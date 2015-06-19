@@ -1,0 +1,6 @@
+IF(NOT NACL)
+  FILE(GLOB sources "*.cpp")
+  FILE(GLOB headers "*.h")
+  ADD_EXECUTABLE(main ${sources} ${headers})
+  TARGET_LINK_LIBRARIES(main diagutility diagphysics diagrender diaggeometry poly2tri polyclipping ${JSONLIBS} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${ADDITIONAL_LIBS})  
+ENDIF()

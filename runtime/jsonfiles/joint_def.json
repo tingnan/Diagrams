@@ -1,0 +1,17 @@
+      "joint": {
+        "type": "revolute",
+        "anchor" : {
+          "x": 0,
+          "y": 0
+        },
+        "node1": "id1",
+        "node2": "id2",
+        "motor": {
+          "speed": 2,
+          "max_torque": 50
+        },
+	"limit" : {
+	  "angle_min": 10,
+	  "angle_max": 40
+	}
+      }
