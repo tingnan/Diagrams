@@ -16,12 +16,14 @@ const char kFragShaderSource[] =
 
 // hard coded scaling in the shader
 const char kVertexShaderSource[] =
+    "uniform float scale;\n"
     "uniform mat4 u_mvp;\n"
     "attribute vec3 a_position;\n"
     "attribute vec3 a_color;\n"
     "varying vec3 v_color;\n"
     "void main() {\n"
-    "  gl_Position = u_mvp * vec4(a_position, 1.0) * 0.002;\n"
+    "  gl_Position = u_mvp * vec4(a_position, 1.0);\n"
+    "  gl_Position.xy = gl_Position.xy * scale;\n"
     "  gl_Position.w = 1.0;\n"
     "  v_color = a_color;\n"
     "}\n";
@@ -209,6 +211,8 @@ void NaClDrawer::DrawPaths() {
   GLuint position_loc = glGetAttribLocation(program_id_, "a_position");
   GLuint color_loc = glGetAttribLocation(program_id_, "a_color");
   GLuint transform_loc = glGetUniformLocation(program_id_, "u_mvp");
+  GLuint scale_loc = glGetUniformLocation(program_id_, "scale");
+  const float kGolbalScale = 1.f / 600.f;
   for (size_t i = 0; i < path_vert_vbo_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, path_vert_vbo_[i]);
     glVertexAttribPointer(position_loc, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
@@ -223,6 +227,9 @@ void NaClDrawer::DrawPaths() {
         path_node_[i]->GetRotationMatrix();
     transform.translation().head<2>() = path_node_[i]->GetPosition();
     glUniformMatrix4fv(transform_loc, 1, false, transform.data());
+
+    glUniform1f(scale_loc, kGolbalScale);
+
     glDrawArrays(GL_LINE_STRIP, 0, path_vert_size_[i]);
   }
 }
@@ -231,6 +238,8 @@ void NaClDrawer::DrawPolygons() {
   GLuint position_loc = glGetAttribLocation(program_id_, "a_position");
   GLuint color_loc = glGetAttribLocation(program_id_, "a_color");
   GLuint transform_loc = glGetUniformLocation(program_id_, "u_mvp");
+  GLuint scale_loc = glGetUniformLocation(program_id_, "scale");
+  const float kGolbalScale = 1.f / 600.f;
   for (size_t i = 0; i < poly_vert_vbo_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, poly_vert_vbo_[i]);
     glVertexAttribPointer(position_loc, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
@@ -245,6 +254,8 @@ void NaClDrawer::DrawPolygons() {
         poly_node_[i]->GetRotationMatrix();
     transform.translation().head<2>() = poly_node_[i]->GetPosition();
     glUniformMatrix4fv(transform_loc, 1, false, transform.data());
+
+    glUniform1f(scale_loc, kGolbalScale);
 
     glDrawArrays(GL_TRIANGLES, 0, poly_vert_size_[i]);
   }

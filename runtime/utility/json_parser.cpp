@@ -1,4 +1,5 @@
 #include "json_parser.h"
+#include "geometry/aabb.h"
 #include <json/json.h>
 #include <iostream>
 #include <fstream>
@@ -51,12 +52,16 @@ Node ParseNode(const Json::Value& nodeobj) {
     return node;
   }
   std::string ntype = nodeobj["type"].asString();
-  if (ntype != "node" && ntype != "openPath") {
+  if (ntype != "node" && ntype != "open_path") {
     return node;
   }
 
   Json::Value::const_iterator itr = nodeobj.begin();
   for (; itr != nodeobj.end(); ++itr) {
+    if (itr.key().asString() == "id") {
+      node.SetID((*itr).asInt());
+    }
+
     if (itr.key().asString() == "transform") {
       const Eigen::Isometry2f tr = ParseTransformation2D(*itr);
       node.SetRotationMatrix(tr.linear());
@@ -66,10 +71,27 @@ Node ParseNode(const Json::Value& nodeobj) {
     if (itr.key().asString() == "path") {
       Geometry2D geo;
       geo.SetPath(ParsePath2D(*itr));
-      if (ntype == "openPath") {
+      if (ntype == "open_path") {
         geo.SetPathClosed(false);
       }
+      node.AddGeometry(std::move(geo));
+    }
 
+    if (itr.key().asString() == "inner_path") {
+      const std::vector<Vec2f>& path = ParsePath2D(*itr);
+      AABB bounding_box = GetAABB(path);
+      Geometry2D geo;
+      geo.AddHole(path);
+      std::vector<Vec2f> box;
+      Vec2f pt0 = bounding_box.lower_bound;
+      Vec2f pt2 = bounding_box.upper_bound;
+      Vec2f pt1(pt2(0), pt0(1));
+      Vec2f pt3(pt0(0), pt2(1));
+      box.emplace_back(pt0);
+      box.emplace_back(pt1);
+      box.emplace_back(pt2);
+      box.emplace_back(pt3);
+      geo.SetPath(box);
       node.AddGeometry(std::move(geo));
     }
   }

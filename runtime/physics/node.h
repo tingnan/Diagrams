@@ -54,9 +54,9 @@ class Node {
 
   // get coordinate information
   float GetRotationAngle();
-  Eigen::Matrix2f GetRotationMatrix();
+  Mat2f GetRotationMatrix();
   void SetRotationAngle(float);
-  void SetRotationMatrix(const Eigen::Matrix2f&);
+  void SetRotationMatrix(const Mat2f&);
   void Rotate(float);
   Vec2f GetPosition();
   void SetPosition(const Vec2f&);

@@ -8,11 +8,10 @@
 namespace {
 
 
-b2Body* ground = nullptr;
-void AddRevoluteJointToWorld(b2World* world, b2Body* body1) {
+void AddRevoluteJointToWorld(b2World* world, b2Body* body1, b2Body* body2) {
   b2RevoluteJointDef pin_def;
   pin_def.bodyA = body1;
-  pin_def.bodyB = ground;
+  pin_def.bodyB = body2;
   pin_def.collideConnected = false;
   pin_def.localAnchorA.SetZero();
   b2Vec2 pos = body1->GetPosition();
@@ -29,8 +28,6 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(World& world)
   // we now try to also create a box2d world
   b2Vec2 gravity(0.f, -4.9f);
   b2world_ = new b2World(gravity);
-  b2BodyDef ground_def;
-  ground = b2world_->CreateBody(&ground_def);
   // now we initialize the world using existing objects
   for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
     _AddNodeToEngine(world_.GetNodeByIndex(i));
@@ -145,18 +142,15 @@ void PhysicsEngineLiquidFun::_AddNodeToEngine(Node* ref) {
   Vec2f pos = ref->GetPosition();
   def.position.Set(pos(0) * kScaleDown, pos(1) * kScaleDown);
   def.angle = ref->GetRotationAngle();
-  def.type = b2_dynamicBody;
   b2Body* body = b2world_->CreateBody(&def);
-  // the body will keep a pointer to the objects
+  // the body will keep a pointer to the node
   body->SetUserData(ref);
-  // body->SetLinearVelocity(b2Vec2(-40, -20));
-  // body->SetAngularVelocity(3.14);
 
   // create a set of triangles, for each geometry the node has
   for (unsigned count = 0; count < ref->GetGeometryCount(); ++count) {
     _AddPolygonToBody(*ref->GetGeometry(count), body);
   }
-  AddRevoluteJointToWorld(b2world_, body);
+  // AddRevoluteJointToWorld(b2world_, body);
 }
 
 PhysicsEngineLiquidFun::~PhysicsEngineLiquidFun() {}

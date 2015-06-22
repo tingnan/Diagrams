@@ -21,26 +21,6 @@ void World::_ConstructWorldFromDescriptor(const Json::Value& world) {
       coordinate_ = ParseTransformation2D(*itr);
       // std::cout << mWorldTransformation.GetTransform().matrix() << std::endl;
     }
-
-    if (itr.key().asString() == "board") {
-      // now we have an board
-      nodes_.emplace_back(make_unique<Node>(ParseNode(*itr)));
-      Node* board = nodes_.back().get();
-      const std::vector<Vec2f>& path = board->GetGeometry(0)->GetPath();
-      AABB pathBox = GetAABB(path);
-      board->GetGeometry(0)->AddHole(path);
-      std::vector<Vec2f> box;
-      Vec2f pt0 = pathBox.lower_bound;
-      Vec2f pt2 = pathBox.upper_bound;
-      Vec2f pt1(pt2(0), pt0(1));
-      Vec2f pt3(pt0(0), pt2(1));
-      box.emplace_back(pt0);
-      box.emplace_back(pt1);
-      box.emplace_back(pt2);
-      box.emplace_back(pt3);
-      board->GetGeometry(0)->SetPath(box);
-    }
-
     if (itr.key().asString() == "children") {
       Json::Value::const_iterator child_itr = (*itr).begin();
       for (; child_itr != (*itr).end(); ++child_itr) {

@@ -14,7 +14,6 @@ IF(NOT NACL)
   FIND_LIBRARY(JSONLIBS NAMES jsoncpp PATHS /usr/lib/x86_64-linux-gnu)
 
   SET(SDL 1)
-
   # OpenGL
   FIND_PACKAGE(OpenGL)
   IF(NOT SDL)
