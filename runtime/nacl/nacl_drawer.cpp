@@ -1,5 +1,4 @@
 #include <GLES2/gl2.h>
-#include "ppapi/gles2/gl2ext_ppapi.h"
 #include "nacl_drawer.h"
 #include "utility/json_parser.h"
 #include <iostream>
