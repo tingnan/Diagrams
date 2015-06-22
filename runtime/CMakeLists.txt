@@ -7,28 +7,35 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 # need c++11 
 
+
 IF(NOT NACL)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
   INCLUDE_DIRECTORIES(/usr/include/jsoncpp /usr/include/eigen3 ./ ./third_party/poly2tri ./third_party/clipper)
   FIND_LIBRARY(JSONLIBS NAMES jsoncpp PATHS /usr/lib/x86_64-linux-gnu)
 
-  # OpenGL
-  find_package(OpenGL)
-  find_package(GLEW)
-  FIND_LIBRARY(GLFW_LIBRARIES glfw3 /opt/physics/lib)
-  INCLUDE_DIRECTORIES(/opt/physics/include)
+  SET(SDL 1)
 
+  # OpenGL
+  FIND_PACKAGE(OpenGL)
+  IF(NOT SDL)
+    FIND_PACKAGE(GLEW)
+    FIND_LIBRARY(GLFW_LIBRARIES glfw3 /opt/physics/lib)
+    SET(ADDITIONAL_LIBS
+    -lpthread
+    -lXcursor
+    -lXinerama
+    -lXrandr
+    -lXxf86vm
+    -lXi
+    )
+  ELSE()
+    FIND_LIBRARY(SDLLIBS NAMES SDL2)
+  ENDIF()
+  INCLUDE_DIRECTORIES(/opt/physics/include)
   # liquidfun
   FIND_LIBRARY(LIQUIDFUN_LIBRARIES liquidfun /opt/physics/lib)
 
-  SET(ADDITIONAL_LIBS
-  -lpthread
-  -lXcursor
-  -lXinerama
-  -lXrandr
-  -lXxf86vm
-  -lXi
-  )
+  
   ADD_SUBDIRECTORY(third_party/poly2tri)
   SET(POLY2TRILIBS poly2tri)
   ADD_SUBDIRECTORY(third_party/clipper)
@@ -36,7 +43,11 @@ IF(NOT NACL)
   ADD_SUBDIRECTORY(utility)
   ADD_SUBDIRECTORY(geometry)
   ADD_SUBDIRECTORY(physics)
-  ADD_SUBDIRECTORY(render)
+  IF(NOT SDL)
+    ADD_SUBDIRECTORY(render)
+  ELSE()
+    ADD_SUBDIRECTORY(sdl)
+  ENDIF()
   ADD_SUBDIRECTORY(testbed)
 ELSE()
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++11")

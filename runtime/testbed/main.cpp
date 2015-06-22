@@ -1,12 +1,8 @@
-#include <cstdlib>
-#include <string>
-#include <fstream>
-#include <iostream>
-
-#include "render/window.h"
+#include "sdl/sdl_interface.h"
 
 int main() {
-  diagrammar::Window myWindow(800, 800, "Test");
-  myWindow.MainLoop();
+  diagrammar::SDLInterfaceOpenGL interface;
+  interface.Init(800, 800);
+  interface.Render();
   return 0;
 }
