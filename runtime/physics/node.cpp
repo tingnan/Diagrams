@@ -11,7 +11,7 @@ Node::Node(const Node& rhs)
   // deep copy
   collision_shapes_.reserve(rhs.collision_shapes_.size());
   for (const auto& ptr : rhs.collision_shapes_) {
-    collision_shapes_.emplace_back(std::make_unique<Geometry2D>(*ptr));
+    collision_shapes_.emplace_back(make_unique<Geometry2D>(*ptr));
   }
 }
 
@@ -21,7 +21,7 @@ Node& Node::operator=(const Node& rhs) {
 }
 
 Node::Node(Geometry2D geo) {
-  collision_shapes_.emplace_back(std::make_unique<Geometry2D>(std::move(geo)));
+  collision_shapes_.emplace_back(make_unique<Geometry2D>(std::move(geo)));
 }
 
 // member accessible functions
@@ -32,7 +32,7 @@ const Geometry2D* Node::GetGeometry(unsigned i) const {
 Geometry2D* Node::GetGeometry(unsigned i) { return collision_shapes_[i].get(); }
 
 void Node::AddGeometry(Geometry2D&& geo) {
-  collision_shapes_.emplace_back(std::make_unique<Geometry2D>(geo));
+  collision_shapes_.emplace_back(make_unique<Geometry2D>(geo));
 }
 
 int Node::GetID() const { return id_; }

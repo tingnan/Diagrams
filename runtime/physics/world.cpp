@@ -24,7 +24,7 @@ void World::_ConstructWorldFromDescriptor(const Json::Value& world) {
 
     if (itr.key().asString() == "board") {
       // now we have an board
-      nodes_.emplace_back(std::make_unique<Node>(ParseNode(*itr)));
+      nodes_.emplace_back(make_unique<Node>(ParseNode(*itr)));
       Node* board = nodes_.back().get();
       const std::vector<Vec2f>& path = board->GetGeometry(0)->GetPath();
       AABB pathBox = GetAABB(path);
@@ -50,7 +50,7 @@ void World::_ConstructWorldFromDescriptor(const Json::Value& world) {
   }
 
   // test to add a dummy node
-  // mCustomObjects.emplace_back(std::make_unique<PhysicsObject>(*mCustomObjects[0]));
+  // mCustomObjects.emplace_back(make_unique<PhysicsObject>(*mCustomObjects[0]));
   // mCustomObjects.back()->SetPosition(Vec2f(600, 0));
 }
 
@@ -124,13 +124,13 @@ void World::_GenerateID(Node* node_ptr) {
 }
 
 Node* World::AddNode(Node obj) {
-  nodes_.emplace_back(std::make_unique<Node>(std::move(obj)));
+  nodes_.emplace_back(make_unique<Node>(std::move(obj)));
   _GenerateID(nodes_.back().get());
   return nodes_.back().get();
 }
 
 Node* World::AddNode() {
-  nodes_.emplace_back(std::make_unique<Node>());
+  nodes_.emplace_back(make_unique<Node>());
   _GenerateID(nodes_.back().get());
   return nodes_.back().get();
 }
