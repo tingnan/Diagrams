@@ -29,6 +29,7 @@ IF(NOT NACL)
     )
   ELSE()
     FIND_LIBRARY(SDLLIBS NAMES SDL2)
+    FIND_LIBRARY(FREETYPELIBS NAMES freetype)
   ENDIF()
   INCLUDE_DIRECTORIES(/opt/physics/include)
   # liquidfun

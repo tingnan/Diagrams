@@ -16,8 +16,8 @@ class GameTimer {
   TimeUnit tick_time_ = TimeUnit(16667);
   TimeUnit accu_time_;
   TimeUnit elap_time_;
-  std::chrono::steady_clock::time_point init_time_;
-  std::chrono::steady_clock::time_point last_time_;
+  std::chrono::high_resolution_clock::time_point init_time_;
+  std::chrono::high_resolution_clock::time_point last_time_;
 
  public:
   GameTimer();

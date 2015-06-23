@@ -12,15 +12,15 @@ GameTimer::GameTimer() {
 }
 void GameTimer::Initialize() {
   // is the time monotonic?
-  init_time_ = std::chrono::steady_clock::now();
-  last_time_ = std::chrono::steady_clock::now();
+  init_time_ = std::chrono::high_resolution_clock::now();
+  last_time_ = std::chrono::high_resolution_clock::now();
   accu_time_ = std::chrono::microseconds::zero();
 }
 
 // this call takes less than 1 us to finish
 int32_t GameTimer::BeginNextFrame() {
-  std::chrono::steady_clock::time_point curr_time =
-      std::chrono::steady_clock::now();
+  std::chrono::high_resolution_clock::time_point curr_time =
+      std::chrono::high_resolution_clock::now();
   elap_time_ = std::chrono::duration_cast<TimeUnit>(curr_time - last_time_);
   elap_time_ = elap_time_ > k000ms ? elap_time_ : k000ms;
   elap_time_ = elap_time_ < k050ms ? elap_time_ : tick_time_;
@@ -45,8 +45,8 @@ double GameTimer::tick_time() const {
 }
 
 double GameTimer::now() const {
-  std::chrono::duration<float> fs = std::chrono::steady_clock::now() - init_time_;
-  return fs.count();
+  auto count = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - init_time_).count();
+  return double(count) * 0.001;
 }
 
 int64_t GameTimer::ticks() const {

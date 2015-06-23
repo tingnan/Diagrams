@@ -77,9 +77,9 @@ void World::Step() {
   if (timer_.ticks() % 200 == 0 && timer_.ticks() > 0) {
     std::cerr << "200 counts: " ;
     auto result = std::minmax_element(step_time_.begin(), step_time_.end());
-    std::cerr << "min: " << *result.first * 1000 << " ms ";
-    std::cerr << "max: " << *result.second * 1000 << " ms ";
-    std::cerr << "mean: " << std::accumulate(step_time_.begin(), step_time_.end(), 0.0) / step_time_.size() * 1000 << " ms\n";
+    std::cerr << "min: " << *result.first << " ms ";
+    std::cerr << "max: " << *result.second << " ms ";
+    std::cerr << "mean: " << std::accumulate(step_time_.begin(), step_time_.end(), 0.0) / step_time_.size() << " ms\n";
   }
 
   physics_engine_->SendDataToWorld();
