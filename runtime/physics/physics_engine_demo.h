@@ -5,7 +5,7 @@
 // the demo physics engine
 // can only do a few predefined stuff for now
 
-#include "physics_engine.h"
+#include "physics/physics_engine.h"
 
 namespace diagrammar {
 // this is a base class that is supposed to be overload

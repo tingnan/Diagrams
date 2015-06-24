@@ -1,8 +1,9 @@
-#ifndef GEOMETRY_TRIANGULATIONDATASTRUCTURE_
-#define GEOMETRY_TRIANGULATIONDATASTRUCTURE_
-#include "typedefs.h"
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_GEOMETRY_TRIANGULATIONDATASTRUCTURE_H_
+#define RUNTIME_GEOMETRY_TRIANGULATIONDATASTRUCTURE_H_
 #include <vector>
 #include <memory>
+#include "include/typedefs.h"
 
 namespace diagrammar {
 // the representation of triangulation
@@ -67,6 +68,6 @@ class MeshDataStructure {
   MeshDataStructure();
   void Flip(Simplex2D* face, unsigned index);
 };
-};
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_GEOMETRY_TRIANGULATIONDATASTRUCTURE_H_

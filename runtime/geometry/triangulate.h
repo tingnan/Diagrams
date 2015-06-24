@@ -2,7 +2,7 @@
 #ifndef RUNTIME_GEOMETRY_TRIANGULATE_H_
 #define RUNTIME_GEOMETRY_TRIANGULATE_H_
 #include <vector>
-#include "typedefs.h"
+#include "include/typedefs.h"
 
 namespace diagrammar {
 struct Triangle2D;

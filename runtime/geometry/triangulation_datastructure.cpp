@@ -1,4 +1,5 @@
-#include "triangulation_datastructure.h"
+// Copyright 2015 Native Client authors
+#include "geometry/triangulation_datastructure.h"
 #include "utility/stl_memory.h"
 
 namespace diagrammar {

@@ -2,7 +2,7 @@
 #ifndef RUNTIME_GEOMETRY_COORDINATE_FRAME_H_
 #define RUNTIME_GEOMETRY_COORDINATE_FRAME_H_
 #include <Eigen/Geometry>
-#include "typedefs.h"
+#include "include/typedefs.h"
 
 namespace diagrammar {
 // a frame that defines the transformation of the object
