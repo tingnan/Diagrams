@@ -7,21 +7,21 @@
 namespace diagrammar {
 
 ComplexShape2D::ComplexShape2D(const std::vector<Vector2f>& pts) {
-  path_ = _Simplify(pts);
+  path_ = SimplifyPath(pts);
 }
 
 void ComplexShape2D::SetPath(const std::vector<Vector2f>& pts) {
-  path_ = _Simplify(pts);
+  path_ = SimplifyPath(pts);
 }
 
 void ComplexShape2D::SetHole(int i, const std::vector<Vector2f>& pts) {
   assert(is_closed_);
-  holes_[i] = _Simplify(pts);
+  holes_[i] = SimplifyPath(pts);
 }
 
 void ComplexShape2D::AddHole(const std::vector<Vector2f>& pts) {
   assert(is_closed_);
-  holes_.emplace_back(_Simplify(pts));
+  holes_.emplace_back(std::move(SimplifyPath(pts)));
 }
 
 std::vector<Triangle2D> ComplexShape2D::Triangulate() const {
@@ -30,14 +30,14 @@ std::vector<Triangle2D> ComplexShape2D::Triangulate() const {
   return InflateAndTriangulate(path_);
 }
 
-inline std::vector<Vector2f> ComplexShape2D::_Simplify(
+inline std::vector<Vector2f> ComplexShape2D::SimplifyPath(
     const std::vector<Vector2f>& in) {
   return Simplify(in);
 }
 
-const std::vector<Vector2f>& ComplexShape2D::GetPath() const { return path_; }
+std::vector<Vector2f> ComplexShape2D::GetPath() const { return path_; }
 
-const std::vector<Vector2f>& ComplexShape2D::GetHole(int i) const {
+std::vector<Vector2f> ComplexShape2D::GetHole(int i) const {
   assert(i >= 0);
   assert(i < holes_.size());
   return holes_[i];

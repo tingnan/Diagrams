@@ -16,20 +16,29 @@ struct Triangle2D {
 
 class ComplexShape2D {
  public:
+  // construct a empty shape
   ComplexShape2D() = default;
+  // construct a shape with boundary described by input points
   explicit ComplexShape2D(const std::vector<Vector2f>& pts);
+  // all defaut
   ComplexShape2D(const ComplexShape2D&) = default;
   ComplexShape2D(ComplexShape2D&&) = default;
   ComplexShape2D& operator=(const ComplexShape2D&) = default;
   ComplexShape2D& operator=(ComplexShape2D&&) = default;
+  // change the boundary path
   void SetPath(const std::vector<Vector2f>& pts);
+  // change the hole at index i
   void SetHole(int i, const std::vector<Vector2f>& pts);
+  // add a hole to the shape
   void AddHole(const std::vector<Vector2f>& pts);
   size_t GetNumHoles() { return holes_.size(); }
+  // return a triangulation of the shape
   std::vector<Triangle2D> Triangulate() const;
-  const std::vector<Vector2f>& GetPath() const;
-  const std::vector<Vector2f>& GetHole(int i) const;
-  const std::vector<std::vector<Vector2f> >& GetHoles() const;
+  // get the boundary points
+  std::vector<Vector2f> GetPath() const;
+  // get the hole at index i
+  std::vector<Vector2f> GetHole(int i) const;
+  // change the path type (open or close)
   void SetPathClosed(bool flag);
   bool IsPathClosed() const { return is_closed_; }
 
@@ -37,7 +46,7 @@ class ComplexShape2D {
   std::vector<Vector2f> path_;
   bool is_closed_ = true;
   std::vector<std::vector<Vector2f> > holes_;
-  std::vector<Vector2f> _Simplify(const std::vector<Vector2f>&);
+  std::vector<Vector2f> SimplifyPath(const std::vector<Vector2f>&);
 };
 }  // namespace diagrammar
 
