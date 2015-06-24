@@ -32,11 +32,11 @@ Json::Value CreateJsonObject(const char* file) {
   return json_obj;
 }
 
-Eigen::Isometry2f ParseTransformation2D(const Json::Value& array) {
-  Eigen::Isometry2f t = Eigen::Isometry2f::Identity();
+Isometry2f ParseTransformation2D(const Json::Value& array) {
+  Isometry2f t = Isometry2f::Identity();
   assert(array.size() == 6);
 
-  Eigen::Matrix2f rot;
+  Matrix2f rot;
   rot << array[0].asFloat(), array[2].asFloat(), array[1].asFloat(),
       array[3].asFloat();
   // rotate then translate, the order is important;
@@ -75,7 +75,7 @@ Node ParseNode(const Json::Value& nodeobj) {
     }
 
     if (itr.key().asString() == "transform") {
-      const Eigen::Isometry2f tr = ParseTransformation2D(*itr);
+      const Isometry2f tr = ParseTransformation2D(*itr);
       node.SetRotationMatrix(tr.linear());
       node.SetPosition(tr.translation());
     }

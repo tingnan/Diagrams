@@ -230,8 +230,8 @@ bool isApproxZero(float t) {
 
 // checking for collinear/degenerate case
 int CounterClockwise(const Vector2f& a, const Vector2f& b, const Vector2f& c) {
-  Eigen::Vector3f atob(b(0) - a(0), b(1) - a(1), 0);
-  Eigen::Vector3f btoc(c(0) - b(0), c(1) - b(1), 0);
+  Vector3f atob(b(0) - a(0), b(1) - a(1), 0);
+  Vector3f btoc(c(0) - b(0), c(1) - b(1), 0);
   float crossProduct = atob.cross(btoc)(2);
   if (isApproxZero(crossProduct)) return 0;
   if (crossProduct > 0) return 1;
@@ -244,7 +244,7 @@ int PointInCircumcenter(const Vector2f& a, const Vector2f& b, const Vector2f& c,
   // a, b, c in counter clockwise order!
   if (!CounterClockwise(a, b, c)) exit(-1);
 
-  Eigen::Matrix4f Det;
+  Matrix4f Det;
   Det << a(0), a(1), a.adjoint() * a, 1, b(0), b(1), b.adjoint() * b, 1, c(0),
       c(1), c.adjoint() * c, 1, p(0), p(1), p.adjoint() * p, 1;
   float determinant = Det.determinant();

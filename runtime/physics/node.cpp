@@ -33,18 +33,18 @@ void Node::SetCollisionGroupID(int id) { collision_group_id_ = id; }
 float Node::GetRotationAngle() { return coordinate_.GetRotation().angle(); }
 
 void Node::SetRotationAngle(float a) {
-  coordinate_.SetRotation(Eigen::Rotation2Df(a));
+  coordinate_.SetRotation(Rotation2f(a));
 }
 
-void Node::SetRotationMatrix(const Eigen::Matrix2f& rotmat) {
+void Node::SetRotationMatrix(const Matrix2f& rotmat) {
   coordinate_.SetRotation(rotmat);
 }
 
-Eigen::Matrix2f Node::GetRotationMatrix() {
+Matrix2f Node::GetRotationMatrix() {
   return coordinate_.GetRotation().matrix();
 }
 
-void Node::Rotate(float a) { coordinate_.Rotate(Eigen::Rotation2Df(a)); }
+void Node::Rotate(float a) { coordinate_.Rotate(Rotation2f(a)); }
 
 Vector2f Node::GetPosition() { return coordinate_.GetTranslation(); }
 

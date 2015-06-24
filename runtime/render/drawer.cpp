@@ -201,7 +201,7 @@ void Drawer::UpdateBuffer() {
 void Drawer::DrawPaths() {
   for (size_t i = 0; i < path_vao_.size(); ++i) {
     // get transformation
-    Eigen::Isometry3f transform(Eigen::Isometry3f::Identity());
+    Isometry3f transform(Isometry3f::Identity());
     transform.linear().topLeftCorner<2, 2>() = path_node_[i]->GetRotationMatrix();
     transform.translation().head<2>() = path_node_[i]->GetPosition();
     GLint loc = glGetUniformLocation(program_id_, "modelToEyeMat");
@@ -215,7 +215,7 @@ void Drawer::DrawPaths() {
 
 void Drawer::DrawPolygons() {
   for (size_t i = 0; i < poly_vao_.size(); ++i) {
-    Eigen::Isometry3f transform(Eigen::Isometry3f::Identity());
+    Isometry3f transform(Isometry3f::Identity());
     transform.linear().topLeftCorner<2, 2>() = poly_node_[i]->GetRotationMatrix();
     transform.translation().head<2>() = poly_node_[i]->GetPosition();
     GLint loc = glGetUniformLocation(program_id_, "modelToEyeMat");

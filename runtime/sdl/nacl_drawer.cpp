@@ -293,7 +293,7 @@ void NaClDrawer::DrawPaths() {
                           0);
     glEnableVertexAttribArray(program.color_loc);
 
-    Eigen::Isometry3f transform(Eigen::Isometry3f::Identity());
+    Isometry3f transform(Isometry3f::Identity());
     transform.linear().topLeftCorner<2, 2>() =
         path_node_[i]->GetRotationMatrix();
     transform.translation().head<2>() = path_node_[i]->GetPosition();
@@ -319,7 +319,7 @@ void NaClDrawer::DrawPolygons() {
                           0);
     glEnableVertexAttribArray(program.color_loc);
 
-    Eigen::Isometry3f transform(Eigen::Isometry3f::Identity());
+    Isometry3f transform(Isometry3f::Identity());
     transform.linear().topLeftCorner<2, 2>() =
         poly_node_[i]->GetRotationMatrix();
     transform.translation().head<2>() = poly_node_[i]->GetPosition();
@@ -337,7 +337,7 @@ void NaClDrawer::DrawTexts() {
   glVertexAttribPointer(program.vertex_loc, 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(program.vertex_loc);
 
-  Eigen::Isometry3f transform(Eigen::Isometry3f::Identity());
+  Isometry3f transform(Isometry3f::Identity());
   glUniformMatrix4fv(program.u_mvp_loc, 1, false, transform.data());
 
   // set texture

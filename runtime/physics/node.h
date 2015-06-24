@@ -16,7 +16,7 @@ class Node {
     float friction = 0;
     float mass = 1;
     // in its fixed frame;
-    Eigen::Matrix3f inertiaMatrix = Eigen::Matrix3f::Identity();
+    Matrix3f inertiaMatrix = Matrix3f::Identity();
   };
 
   Node();
