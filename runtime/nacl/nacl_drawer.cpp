@@ -110,7 +110,7 @@ void NaClDrawer::GenPathBuffers() {
         glBindBuffer(GL_ARRAY_BUFFER, vert_vbo);
         // serialize the vector of 2S points to GLfloat
         // the rendering is in three dimension
-        const std::vector<Vec2f>& points =
+        const std::vector<Vector2f>& points =
             pa_idx == 0 ? geoptr->GetPath() : geoptr->GetHole(pa_idx - 1);
 
         std::vector<GLfloat> vertices(points.size() * kVertDim);

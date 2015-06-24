@@ -40,19 +40,19 @@ Eigen::Isometry2f ParseTransformation2D(const Json::Value& array) {
   rot << array[0].asFloat(), array[2].asFloat(), array[1].asFloat(),
       array[3].asFloat();
   // rotate then translate, the order is important;
-  t.translate(Vec2f(array[4].asFloat(), array[5].asFloat())).rotate(rot);
+  t.translate(Vector2f(array[4].asFloat(), array[5].asFloat())).rotate(rot);
   return t;
 }
 
-std::vector<Vec2f> ParsePath2D(const Json::Value& pathobj) {
-  std::vector<Vec2f> mypath;
+std::vector<Vector2f> ParsePath2D(const Json::Value& pathobj) {
+  std::vector<Vector2f> mypath;
 
   Json::Value::const_iterator itr = pathobj.begin();
   for (; itr != pathobj.end(); ++itr) {
     const Json::Value& pt = *itr;
     float x = pt.get("x", 0).asFloat();
     float y = pt.get("y", 0).asFloat();
-    mypath.emplace_back(Vec2f(x, y));
+    mypath.emplace_back(Vector2f(x, y));
   }
   return mypath;
 }
@@ -90,15 +90,15 @@ Node ParseNode(const Json::Value& nodeobj) {
     }
 
     if (itr.key().asString() == "inner_path") {
-      const std::vector<Vec2f>& path = ParsePath2D(*itr);
+      const std::vector<Vector2f>& path = ParsePath2D(*itr);
       AABB bounding_box = GetAABBWithPadding(path, 5e-2);
       ComplexShape2D geo;
       geo.AddHole(path);
-      std::vector<Vec2f> box;
-      Vec2f pt0 = bounding_box.lower_bound;
-      Vec2f pt2 = bounding_box.upper_bound;
-      Vec2f pt1(pt2(0), pt0(1));
-      Vec2f pt3(pt0(0), pt2(1));
+      std::vector<Vector2f> box;
+      Vector2f pt0 = bounding_box.lower_bound;
+      Vector2f pt2 = bounding_box.upper_bound;
+      Vector2f pt1(pt2(0), pt0(1));
+      Vector2f pt3(pt0(0), pt2(1));
       box.emplace_back(pt0);
       box.emplace_back(pt1);
       box.emplace_back(pt2);

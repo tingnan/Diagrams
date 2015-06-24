@@ -1,4 +1,4 @@
-// Copyright 2015 Native Client authors
+// Copyright 2015 Native Client Authors.
 #ifndef RUNTIME_GEOMETRY_TRIANGULATIONDATASTRUCTURE_H_
 #define RUNTIME_GEOMETRY_TRIANGULATIONDATASTRUCTURE_H_
 #include <vector>
@@ -41,21 +41,21 @@ class MeshDataStructure {
   };
 
   class Vertex2D {
-    const Vec2f* point_;
+    const Vector2f* point_;
     Simplex2D* face_;
 
    public:
-    Vertex2D(const Vec2f* a, Simplex2D* f = nullptr);
+    Vertex2D(const Vector2f* a, Simplex2D* f = nullptr);
     Vertex2D(Vertex2D&&) = default;
     Simplex2D* GetSimplex() const;
     void SetSimplex(Simplex2D*);
-    const Vec2f* GetPoint() const;
+    const Vector2f* GetPoint() const;
   };
 
  private:
   std::vector<std::unique_ptr<Simplex2D> > faces_;
   std::vector<std::unique_ptr<Vertex2D> > vertices_;
-  std::vector<std::unique_ptr<Vec2f> > points_;
+  std::vector<std::unique_ptr<Vector2f> > points_;
   friend class Triangulation;
 
   unsigned static ccw(unsigned i) { return (i + 1) % 3; }

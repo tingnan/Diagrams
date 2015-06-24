@@ -1,4 +1,4 @@
-// Copyright 2015 Native Client authors
+// Copyright 2015 Native Client Authors.
 #ifndef RUNTIME_GEOMETRY_AABB_H_
 #define RUNTIME_GEOMETRY_AABB_H_
 

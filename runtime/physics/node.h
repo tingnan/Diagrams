@@ -41,13 +41,13 @@ class Node {
 
   // get coordinate information
   float GetRotationAngle();
-  Mat2f GetRotationMatrix();
+  Matrix2f GetRotationMatrix();
   void SetRotationAngle(float angle);
-  void SetRotationMatrix(const Mat2f&);
+  void SetRotationMatrix(const Matrix2f&);
   void Rotate(float angle);
-  Vec2f GetPosition();
-  void SetPosition(const Vec2f&);
-  void Translate(const Vec2f&);
+  Vector2f GetPosition();
+  void SetPosition(const Vector2f&);
+  void Translate(const Vector2f&);
 
  private:
   // Geometry: note, we may allow composite geometries

@@ -77,10 +77,10 @@ void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
       b2PolygonShape* shape =
           dynamic_cast<b2PolygonShape*>(shape_fixture->GetShape());
       size_t count = shape->GetVertexCount();
-      std::vector<Vec2f> vertices(count);
+      std::vector<Vector2f> vertices(count);
       for (size_t i = 0; i < count; ++i) {
         b2Vec2 tmp = shape->GetVertex(i);
-        vertices[i] = Vec2f(tmp.x, tmp.y) * kScaleUp;
+        vertices[i] = Vector2f(tmp.x, tmp.y) * kScaleUp;
       }
       geo_list.emplace_back(ComplexShape2D(vertices));
     }
@@ -88,13 +88,13 @@ void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
       b2CircleShape* shape =
           dynamic_cast<b2CircleShape*>(shape_fixture->GetShape());
       size_t count = 10;
-      std::vector<Vec2f> vertices(count);
+      std::vector<Vector2f> vertices(count);
       for (size_t i = 0; i < count; ++i) {
         float32 x =
             shape->m_p.x + shape->m_radius * cos(float32(2 * i) / count * M_PI);
         float32 y =
             shape->m_p.y + shape->m_radius * sin(float32(2 * i) / count * M_PI);
-        vertices[i] = Vec2f(x, y) * kScaleUp;
+        vertices[i] = Vector2f(x, y) * kScaleUp;
       }
       geo_list.emplace_back(ComplexShape2D(vertices));
     }
@@ -108,7 +108,7 @@ void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
 
 void PhysicsEngineLiquidFun::AddChainsToBody(const ComplexShape2D& geo,
                                              b2Body* b) {
-  const std::vector<Vec2f>& pts = geo.GetPath();
+  const std::vector<Vector2f>& pts = geo.GetPath();
   std::vector<b2Vec2> vertices(pts.size());
   for (size_t i = 0; i < vertices.size(); ++i) {
     vertices[i].Set(pts[i](0) * kScaleDown, pts[i](1) * kScaleDown);
@@ -144,7 +144,7 @@ void PhysicsEngineLiquidFun::AddPolygonsToBody(const ComplexShape2D& geo,
 
 void PhysicsEngineLiquidFun::AddNodeFromWorldToEngine(Node* ref) {
   b2BodyDef def;
-  Vec2f pos = ref->GetPosition();
+  Vector2f pos = ref->GetPosition();
   def.position.Set(pos(0) * kScaleDown, pos(1) * kScaleDown);
   def.angle = ref->GetRotationAngle();
   b2Body* body = b2world_->CreateBody(&def);
@@ -168,7 +168,7 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
   for (b2Body* b = b2world_->GetBodyList(); b; b = b->GetNext()) {
     Node* obj = reinterpret_cast<Node*>(b->GetUserData());
     if (obj) {
-      Vec2f translation(b->GetPosition().x * kScaleUp,
+      Vector2f translation(b->GetPosition().x * kScaleUp,
                         b->GetPosition().y * kScaleUp);
       obj->SetPosition(translation);
       obj->SetRotationAngle(b->GetAngle());

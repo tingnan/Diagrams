@@ -1,4 +1,4 @@
-// Copyright 2015 Native Client authors
+// Copyright 2015 Native Client Authors.
 #include "geometry/triangulation_datastructure.h"
 #include "utility/stl_memory.h"
 
@@ -45,7 +45,7 @@ void MeshDataStructure::Simplex2D::SetNeighbor(unsigned i, Simplex2D* f) {
   faces_[index] = f;
 }
 
-MeshDataStructure::Vertex2D::Vertex2D(const Vec2f* a, Simplex2D* f)
+MeshDataStructure::Vertex2D::Vertex2D(const Vector2f* a, Simplex2D* f)
     : point_(a), face_(f) {}
 
 MeshDataStructure::Simplex2D* MeshDataStructure::Vertex2D::GetSimplex() const {
@@ -54,7 +54,7 @@ MeshDataStructure::Simplex2D* MeshDataStructure::Vertex2D::GetSimplex() const {
 
 void MeshDataStructure::Vertex2D::SetSimplex(Simplex2D* f) { face_ = f; }
 
-const Vec2f* MeshDataStructure::Vertex2D::GetPoint() const { return point_; }
+const Vector2f* MeshDataStructure::Vertex2D::GetPoint() const { return point_; }
 
 MeshDataStructure::MeshDataStructure() {}
 

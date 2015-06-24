@@ -46,9 +46,9 @@ Eigen::Matrix2f Node::GetRotationMatrix() {
 
 void Node::Rotate(float a) { coordinate_.Rotate(Eigen::Rotation2Df(a)); }
 
-Vec2f Node::GetPosition() { return coordinate_.GetTranslation(); }
+Vector2f Node::GetPosition() { return coordinate_.GetTranslation(); }
 
-void Node::SetPosition(const Vec2f& pos) { coordinate_.SetTranslation(pos); }
+void Node::SetPosition(const Vector2f& pos) { coordinate_.SetTranslation(pos); }
 
-void Node::Translate(const Vec2f& ds) { coordinate_.Translate(ds); }
+void Node::Translate(const Vector2f& ds) { coordinate_.Translate(ds); }
 }  // namespace diagrammar
