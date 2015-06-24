@@ -1,12 +1,12 @@
-#ifndef PHYSICS_WORLD_
-#define PHYSICS_WORLD_
-
-#include "utility/timer.h"
-#include "utility/stl_memory.h"
-#include "node.h"
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_PHYSICS_WORLD_H_
+#define RUNTIME_PHYSICS_WORLD_H_
 #include <list>
 #include <vector>
 #include <unordered_map>
+#include "utility/timer.h"
+#include "utility/stl_memory.h"
+#include "physics/node.h"
 
 namespace Json {
 class Value;
@@ -28,6 +28,7 @@ class World {
  public:
   enum EngineType { kDemo, kLiquidFun, kChipmunk2D, kBullet, kODE };
   World();
+  ~World();
   World(World&& other) = default;
   // not copyable
   World(const World& other) = delete;
@@ -91,10 +92,10 @@ class World {
   std::list<double> step_time_;
   // the pointer to the actual physics engine used;
   // we will allow user to switch engine;
-  class PhysicsEngine* physics_engine_ = nullptr;
+  class PhysicsEngine* physics_engine_;
 
   int world_state_ = WorldStateFlag::kCreated;
 };
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_PHYSICS_WORLD_H_

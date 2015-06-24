@@ -1,7 +1,8 @@
-#ifndef GEOMETRY_COORDINATEFRAME_
-#define GEOMETRY_COORDINATEFRAME_
-#include "typedefs.h"
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_GEOMETRY_COORDINATE_FRAME_H_
+#define RUNTIME_GEOMETRY_COORDINATE_FRAME_H_
 #include <Eigen/Geometry>
+#include "typedefs.h"
 
 namespace diagrammar {
 // a frame that defines the transformation of the object
@@ -14,8 +15,11 @@ namespace diagrammar {
 class CoordinateFrame2D {
  public:
   CoordinateFrame2D();
-
-  CoordinateFrame2D(const Eigen::Isometry2f& transform);
+  explicit  CoordinateFrame2D(const Eigen::Isometry2f& transform);
+  CoordinateFrame2D(const CoordinateFrame2D&) = default;
+  CoordinateFrame2D(CoordinateFrame2D&&) = default;
+  CoordinateFrame2D& operator = (const CoordinateFrame2D&) = default;
+  CoordinateFrame2D& operator = (CoordinateFrame2D&&) = default;
 
  public:
   // notice: it differs from SetTranslation because
@@ -51,10 +55,11 @@ class CoordinateFrame2D {
 
   Vec2f GetTranslation();
   Eigen::Rotation2Df GetRotation();
+
  private:
   // our coordinate frame can be treated as a isometry
   Eigen::Isometry2f frame_;
 };
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_GEOMETRY_COORDINATE_FRAME_H_

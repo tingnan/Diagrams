@@ -1,12 +1,12 @@
-#include "Box2D/Box2D.h"
-#include "physics_engine_liquidfun.h"
-#include "world.h"
-#include "geometry/triangulate.h"
+// Copyright 2015 Native Client authors
 #include <random>
 #include <iostream>
+#include "Box2D/Box2D.h"
+#include "physics/physics_engine_liquidfun.h"
+#include "physics/world.h"
+#include "geometry/triangulate.h"
 
 namespace {
-
 
 void AddRevoluteJointToWorld(b2World* world, b2Body* body1, b2Body* body2) {
   b2RevoluteJointDef pin_def;
@@ -19,7 +19,7 @@ void AddRevoluteJointToWorld(b2World* world, b2Body* body1, b2Body* body2) {
   world->CreateJoint(&pin_def);
 }
 
-}
+}  // namespace
 
 namespace diagrammar {
 
@@ -58,9 +58,9 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(World& world)
 
       b2FixtureDef particle_fixture;
       particle_fixture.shape = &particle_shape;
-      particle_fixture.density = kDensity;
-      particle_fixture.friction = kFriction;
-      particle_fixture.restitution = kRestitution;
+      particle_fixture.density = kDefaultDensity;
+      particle_fixture.friction = kDefaultFriction;
+      particle_fixture.restitution = kDefaultRestitution;
 
       particle->CreateFixture(&particle_fixture);
       AddNodeFromEngineToWorld(particle);
@@ -70,10 +70,12 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(World& world)
 
 void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
   std::vector<ComplexShape2D> geo_list;
-  for (b2Fixture* shape_fixture = body->GetFixtureList(); shape_fixture; shape_fixture = shape_fixture->GetNext()) {
+  for (b2Fixture* shape_fixture = body->GetFixtureList(); shape_fixture;
+       shape_fixture = shape_fixture->GetNext()) {
     b2Shape::Type shape_type = shape_fixture->GetType();
     if (shape_type == b2Shape::e_polygon) {
-      b2PolygonShape* shape = (b2PolygonShape*)shape_fixture->GetShape();
+      b2PolygonShape* shape =
+          dynamic_cast<b2PolygonShape*>(shape_fixture->GetShape());
       size_t count = shape->GetVertexCount();
       std::vector<Vec2f> vertices(count);
       for (size_t i = 0; i < count; ++i) {
@@ -83,12 +85,15 @@ void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
       geo_list.emplace_back(ComplexShape2D(vertices));
     }
     if (shape_type == b2Shape::e_circle) {
-      b2CircleShape* shape = (b2CircleShape*)shape_fixture->GetShape();
+      b2CircleShape* shape =
+          dynamic_cast<b2CircleShape*>(shape_fixture->GetShape());
       size_t count = 10;
       std::vector<Vec2f> vertices(count);
       for (size_t i = 0; i < count; ++i) {
-        float32 x = shape->m_p.x + shape->m_radius * cos(float32(2 * i) / count * M_PI);
-        float32 y = shape->m_p.y + shape->m_radius * sin(float32(2 * i) / count * M_PI);
+        float32 x =
+            shape->m_p.x + shape->m_radius * cos(float32(2 * i) / count * M_PI);
+        float32 y =
+            shape->m_p.y + shape->m_radius * sin(float32(2 * i) / count * M_PI);
         vertices[i] = Vec2f(x, y) * kScaleUp;
       }
       geo_list.emplace_back(ComplexShape2D(vertices));
@@ -101,12 +106,12 @@ void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
   body->SetUserData(tmp);
 }
 
-void PhysicsEngineLiquidFun::AddChainsToBody(const ComplexShape2D& geo, b2Body* b) {
+void PhysicsEngineLiquidFun::AddChainsToBody(const ComplexShape2D& geo,
+                                             b2Body* b) {
   const std::vector<Vec2f>& pts = geo.GetPath();
   std::vector<b2Vec2> vertices(pts.size());
   for (size_t i = 0; i < vertices.size(); ++i) {
-    vertices[i].Set(pts[i](0) * kScaleDown,
-                    pts[i](1) * kScaleDown);
+    vertices[i].Set(pts[i](0) * kScaleDown, pts[i](1) * kScaleDown);
   }
   b2ChainShape chain;
   if (geo.IsPathClosed()) {
@@ -130,9 +135,9 @@ void PhysicsEngineLiquidFun::AddPolygonsToBody(const ComplexShape2D& geo,
 
     b2FixtureDef polyfixture;
     polyfixture.shape = &polygon;
-    polyfixture.density = kDensity;
-    polyfixture.friction = kFriction;
-    polyfixture.restitution = kRestitution;
+    polyfixture.density = kDefaultDensity;
+    polyfixture.friction = kDefaultFriction;
+    polyfixture.restitution = kDefaultRestitution;
     b->CreateFixture(&polyfixture);
   }
 }
@@ -156,13 +161,12 @@ void PhysicsEngineLiquidFun::AddNodeFromWorldToEngine(Node* ref) {
 PhysicsEngineLiquidFun::~PhysicsEngineLiquidFun() {}
 
 void PhysicsEngineLiquidFun::Step() {
-  b2world_->Step(world_.time_step(), kVelocityIterations,
-                 kPositionIterations);
+  b2world_->Step(world_.time_step(), velocity_iterations_, position_iterations_);
 }
 
 void PhysicsEngineLiquidFun::SendDataToWorld() {
   for (b2Body* b = b2world_->GetBodyList(); b; b = b->GetNext()) {
-    Node* obj = (Node*)b->GetUserData();
+    Node* obj = reinterpret_cast<Node*>(b->GetUserData());
     if (obj) {
       Vec2f translation(b->GetPosition().x * kScaleUp,
                         b->GetPosition().y * kScaleUp);
@@ -173,4 +177,4 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
 }
 
 void PhysicsEngineLiquidFun::HandleEvents(const Json::Value&) {}
-}
+}  // namespace diagrammar

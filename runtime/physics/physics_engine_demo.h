@@ -1,5 +1,6 @@
-#ifndef PHYSICS_PHYSICS_ENGINE_DEMO_
-#define PHYSICS_PHYSICS_ENGINE_DEMO_
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_PHYSICS_PHYSICS_ENGINE_DEMO_H_
+#define RUNTIME_PHYSICS_PHYSICS_ENGINE_DEMO_H_
 
 // the demo physics engine
 // can only do a few predefined stuff for now
@@ -13,7 +14,7 @@ class PhysicsEngineDemo : public PhysicsEngine {
   // this engine is special in that it will directly modify
   // the objects in the world
   // other physics engines only obtain immutable copies
-  PhysicsEngineDemo(World&);
+  explicit PhysicsEngineDemo(World&);
   ~PhysicsEngineDemo();
   // step the world
   void Step();
@@ -22,6 +23,6 @@ class PhysicsEngineDemo : public PhysicsEngine {
   // to be implemented
   void HandleEvents(const Json::Value&);
 };
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_PHYSICS_PHYSICS_ENGINE_DEMO_H_

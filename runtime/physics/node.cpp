@@ -1,24 +1,9 @@
-#include "node.h"
+// Copyright 2015 Native Client authors
+#include "physics/node.h"
 #include "utility/stl_memory.h"
+
 namespace diagrammar {
 Node::Node() {}
-
-Node::Node(const Node& rhs)
-    : coordinate_(rhs.coordinate_),
-      properties_(rhs.properties_),
-      id_(rhs.id_),
-      collision_group_id_(rhs.collision_group_id_) {
-  // deep copy
-  collision_shapes_.reserve(rhs.collision_shapes_.size());
-  for (const auto& ptr : rhs.collision_shapes_) {
-    collision_shapes_.emplace_back(make_unique<ComplexShape2D>(*ptr));
-  }
-}
-
-Node& Node::operator=(const Node& rhs) {
-  assert(0);
-  return *this;
-}
 
 Node::Node(ComplexShape2D geo) {
   collision_shapes_.emplace_back(make_unique<ComplexShape2D>(std::move(geo)));
@@ -29,10 +14,12 @@ const ComplexShape2D* Node::GetGeometry(unsigned i) const {
   return collision_shapes_[i].get();
 }
 
-ComplexShape2D* Node::GetGeometry(unsigned i) { return collision_shapes_[i].get(); }
+ComplexShape2D* Node::GetGeometry(unsigned i) {
+  return collision_shapes_[i].get();
+}
 
-void Node::AddGeometry(ComplexShape2D&& geo) {
-  collision_shapes_.emplace_back(make_unique<ComplexShape2D>(geo));
+void Node::AddGeometry(ComplexShape2D geo) {
+  collision_shapes_.emplace_back(make_unique<ComplexShape2D>(std::move(geo)));
 }
 
 int Node::GetID() const { return id_; }
@@ -64,4 +51,4 @@ Vec2f Node::GetPosition() { return coordinate_.GetTranslation(); }
 void Node::SetPosition(const Vec2f& pos) { coordinate_.SetTranslation(pos); }
 
 void Node::Translate(const Vec2f& ds) { coordinate_.Translate(ds); }
-}
+}  // namespace diagrammar

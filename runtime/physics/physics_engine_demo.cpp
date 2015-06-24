@@ -1,6 +1,7 @@
+// Copyright 2015 Native Client authors
+#include <json/json.h>
 #include "physics_engine_demo.h"
 #include "world.h"
-#include <json/json.h>
 
 namespace diagrammar {
 // this engine is special in that it will directly modify
@@ -28,4 +29,4 @@ void PhysicsEngineDemo::Step() {
 void PhysicsEngineDemo::SendDataToWorld() {}
 
 void PhysicsEngineDemo::HandleEvents(const Json::Value&) {}
-}
+}  // namespace diagrammar

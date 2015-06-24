@@ -1,7 +1,6 @@
-// the geometry
-
-#ifndef GEOMETRY_GEOMETRY2_
-#define GEOMETRY_GEOMETRY2_
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_GEOMETRY_GEOMETRY2_H_
+#define RUNTIME_GEOMETRY_GEOMETRY2_H_
 #include <vector>
 #include "typedefs.h"
 
@@ -18,9 +17,11 @@ struct Triangle2D {
 class ComplexShape2D {
  public:
   ComplexShape2D() = default;
-  ComplexShape2D(const std::vector<Vec2f>& pts);
+  explicit ComplexShape2D(const std::vector<Vec2f>& pts);
   ComplexShape2D(const ComplexShape2D&) = default;
   ComplexShape2D(ComplexShape2D&&) = default;
+  ComplexShape2D& operator = (const ComplexShape2D&) = default;
+  ComplexShape2D& operator = (ComplexShape2D&&) = default;
   void SetPath(const std::vector<Vec2f>& pts);
   void SetHole(int i, const std::vector<Vec2f>& pts);
   void AddHole(const std::vector<Vec2f>& pts);
@@ -37,6 +38,6 @@ class ComplexShape2D {
   std::vector<std::vector<Vec2f> > holes_;
   std::vector<Vec2f> _Simplify(const std::vector<Vec2f>&);
 };
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_GEOMETRY_GEOMETRY2_H_

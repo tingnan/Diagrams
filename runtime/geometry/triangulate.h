@@ -1,5 +1,6 @@
-#ifndef GEOMETRY_TRIANGULATE_
-#define GEOMETRY_TRIANGULATE_
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_GEOMETRY_TRIANGULATE_H_
+#define RUNTIME_GEOMETRY_TRIANGULATE_H_
 #include <vector>
 #include "typedefs.h"
 
@@ -14,6 +15,6 @@ std::vector<Triangle2D> DelaunayTriangulation(
     const std::vector<Vec2f>& path,
     const std::vector<std::vector<Vec2f> >& holes);
 std::vector<Triangle2D> InflateAndTriangulate(const std::vector<Vec2f>& path);
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_GEOMETRY_TRIANGULATE_H_

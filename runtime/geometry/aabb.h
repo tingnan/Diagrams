@@ -1,5 +1,6 @@
-#ifndef GEOMETRY_AABB_
-#define GEOMETRY_AABB_
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_GEOMETRY_AABB_H_
+#define RUNTIME_GEOMETRY_AABB_H_
 
 #include <Eigen/Dense>
 #include <vector>
@@ -10,7 +11,8 @@ typedef struct AABB {
   Eigen::Vector2f upper_bound;
 } AABB;
 
-static AABB GetAABBWithPadding(const std::vector<Eigen::Vector2f>& closure, float pad_percent) {
+static AABB GetAABBWithPadding(const std::vector<Eigen::Vector2f>& closure,
+                               float pad_percent) {
   float xmin = closure[0](0);
   float xmax = closure[0](0);
   float ymin = closure[0](1);
@@ -23,7 +25,8 @@ static AABB GetAABBWithPadding(const std::vector<Eigen::Vector2f>& closure, floa
   }
 
   AABB bound;
-  Eigen::Vector2f padding(pad_percent * (xmax - xmin), pad_percent * (ymax - ymin));
+  Eigen::Vector2f padding(pad_percent * (xmax - xmin),
+                          pad_percent * (ymax - ymin));
   bound.lower_bound(0) = xmin;
   bound.lower_bound(1) = ymin;
   bound.lower_bound -= padding;
@@ -31,6 +34,6 @@ static AABB GetAABBWithPadding(const std::vector<Eigen::Vector2f>& closure, floa
   bound.upper_bound(1) = ymax;
   bound.upper_bound += padding;
   return bound;
-}
-}
-#endif
+} 
+}  // namespace diagrammar
+#endif  // RUNTIME_GEOMETRY_AABB_H_

@@ -1,19 +1,20 @@
-#ifndef PHYSICS_PHYSICS_ENGINE_
-#define PHYSICS_PHYSICS_ENGINE_
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_PHYSICS_PHYSICS_ENGINE_H_
+#define RUNTIME_PHYSICS_PHYSICS_ENGINE_H_
 
 #include <vector>
-
 namespace Json {
 class Value;
-}
+}  // namespace Json
 
 namespace diagrammar {
 // this is a base class that is supposed to be overload
 class Node;
 class PhysicsEngine {
  public:
-  PhysicsEngine(class World& world) : world_(world) {}
-  PhysicsEngine(PhysicsEngine&) = delete;
+  explicit PhysicsEngine(class World& world) : world_(world) {}
+  PhysicsEngine(const PhysicsEngine&) = delete;
+  PhysicsEngine(PhysicsEngine&&) = default;
   virtual ~PhysicsEngine() {}
   // step the internal world
   virtual void Step() = 0;
@@ -26,6 +27,6 @@ class PhysicsEngine {
   // maintain a reference layer
   class World& world_;
 };
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_PHYSICS_PHYSICS_ENGINE_H_

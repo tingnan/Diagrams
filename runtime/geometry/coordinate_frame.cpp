@@ -1,4 +1,5 @@
-#include "coordinate_frame.h"
+// Copyright 2015 Native Client authors
+#include "geometry/coordinate_frame.h"
 
 namespace diagrammar {
 CoordinateFrame2D::CoordinateFrame2D() {
@@ -68,4 +69,4 @@ Eigen::Rotation2Df CoordinateFrame2D::GetRotation() {
   tmp.fromRotationMatrix(frame_.linear());
   return tmp;
 }
-}
+}  // namespace diagrammar

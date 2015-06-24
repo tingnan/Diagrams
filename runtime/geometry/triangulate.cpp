@@ -1,18 +1,26 @@
-#include "triangulate.h"
-#include "geometry2.h"
-#include "poly2tri/poly2tri.h"
-#include "polyclipping/clipper.hpp"
-#include "aabb.h"
+// Copyright 2015 Native Client authors
 #include <stack>
 #include <iostream>
+#include <utility>
+#include <algorithm>
+#include <vector>
+#include "geometry/triangulate.h"
+#include "geometry/geometry2.h"
+#include "poly2tri/poly2tri.h"
+#include "polyclipping/clipper.hpp"
+#include "geometry/aabb.h"
 
 namespace {
 // maybe we have a template class
-inline double dot(const diagrammar::Vec2f& a, diagrammar::Vec2f& b) { return a.adjoint() * b; }
+inline double dot(const diagrammar::Vec2f& a, const diagrammar::Vec2f& b) {
+  return a.adjoint() * b;
+}
 
 // the dist is between the segment [st, ed] and the point pt
 // use double precision to prevent overflow (though not likely to happen)
-double SqrdEuclideanDist(const diagrammar::Vec2f& bg, const diagrammar::Vec2f& ed, const diagrammar::Vec2f& pt) {
+double SqrdEuclideanDist(const diagrammar::Vec2f& bg,
+                         const diagrammar::Vec2f& ed,
+                         const diagrammar::Vec2f& pt) {
   // first we check the projection from pt to [st, end];
   diagrammar::Vec2f seg = ed - bg;
   diagrammar::Vec2f pt2bg = pt - bg;
@@ -36,11 +44,13 @@ double SqrdEuclideanDist(const diagrammar::Vec2f& bg, const diagrammar::Vec2f& e
 const float kUScale = 1000.f;
 const float kDScale = 0.001f;
 
-std::vector<p2t::Point> CleanPolygon(const std::vector<diagrammar::Vec2f>& path) {
+std::vector<p2t::Point> CleanPolygon(
+    const std::vector<diagrammar::Vec2f>& path) {
   ClipperLib::Path scaled_path;
   scaled_path.reserve(path.size());
   for (const auto& pt : path) {
-    scaled_path.emplace_back(ClipperLib::IntPoint(pt(0) * kUScale, pt(1) * kUScale));
+    scaled_path.emplace_back(
+        ClipperLib::IntPoint(pt(0) * kUScale, pt(1) * kUScale));
   }
   ClipperLib::CleanPolygon(scaled_path);
   std::vector<p2t::Point> out;
@@ -51,7 +61,8 @@ std::vector<p2t::Point> CleanPolygon(const std::vector<diagrammar::Vec2f>& path)
   return out;
 }
 
-std::vector<std::vector<p2t::Point> > CleanPolygon(const std::vector<std::vector<diagrammar::Vec2f> >& paths) {
+std::vector<std::vector<p2t::Point> > CleanPolygon(
+    const std::vector<std::vector<diagrammar::Vec2f> >& paths) {
   std::vector<std::vector<p2t::Point> > out;
   out.reserve(paths.size());
   for (const auto& path : paths) {
@@ -59,16 +70,15 @@ std::vector<std::vector<p2t::Point> > CleanPolygon(const std::vector<std::vector
   }
   return out;
 }
-
-}
+}  // namespace
 
 namespace diagrammar {
 
 // Time complexity NlogN like quick sort, worst case is O(N^2)
 // this is a recursive algorithm.
-void PolylineDouglasPeuckerRecursive(
-    const size_t bg, const size_t ed, const std::vector<Vec2f>& in, float tol,
-    std::vector<bool>& out) {
+void PolylineDouglasPeuckerRecursive(const size_t bg, const size_t ed,
+                                     const std::vector<Vec2f>& in, float tol,
+                                     std::vector<bool>* out) {
   if (bg == ed - 1) return;
   double maxDist = 0;
   size_t mid = bg + 1;
@@ -89,14 +99,14 @@ void PolylineDouglasPeuckerRecursive(
   } else {
     // disgard every point between bg and ed
     for (size_t i = bg + 1; i < ed; ++i) {
-      out[i] = false;
+      (*out)[i] = false;
     }
   }
 }
 
 // the iterative version
-std::vector<Vec2f> PolylineDouglasPeuckerIterative(
-    const std::vector<Vec2f>& in, float mTol) {
+std::vector<Vec2f> PolylineDouglasPeuckerIterative(const std::vector<Vec2f>& in,
+                                                   float mTol) {
   if (in.size() <= 2) {
     return in;
   }
@@ -194,8 +204,7 @@ std::vector<Triangle2D> DelaunaySweepline(
   return out;
 }
 
-std::vector<Vec2f> Simplify(const std::vector<Vec2f>& in,
-                                           PolylineMethod m) {
+std::vector<Vec2f> Simplify(const std::vector<Vec2f>& in, PolylineMethod m) {
   if (in.size() <= 2) {
     return in;
   }
@@ -207,8 +216,7 @@ std::vector<Vec2f> Simplify(const std::vector<Vec2f>& in,
     float relTol = 5e-3;
     float tol = std::max(span(0), span(1)) * relTol;
     out = PolylineDouglasPeuckerIterative(in, tol);
-  }
-  else {
+  } else {
     // only one method implemented
     assert(0);
   }
@@ -245,8 +253,7 @@ int PointInCircumcenter(const Vec2f& a, const Vec2f& b, const Vec2f& c,
   return -1;
 }
 
-std::vector<Triangle2D> DelaunayTriangulation(
-    const std::vector<Vec2f>& path) {
+std::vector<Triangle2D> DelaunayTriangulation(const std::vector<Vec2f>& path) {
   return DelaunaySweepline(path, nullptr);
 }
 
@@ -256,11 +263,7 @@ std::vector<Triangle2D> DelaunayTriangulation(
   return DelaunaySweepline(path, &holes);
 }
 
-
-
-
-std::vector<Triangle2D> InflateAndTriangulate(
-    const std::vector<Vec2f>& path) {
+std::vector<Triangle2D> InflateAndTriangulate(const std::vector<Vec2f>& path) {
   // clipper only works on integer points
   ClipperLib::Path in(path.size());
 
@@ -281,7 +284,7 @@ std::vector<Triangle2D> InflateAndTriangulate(
   // one out path
   assert(inflated.size() == 1);
   std::vector<Vec2f> pts(inflated[0].size());
-  
+
   for (size_t i = 0; i < pts.size(); ++i) {
     pts[i](0) = inflated[0][i].X;
     pts[i](1) = inflated[0][i].Y;
@@ -296,4 +299,4 @@ std::vector<Triangle2D> InflateAndTriangulate(
   }
   return out;
 }
-}
+}  // namespace diagrammar

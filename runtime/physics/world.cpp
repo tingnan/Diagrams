@@ -1,16 +1,16 @@
-#include "world.h"
-#include "utility/world_parser.h"
-#include "physics_engine_demo.h"
-#include "physics_engine_liquidfun.h"
-#include "geometry/aabb.h"
+// Copyright 2015 Native Client authors
 #include <random>
-#include <json/json.h>
 #include <iostream>
 #include <algorithm>
+#include <json/json.h>
+#include "physics/world.h"
+#include "utility/world_parser.h"
+#include "physics/physics_engine_demo.h"
+#include "physics/physics_engine_liquidfun.h"
+
 namespace diagrammar {
 
-World::World() {
-}
+World::World() {}
 
 void World::_ConstructWorldFromDescriptor(const Json::Value& world) {
   // using the WorldDescptor to construct the initial world
@@ -18,20 +18,22 @@ void World::_ConstructWorldFromDescriptor(const Json::Value& world) {
   Json::Value::const_iterator itr = world.begin();
   for (; itr != world.end(); ++itr) {
     if (itr.key().asString() == "transform") {
-      coordinate_ = ParseTransformation2D(*itr);
+      coordinate_ = CoordinateFrame2D(ParseTransformation2D(*itr));
       // std::cout << mWorldTransformation.GetTransform().matrix() << std::endl;
     }
     if (itr.key().asString() == "children") {
       Json::Value::const_iterator child_itr = (*itr).begin();
       for (; child_itr != (*itr).end(); ++child_itr) {
-        Node * ptr = AddNode(ParseNode(*child_itr));
+        Node* ptr = AddNode(ParseNode(*child_itr));
       }
     }
   }
+}
 
-  // test to add a dummy node
-  // mCustomObjects.emplace_back(make_unique<PhysicsObject>(*mCustomObjects[0]));
-  // mCustomObjects.back()->SetPosition(Vec2f(600, 0));
+World::~World() {
+  if (physics_engine_) {
+    delete physics_engine_;
+  }
 }
 
 void World::InitializeWorldDescription(const Json::Value& world) {
@@ -51,9 +53,7 @@ void World::InitializePhysicsEngine(EngineType t) {
   world_state_ |= WorldStateFlag::kEngineReady;
 }
 
-void World::InitializeTimer() {
-  timer_.Initialize();
-}
+void World::InitializeTimer() { timer_.Initialize(); }
 
 void World::Step() {
   // threaded support, handle the stepping in another thread
@@ -71,15 +71,18 @@ void World::Step() {
     step_time_.push_back((after_step - before_step) / num_ticks);
     if (step_time_.size() > 200) {
       step_time_.pop_front();
-    }  
+    }
   }
 
   if (timer_.ticks() % 200 == 0 && timer_.ticks() > 0) {
-    std::cerr << "200 counts: " ;
+    std::cerr << "200 counts: ";
     auto result = std::minmax_element(step_time_.begin(), step_time_.end());
     std::cerr << "min: " << *result.first << " ms ";
     std::cerr << "max: " << *result.second << " ms ";
-    std::cerr << "mean: " << std::accumulate(step_time_.begin(), step_time_.end(), 0.0) / step_time_.size() << " ms\n";
+    std::cerr << "mean: "
+              << std::accumulate(step_time_.begin(), step_time_.end(), 0.0) /
+                     step_time_.size()
+              << " ms\n";
   }
 
   physics_engine_->SendDataToWorld();
@@ -116,8 +119,7 @@ Node* World::AddNode() {
 }
 
 Node* World::GetNodeByIndex(int i) const {
-  if (i < nodes_.size())
-    return nodes_[i].get();
+  if (i < nodes_.size()) return nodes_[i].get();
   return nullptr;
 }
 
@@ -128,9 +130,7 @@ Node* World::GetNodeByID(int id) const {
   return nullptr;
 }
 
-size_t World::GetNumNodes() const {
-  return nodes_.size();
-}
+size_t World::GetNumNodes() const { return nodes_.size(); }
 
 float World::time_step() const { return timer_.tick_time(); }
 
@@ -140,4 +140,4 @@ float World::simulation_time() const {
   return timer_.ticks() * timer_.tick_time();
 }
 
-}
+}  // namespace diagrammar

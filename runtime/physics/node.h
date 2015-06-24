@@ -1,9 +1,11 @@
-#ifndef PHYSICS_NODE__
-#define PHYSICS_NODE__
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_PHYSICS_NODE_H_
+#define RUNTIME_PHYSICS_NODE_H_
 
+#include <memory>
+#include <vector>
 #include "geometry/geometry2.h"
 #include "geometry/coordinate_frame.h"
-#include <memory>
 
 namespace diagrammar {
 
@@ -16,19 +18,19 @@ class Node {
     // in its fixed frame;
     Eigen::Matrix3f inertiaMatrix = Eigen::Matrix3f::Identity();
   };
- 
+
   Node();
-  Node(const Node&);
-  Node& operator=(const Node&);
+  Node(const Node&) = delete;
+  Node& operator=(const Node&) = delete;
   Node(Node&&) = default;
   Node& operator=(Node&&) = default;
   // using the move stuff
-  Node(ComplexShape2D geo);
+  explicit Node(ComplexShape2D geo);
 
   // manipulate geometry
   const ComplexShape2D* GetGeometry(unsigned) const;
   ComplexShape2D* GetGeometry(unsigned);
-  void AddGeometry(ComplexShape2D&& geo);
+  void AddGeometry(ComplexShape2D geo);
   unsigned GetGeometryCount() const { return collision_shapes_.size(); }
 
   // get unique id
@@ -40,9 +42,9 @@ class Node {
   // get coordinate information
   float GetRotationAngle();
   Mat2f GetRotationMatrix();
-  void SetRotationAngle(float);
+  void SetRotationAngle(float angle);
   void SetRotationMatrix(const Mat2f&);
-  void Rotate(float);
+  void Rotate(float angle);
   Vec2f GetPosition();
   void SetPosition(const Vec2f&);
   void Translate(const Vec2f&);
@@ -60,8 +62,8 @@ class Node {
   int id_ = 0xffffffff;
   // the collision filtering ID, used for broad phase collision filtering only
   int collision_group_id_;
-
 };
-}
 
-#endif
+}  // namespace diagrammar
+
+#endif  // RUNTIME_PHYSICS_NODE_H_

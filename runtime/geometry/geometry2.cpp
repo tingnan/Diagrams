@@ -1,6 +1,9 @@
-#include "geometry2.h"
-#include "triangulate.h"
+// Copyright 2015 Native Client authors
 #include <iostream>
+#include <vector>
+#include "geometry/geometry2.h"
+#include "geometry/triangulate.h"
+
 namespace diagrammar {
 
 ComplexShape2D::ComplexShape2D(const std::vector<Vec2f>& pts) {
@@ -27,7 +30,8 @@ std::vector<Triangle2D> ComplexShape2D::Triangulate() const {
   return InflateAndTriangulate(path_);
 }
 
-inline std::vector<Vec2f> ComplexShape2D::_Simplify(const std::vector<Vec2f>& in) {
+inline std::vector<Vec2f> ComplexShape2D::_Simplify(
+    const std::vector<Vec2f>& in) {
   return Simplify(in);
 }
 
@@ -45,8 +49,6 @@ void ComplexShape2D::SetPathClosed(bool flag) {
     holes_.clear();
   }
   is_closed_ = flag;
-  // we also want to send out notifications to the drawer
-  // TO DO
 }
 
-}
+}  // namespace diagrammar
