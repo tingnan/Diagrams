@@ -1,8 +1,9 @@
-#ifndef NACL_NACL_DRAWER_
-#define NACL_NACL_DRAWER_
+// Copyright 2015 Native Client authors
+#ifndef RUNTIME_NACL_NACL_DRAWER_
+#define RUNTIME_NACL_NACL_DRAWER_
 
-#include <GLES2/gl2.h>
 #include "physics/world.h"
+#include <GLES2/gl2.h>
 
 namespace diagrammar {
 // currently I am not going to polute other
@@ -20,6 +21,7 @@ class NaClDrawer {
   NaClDrawer(NaClDrawer&&) = default;
   void Draw();
  private:
+  const World& world_;
   void LoadShaders();
   // generate vao and vbo for boundary path
   void GenPathBuffers();
@@ -29,7 +31,6 @@ class NaClDrawer {
   void DrawPaths();
   void DrawPolygons();
 
-  const World& world_;
   GLuint program_id_;
   std::vector<GLuint> path_vert_vbo_;
   std::vector<GLuint> path_vert_size_;
@@ -41,6 +42,6 @@ class NaClDrawer {
   std::vector<GLuint> poly_color_vbo_;
   std::vector<Node*> poly_node_;
 };
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_NACL_NACL_DRAWER_
