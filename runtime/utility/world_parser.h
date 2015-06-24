@@ -1,12 +1,13 @@
-#ifndef UTILITY_WORLD_PARSER_
-#define UTILITY_WORLD_PARSER_
+// Copyright 2015 Native Client Authors.
+#ifndef RUNTIME_UTILITY_WORLD_PARSER_H_
+#define RUNTIME_UTILITY_WORLD_PARSER_H_
 
 #include <string>
 #include <physics/node.h>
 
 namespace Json {
 class Value;
-}
+}  // namespace Json
 
 namespace diagrammar {
 // open a file and make a string out of its content
@@ -19,6 +20,6 @@ Isometry2f ParseTransformation2D(const Json::Value& transformobj);
 std::vector<Vector2f> ParsePath2D(const Json::Value& pathobj);
 // parse a node;
 Node ParseNode(const Json::Value& nodeobj);
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_UTILITY_WORLD_PARSER_H_

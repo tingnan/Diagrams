@@ -1,6 +1,7 @@
 // Copyright 2015 Native Client authors
 #include <random>
 #include <iostream>
+#include <vector>
 #include "Box2D/Box2D.h"
 #include "physics/physics_engine_liquidfun.h"
 #include "physics/world.h"

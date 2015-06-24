@@ -58,7 +58,9 @@ class World {
   // create a node from another
   Node* AddNode(Node);
   size_t GetNumNodes() const;
+  // get a ptr to a node by unique id
   Node* GetNodeByID(int id) const;
+  // get a ptr to a node by index (only for interating purpose) 
   Node* GetNodeByIndex(int index) const;
 
  private:
@@ -82,11 +84,9 @@ class World {
   // world frame
   CoordinateFrame2D coordinate_;
 
-  // the vector that contains all the custom physics objects in the world
-  // the vector includes objects created using json file, or later from JS
-  // the vector DO NOT contain pinballs, which should be efficiently handled
-  // using ObjectBatch class;
+  // all the nodes in the world
   std::vector<std::unique_ptr<Node> > nodes_;
+  // a lookup table for quick access by unique id
   std::unordered_map<int, Node*> node_table_;
   // Timer that controls the simulation
   Timer timer_;

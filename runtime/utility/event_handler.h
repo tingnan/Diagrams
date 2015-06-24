@@ -1,5 +1,6 @@
-#ifndef UTILITY_EVENTHANDLER_
-#define UTILITY_EVENTHANDLER_
+// Copyright 2015 Native Client Authors.
+#ifndef RUNTIME_UTILITY_EVENTHANDLER_H_
+#define RUNTIME_UTILITY_EVENTHANDLER_H_
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -17,8 +18,9 @@ class ThreadSafeQueue {
  public:
   void push(EventType data);
   EventType wait_and_pop();
+  // potential of racing
   EventType try_pop();
 };
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_UTILITY_EVENTHANDLER_H_

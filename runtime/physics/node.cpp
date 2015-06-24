@@ -22,15 +22,15 @@ void Node::AddGeometry(ComplexShape2D geo) {
   collision_shapes_.emplace_back(make_unique<ComplexShape2D>(std::move(geo)));
 }
 
-int Node::GetID() const { return id_; }
+int Node::id() const { return id_; }
 
-void Node::SetID(int id) { id_ = id; }
+void Node::set_id(int id) { id_ = id; }
 
-int Node::GetCollisionGroupID() const { return collision_group_id_; }
+int Node::collision_group_id() const { return collision_group_id_; }
 
-void Node::SetCollisionGroupID(int id) { collision_group_id_ = id; }
+void Node::set_collision_group_id(int id) { collision_group_id_ = id; }
 
-float Node::GetRotationAngle() { return coordinate_.GetRotation().angle(); }
+float Node::GetRotationAngle() const { return coordinate_.GetRotationAngle(); }
 
 void Node::SetRotationAngle(float a) { coordinate_.SetRotation(Rotation2f(a)); }
 
@@ -38,13 +38,13 @@ void Node::SetRotationMatrix(const Matrix2f& rotmat) {
   coordinate_.SetRotation(rotmat);
 }
 
-Matrix2f Node::GetRotationMatrix() {
-  return coordinate_.GetRotation().matrix();
+Matrix2f Node::GetRotationMatrix() const {
+  return coordinate_.GetRotationMatrix();
 }
 
 void Node::Rotate(float a) { coordinate_.Rotate(Rotation2f(a)); }
 
-Vector2f Node::GetPosition() { return coordinate_.GetTranslation(); }
+Vector2f Node::GetPosition() const { return coordinate_.GetTranslation(); }
 
 void Node::SetPosition(const Vector2f& pos) { coordinate_.SetTranslation(pos); }
 

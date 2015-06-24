@@ -1,7 +1,7 @@
 // Copyright 2015 Native Client authors
 #include <json/json.h>
-#include "physics_engine_demo.h"
-#include "world.h"
+#include "physics/physics_engine_demo.h"
+#include "physics/world.h"
 
 namespace diagrammar {
 // this engine is special in that it will directly modify

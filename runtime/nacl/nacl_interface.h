@@ -1,5 +1,5 @@
-#ifndef NACL_NACL_INTERFACE_
-#define NACL_NACL_INTERFACE_
+#ifndef RUNTIME_NACL_NACL_INTERFACE_H_
+#define RUNTIME_NACL_NACL_INTERFACE_H_
 
 #include "physics/world.h"
 #include "ppapi/cpp/instance.h"
@@ -33,11 +33,12 @@ class DiagrammarModule : public pp::Module {
   virtual ~DiagrammarModule();
   virtual ::pp::Instance* CreateInstance(PP_Instance instance);
 };
-}
+}  // namespace diagrammar
 
 namespace pp {
 
 Module* CreateModule();
 
 }  // namespace pp
-#endif
+
+#endif  // RUNTIME_NACL_NACL_INTERFACE_H_

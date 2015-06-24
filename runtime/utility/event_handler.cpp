@@ -1,4 +1,5 @@
-#include "event_handler.h"
+// Copyright 2015 Native Client Authors.
+#include "utility/event_handler.h"
 
 namespace diagrammar {
 
@@ -32,4 +33,5 @@ EventType ThreadSafeQueue<EventType, QueueType>::try_pop() {
   queue_.pop();
   return tmp;
 }
-}
+
+}  // namespace diagrammar

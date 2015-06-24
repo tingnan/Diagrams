@@ -22,7 +22,7 @@ TEST_F(CoordinateFrame2DTest, TranslateRotateOrder) {
 
   // the indernal order
   mFrameInternal.translate(disp).translate(disp).rotate(rot).rotate(rot);
-  diagrammar::Matrix2f diff = mFrameInternal.linear() - coordinate_.GetRotation().matrix();
+  diagrammar::Matrix2f diff = mFrameInternal.linear() - coordinate_.GetRotationMatrix();
   ASSERT_LE(abs(diff(0, 0)), FLOAT_ROUNDOFF);
   ASSERT_LE(abs(diff(0, 1)), FLOAT_ROUNDOFF);
   ASSERT_LE(abs(diff(1, 0)), FLOAT_ROUNDOFF);
@@ -32,7 +32,7 @@ TEST_F(CoordinateFrame2DTest, TranslateRotateOrder) {
   // prerotate and pretranslate
   mFrameInternal.prerotate(rot).prerotate(rot).pretranslate(disp).pretranslate(
       disp);
-  diff = mFrameInternal.linear() - coordinate_.GetRotation().matrix();
+  diff = mFrameInternal.linear() - coordinate_.GetRotationMatrix();
   ASSERT_LE(abs(diff(0, 0)), FLOAT_ROUNDOFF);
   ASSERT_LE(abs(diff(0, 1)), FLOAT_ROUNDOFF);
   ASSERT_LE(abs(diff(1, 0)), FLOAT_ROUNDOFF);

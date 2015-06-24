@@ -41,22 +41,28 @@ class CoordinateFrame2D {
 
   void RotateAboutParentCenter(const Matrix2f& rotmat);
   void RotateAboutParentCenter(const Rotation2f& rot);
-  // utility methods acting on vectors according to the coordinate
-  // transformation
+
+  // provide a vector in the local frame, get the transformed vector
+  // in the parent frame
   Vector2f TransformVector(const Vector2f& vec) const;
-
+  // provide a vector in the parent frame and get the trasformed vector
+  // in the local frame
   Vector2f InverseTransformVector(const Vector2f& vec) const;
-
-  // give the coordinate in the parent frame
+  // transform a point from local to parent frame
   Vector2f TransformPoint(const Vector2f& vec) const;
-  // transform the coordinate from the parent to local
+  // transform the point from the parent to local frame
   Vector2f InverseTransformPoint(const Vector2f& vec) const;
 
-  Vector2f GetTranslation();
-  Rotation2f GetRotation();
+  // get the translation of the frame (relative to the parent frame)
+  Vector2f GetTranslation() const;
+  // get the rotation angle of the frame (relative to the parent frame)
+  float GetRotationAngle() const;
+  // get the rotatio matrix
+  Matrix2f GetRotationMatrix() const;
 
  private:
   // our coordinate frame can be treated as a isometry
+  // 3x3 matrix
   Isometry2f frame_;
 };
 }  // namespace diagrammar

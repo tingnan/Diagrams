@@ -18,13 +18,16 @@ class Node {
     // in its fixed frame;
     Matrix3f inertiaMatrix = Matrix3f::Identity();
   };
-
+  // default constructor
   Node();
+  // copy constructor and copy assignment
+  // not yet implemented, need to deal with unique_ptr
   Node(const Node&) = delete;
   Node& operator=(const Node&) = delete;
+  // default
   Node(Node&&) = default;
   Node& operator=(Node&&) = default;
-  // using the move stuff
+  // internally using std::move(geo) to account for rvalue
   explicit Node(ComplexShape2D geo);
 
   // manipulate geometry
@@ -33,23 +36,25 @@ class Node {
   void AddGeometry(ComplexShape2D geo);
   unsigned GetGeometryCount() const { return collision_shapes_.size(); }
 
-  // get unique id
-  int GetID() const;
-  void SetID(int id);
-  int GetCollisionGroupID() const;
-  void SetCollisionGroupID(int id);
+  // unique id
+  int id() const;
+  void set_id(int id);
+  // the collision group
+  int collision_group_id() const;
+  void set_collision_group_id(int id);
 
   // get coordinate information
-  float GetRotationAngle();
-  Matrix2f GetRotationMatrix();
+  float GetRotationAngle() const;
+  Matrix2f GetRotationMatrix() const;
   void SetRotationAngle(float angle);
   void SetRotationMatrix(const Matrix2f&);
   void Rotate(float angle);
-  Vector2f GetPosition();
+  Vector2f GetPosition() const;
   void SetPosition(const Vector2f&);
   void Translate(const Vector2f&);
 
  private:
+  void Clone() const;
   // Geometry: note, we may allow composite geometries
   // we can have a vector of collisionshapes
   // attached to the same PhysicsObject

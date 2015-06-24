@@ -60,11 +60,18 @@ Vector2f CoordinateFrame2D::InverseTransformPoint(const Vector2f& vec) const {
   return frame_.inverse() * vec;
 }
 
-Vector2f CoordinateFrame2D::GetTranslation() { return frame_.translation(); }
+Vector2f CoordinateFrame2D::GetTranslation() const {
+  return frame_.translation();
+}
 
-Rotation2f CoordinateFrame2D::GetRotation() {
+float CoordinateFrame2D::GetRotationAngle() const {
   Rotation2f tmp = Rotation2f::Identity();
   tmp.fromRotationMatrix(frame_.linear());
-  return tmp;
+  return tmp.angle();
 }
+
+Matrix2f CoordinateFrame2D::GetRotationMatrix() const {
+  return frame_.linear();
+}
+
 }  // namespace diagrammar

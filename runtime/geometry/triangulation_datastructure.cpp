@@ -107,4 +107,4 @@ void MeshDataStructure::Flip(Simplex2D* f0, unsigned i) {
   if (vccwi->GetSimplex() == f1) vccwi->SetSimplex(f0);
   if (vccwj->GetSimplex() == f0) vccwj->SetSimplex(f1);
 }
-}
+}  // namespace diagrammar

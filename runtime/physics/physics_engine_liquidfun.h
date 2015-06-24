@@ -2,9 +2,6 @@
 #ifndef RUNTIME_PHYSICS_PHYSICS_ENGINE_LIQUIDFUN_H_
 #define RUNTIME_PHYSICS_PHYSICS_ENGINE_LIQUIDFUN_H_
 
-// the demo physics engine
-// can only do a few predefined stuff for now
-
 #include "physics/physics_engine.h"
 class b2World;
 class b2Body;
@@ -35,7 +32,7 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   void AddChainsToBody(const class ComplexShape2D&, b2Body*);
 
   class b2World* b2world_;
-  // a default set of constant
+  // a default set of constants
   int velocity_iterations_ = 5;
   int position_iterations_ = 5;
   const float kScaleUp = 10;

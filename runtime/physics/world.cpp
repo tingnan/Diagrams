@@ -74,7 +74,7 @@ void World::Step() {
     }
   }
 
-  if (timer_.ticks() % 200 == 0 && timer_.ticks() > 0) {
+  if (timer_.accumulated_ticks() % 200 == 0 && timer_.accumulated_ticks() > 0) {
     std::cerr << "200 counts: ";
     auto result = std::minmax_element(step_time_.begin(), step_time_.end());
     std::cerr << "min: " << *result.first << " ms ";
@@ -92,8 +92,8 @@ void World::_GenerateID(Node* node_ptr) {
   std::random_device rd;
   std::mt19937 engine(rd());
   std::uniform_int_distribution<int> distro;
-  if (node_table_.find(node_ptr->GetID()) == node_table_.end()) {
-    node_table_.insert(std::make_pair(node_ptr->GetID(), node_ptr));
+  if (node_table_.find(node_ptr->id()) == node_table_.end()) {
+    node_table_.insert(std::make_pair(node_ptr->id(), node_ptr));
   } else {
     // try to generate a new id
     int id = distro(engine);
@@ -101,7 +101,7 @@ void World::_GenerateID(Node* node_ptr) {
       id = distro(engine);
     }
     // std::cout << id << std::endl;
-    node_ptr->SetID(id);
+    node_ptr->set_id(id);
     node_table_.insert(std::make_pair(id, node_ptr));
   }
 }
@@ -137,7 +137,7 @@ float World::time_step() const { return timer_.tick_time(); }
 float World::now() const { return timer_.now(); }
 
 float World::simulation_time() const {
-  return timer_.ticks() * timer_.tick_time();
+  return timer_.accumulated_ticks() * timer_.tick_time();
 }
 
 }  // namespace diagrammar

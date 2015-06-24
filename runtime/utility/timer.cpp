@@ -1,10 +1,11 @@
-#include "timer.h"
+// Copyright 2015 Native Client Authors.
 #include <iostream>
+#include "utility/timer.h"
 
 namespace {
 const std::chrono::milliseconds k050ms = std::chrono::milliseconds(50);
 const std::chrono::milliseconds k000ms = std::chrono::milliseconds(0);
-}
+}  // namespace
 
 namespace diagrammar {
 
@@ -47,8 +48,8 @@ double Timer::now() const {
   auto count = std::chrono::duration_cast<std::chrono::microseconds>(
                    std::chrono::high_resolution_clock::now() - init_time_)
                    .count();
-  return double(count) * 0.001;
+  return static_cast<double>(count) * 0.001;
 }
 
-int64_t Timer::ticks() const { return accu_ticks_; }
-}
+int64_t Timer::accumulated_ticks() const { return accu_ticks_; }
+}  // namespace diagrammar

@@ -1,8 +1,11 @@
-#include "world_parser.h"
-#include "geometry/aabb.h"
-#include <json/json.h>
+// Copyright 2015 Native Client Authors
 #include <iostream>
 #include <fstream>
+#include <vector>
+#include <string>
+#include <json/json.h>
+#include "utility/world_parser.h"
+#include "geometry/aabb.h"
 
 namespace diagrammar {
 std::string Stringify(const char* path) {
@@ -71,7 +74,7 @@ Node ParseNode(const Json::Value& nodeobj) {
   Json::Value::const_iterator itr = nodeobj.begin();
   for (; itr != nodeobj.end(); ++itr) {
     if (itr.key().asString() == "id") {
-      node.SetID((*itr).asInt());
+      node.set_id((*itr).asInt());
     }
 
     if (itr.key().asString() == "transform") {
@@ -107,10 +110,6 @@ Node ParseNode(const Json::Value& nodeobj) {
       node.AddGeometry(std::move(geo));
     }
   }
-  // once the geometry boundary is initilalized, we will also
-  // initilized the internal convexhull.
-  // TO DO;
-  //
   return node;
 }
-}
+}  // namespace diagrammar
