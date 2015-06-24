@@ -15,7 +15,7 @@ class PhysicsEngine {
   explicit PhysicsEngine(class World& world) : world_(world) {}
   PhysicsEngine(const PhysicsEngine&) = delete;
   PhysicsEngine(PhysicsEngine&&) = default;
-  virtual ~PhysicsEngine() {}
+  virtual ~PhysicsEngine() = default;
   // step the internal world
   virtual void Step() = 0;
   // update the world

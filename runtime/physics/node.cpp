@@ -5,6 +5,32 @@
 namespace diagrammar {
 Node::Node() {}
 
+Node::Node(const Node& rhs) :  
+  coordinate_(rhs.coordinate_),
+  properties_(rhs.properties_),
+  id_(rhs.id_),
+  collision_group_id_(rhs.collision_group_id_) {
+  // deep copy content of unique_ptr
+  collision_shapes_.reserve(rhs.collision_shapes_.size());
+  for (const auto& geo_ptr : rhs.collision_shapes_) {
+    collision_shapes_.emplace_back(make_unique<ComplexShape2D>(*geo_ptr));
+  }
+}
+
+Node& Node::operator = (Node rhs) {
+  swap(rhs);
+  return *this;
+}
+
+void Node::swap(Node& rhs) {
+  using std::swap;
+  swap(collision_group_id_, rhs.collision_group_id_);
+  swap(id_, rhs.id_);
+  swap(properties_, rhs.properties_);
+  swap(coordinate_, rhs.coordinate_);
+  swap(collision_shapes_, rhs.collision_shapes_);
+}
+
 Node::Node(ComplexShape2D geo) {
   collision_shapes_.emplace_back(make_unique<ComplexShape2D>(std::move(geo)));
 }

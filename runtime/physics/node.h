@@ -22,8 +22,8 @@ class Node {
   Node();
   // copy constructor and copy assignment
   // not yet implemented, need to deal with unique_ptr
-  Node(const Node&) = delete;
-  Node& operator=(const Node&) = delete;
+  Node(const Node&);
+  Node& operator=(Node);
   // default
   Node(Node&&) = default;
   Node& operator=(Node&&) = default;
@@ -54,7 +54,8 @@ class Node {
   void Translate(const Vector2f&);
 
  private:
-  void Clone() const;
+  // for asignment operator
+  void swap(Node& rhs);
   // Geometry: note, we may allow composite geometries
   // we can have a vector of collisionshapes
   // attached to the same PhysicsObject
