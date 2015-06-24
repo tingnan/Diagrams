@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_PHYSICSOBJ_
-#define _DIAGRAMMAR_PHYSICSOBJ_
+#ifndef PHYSICS_NODE__
+#define PHYSICS_NODE__
 
 #include "geometry/geometry2.h"
 #include "geometry/coordinate_frame.h"

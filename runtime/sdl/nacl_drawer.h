@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_NACLDRAW3D_
-#define _DIAGRAMMAR_NACLDRAW3D_
+#ifndef SDL_NACL_DRAWER_
+#define SDL_NACL_DRAWER_
 #include "physics/world.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H

@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMR_EVENTHANDLER_
-#define _DIAGRAMMR_EVENTHANDLER_
+#ifndef UTILITY_EVENTHANDLER_
+#define UTILITY_EVENTHANDLER_
 #include <thread>
 #include <mutex>
 #include <condition_variable>

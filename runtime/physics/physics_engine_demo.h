@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_PHYSICSENGINEDEMO_
-#define _DIAGRAMMAR_PHYSICSENGINEDEMO_
+#ifndef PHYSICS_PHYSICS_ENGINE_DEMO_
+#define PHYSICS_PHYSICS_ENGINE_DEMO_
 
 // the demo physics engine
 // can only do a few predefined stuff for now

@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMR_GAMETIMER_
-#define _DIAGRAMMR_GAMETIMER_
+#ifndef UTILITY_TIMER_
+#define UTILITY_TIMER_
 
 #include <utility>
 #include <chrono>

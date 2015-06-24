@@ -33,7 +33,7 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(World& world)
     AddNodeFromWorldToEngine(world_.GetNodeByIndex(i));
   }
 
-  if (true) {
+  {
     std::random_device rd;
     std::uniform_real_distribution<float> pos_distx(-25.f, 5.f);
     std::uniform_real_distribution<float> pos_disty(5.f, 10.f);

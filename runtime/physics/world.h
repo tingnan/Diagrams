@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_WORLD_
-#define _DIAGRAMMAR_WORLD_
+#ifndef PHYSICS_WORLD_
+#define PHYSICS_WORLD_
 
 #include "utility/timer.h"
 #include "utility/stl_memory.h"

@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_SDL_INTERFACE_
-#define _DIAGRAMMAR_SDL_INTERFACE_
+#ifndef SDL_SDL_INTERFACE_
+#define SDL_SDL_INTERFACE_
 #include <memory>
 class SDL_Window;
 namespace diagrammar {

@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_PHYSICSENGINE_LIQUIDFUN_
-#define _DIAGRAMMAR_PHYSICSENGINE_LIQUIDFUN_
+#ifndef PHYSICS_PHYSICS_ENGINE_LIQUIDFUN_
+#define PHYSICS_PHYSICS_ENGINE_LIQUIDFUN_
 
 // the demo physics engine
 // can only do a few predefined stuff for now

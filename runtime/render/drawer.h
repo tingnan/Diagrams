@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_DRAW_
-#define _DIAGRAMMAR_DRAW_
+#ifndef RENDER_DRAWER_
+#define RENDER_DRAWER_
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>

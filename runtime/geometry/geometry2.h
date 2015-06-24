@@ -1,7 +1,7 @@
 // the geometry
 
-#ifndef _DIAGRAMMAR_GEOMETRY2D_
-#define _DIAGRAMMAR_GEOMETRY2D_
+#ifndef GEOMETRY_GEOMETRY2_
+#define GEOMETRY_GEOMETRY2_
 #include <vector>
 #include "typedefs.h"
 

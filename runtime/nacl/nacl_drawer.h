@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_NACLDRAW3D_
-#define _DIAGRAMMAR_NACLDRAW3D_
+#ifndef NACL_NACL_DRAWER_
+#define NACL_NACL_DRAWER_
 
 #include <GLES2/gl2.h>
 #include "physics/world.h"

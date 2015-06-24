@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_NACLINTERFACE_
-#define _DIAGRAMMAR_NACLINTERFACE_
+#ifndef NACL_NACL_INTERFACE_
+#define NACL_NACL_INTERFACE_
 
 #include "physics/world.h"
 #include "ppapi/cpp/instance.h"

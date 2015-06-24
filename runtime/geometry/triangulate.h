@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_TRIANGULATION_
-#define _DIAGRAMMAR_TRIANGULATION_
+#ifndef GEOMETRY_TRIANGULATE_
+#define GEOMETRY_TRIANGULATE_
 #include <vector>
 #include "typedefs.h"
 

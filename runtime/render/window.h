@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_GLAPP_
-#define _DIAGRAMMAR_GLAPP_
+#ifndef RENDER_WINDOW_
+#define RENDER_WINDOW_
 
 #include "drawer.h"
 #include <GLFW/glfw3.h>

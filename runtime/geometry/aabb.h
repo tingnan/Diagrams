@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_AABB_
-#define _DIAGRAMMAR_AABB_
+#ifndef GEOMETRY_AABB_
+#define GEOMETRY_AABB_
 
 #include <Eigen/Dense>
 #include <vector>

@@ -1,5 +1,5 @@
-#ifndef _DIAGRAMMAR_COORDINATEFRAME_
-#define _DIAGRAMMAR_COORDINATEFRAME_
+#ifndef GEOMETRY_COORDINATEFRAME_
+#define GEOMETRY_COORDINATEFRAME_
 #include "typedefs.h"
 #include <Eigen/Geometry>
 

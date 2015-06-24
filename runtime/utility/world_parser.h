@@ -1,3 +1,6 @@
+#ifndef UTILITY_WORLD_PARSER_
+#define UTILITY_WORLD_PARSER_
+
 #include <string>
 #include <physics/node.h>
 
@@ -18,3 +21,5 @@ std::vector<Vec2f> ParsePath2D(const Json::Value& pathobj);
 Node ParseNode(const Json::Value& nodeobj);
 
 }
+
+#endif
