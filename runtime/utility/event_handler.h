@@ -8,7 +8,7 @@
 namespace diagrammar {
 // the event queue template type
 template<typename EventType, template<typename> class QueueType = std::queue >
-class event_queue {
+class ThreadSafeQueue {
   std::mutex mutex_;
   std::condition_variable cvar_;
   QueueType<EventType> queue_;

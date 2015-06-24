@@ -15,18 +15,12 @@ struct Triangle2D {
   Vec2f p2;
 };
 
-class Geometry2D {
+class ComplexShape2D {
  public:
- private:
-  std::vector<Vec2f> path_;
-  bool is_closed_ = true;
-  std::vector<std::vector<Vec2f> > holes_;
-  std::vector<Vec2f> _Simplify(const std::vector<Vec2f>&);
- public:
-  Geometry2D() = default;
-  Geometry2D(const std::vector<Vec2f>& pts);
-  Geometry2D(const Geometry2D&) = default;
-  Geometry2D(Geometry2D&&) = default;
+  ComplexShape2D() = default;
+  ComplexShape2D(const std::vector<Vec2f>& pts);
+  ComplexShape2D(const ComplexShape2D&) = default;
+  ComplexShape2D(ComplexShape2D&&) = default;
   void SetPath(const std::vector<Vec2f>& pts);
   void SetHole(int i, const std::vector<Vec2f>& pts);
   void AddHole(const std::vector<Vec2f>& pts);
@@ -34,9 +28,14 @@ class Geometry2D {
   std::vector<Triangle2D> Triangulate() const;
   const std::vector<Vec2f>& GetPath() const;
   const std::vector<Vec2f>& GetHole(int i) const;
-  const std::vector<std::vector<Vec2f> >& GetHoles() const { return holes_; }
-  void SetPathClosed(bool flag) { is_closed_ = flag; }
+  const std::vector<std::vector<Vec2f> >& GetHoles() const;
+  void SetPathClosed(bool flag);
   bool IsPathClosed() const { return is_closed_; }
+ private:
+  std::vector<Vec2f> path_;
+  bool is_closed_ = true;
+  std::vector<std::vector<Vec2f> > holes_;
+  std::vector<Vec2f> _Simplify(const std::vector<Vec2f>&);
 };
 }
 

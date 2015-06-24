@@ -1,4 +1,4 @@
-#include "game_timer.h"
+#include "timer.h"
 #include <iostream>
 
 namespace {
@@ -8,9 +8,9 @@ const std::chrono::milliseconds k000ms = std::chrono::milliseconds(0);
 
 namespace diagrammar {
 
-GameTimer::GameTimer() {
+Timer::Timer() {
 }
-void GameTimer::Initialize() {
+void Timer::Initialize() {
   // is the time monotonic?
   init_time_ = std::chrono::high_resolution_clock::now();
   last_time_ = std::chrono::high_resolution_clock::now();
@@ -18,7 +18,7 @@ void GameTimer::Initialize() {
 }
 
 // this call takes less than 1 us to finish
-int32_t GameTimer::BeginNextFrame() {
+int32_t Timer::BeginNextFrame() {
   std::chrono::high_resolution_clock::time_point curr_time =
       std::chrono::high_resolution_clock::now();
   elap_time_ = std::chrono::duration_cast<TimeUnit>(curr_time - last_time_);
@@ -39,17 +39,17 @@ int32_t GameTimer::BeginNextFrame() {
 }
 
 // warning, must be in unit second
-double GameTimer::tick_time() const {
+double Timer::tick_time() const {
   std::chrono::duration<float> fs = tick_time_;
   return fs.count();
 }
 
-double GameTimer::now() const {
+double Timer::now() const {
   auto count = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - init_time_).count();
   return double(count) * 0.001;
 }
 
-int64_t GameTimer::ticks() const {
+int64_t Timer::ticks() const {
   return accu_ticks_;
 }
 

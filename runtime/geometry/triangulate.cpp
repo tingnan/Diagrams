@@ -6,7 +6,6 @@
 #include <stack>
 #include <iostream>
 
-
 namespace {
 // maybe we have a template class
 inline double dot(const diagrammar::Vec2f& a, diagrammar::Vec2f& b) { return a.adjoint() * b; }
@@ -28,16 +27,16 @@ double SqrdEuclideanDist(const diagrammar::Vec2f& bg, const diagrammar::Vec2f& e
     diagrammar::Vec2f pt2ed = pt - ed;
     return dot(pt2ed, pt2ed);
   }
-
   // the segment is degenerate!
   if (sqrdSegLength < 1.e-8) return dot(pt2bg, pt2bg);
 
   return dot(pt2bg, pt2bg) - projectLength * (projectLength / sqrdSegLength);
 }
 
+const float kUScale = 1000.f;
+const float kDScale = 0.001f;
+
 std::vector<p2t::Point> CleanPolygon(const std::vector<diagrammar::Vec2f>& path) {
-  static const float kUScale = 1000.f;
-  static const float kDScale = 0.001f;
   ClipperLib::Path scaled_path;
   scaled_path.reserve(path.size());
   for (const auto& pt : path) {
@@ -65,12 +64,9 @@ std::vector<std::vector<p2t::Point> > CleanPolygon(const std::vector<std::vector
 
 namespace diagrammar {
 
-
-Triangulation::Triangulation() {}
-
 // Time complexity NlogN like quick sort, worst case is O(N^2)
 // this is a recursive algorithm.
-void Triangulation::_PolylineDouglasPeuckerRecursive(
+void PolylineDouglasPeuckerRecursive(
     const size_t bg, const size_t ed, const std::vector<Vec2f>& in, float tol,
     std::vector<bool>& out) {
   if (bg == ed - 1) return;
@@ -87,8 +83,8 @@ void Triangulation::_PolylineDouglasPeuckerRecursive(
   // now we have the index of the maxDist point
   if (maxDist > tol * tol) {
     // we will continue in to subgroups
-    _PolylineDouglasPeuckerRecursive(bg, mid, in, tol, out);
-    _PolylineDouglasPeuckerRecursive(mid, ed, in, tol, out);
+    PolylineDouglasPeuckerRecursive(bg, mid, in, tol, out);
+    PolylineDouglasPeuckerRecursive(mid, ed, in, tol, out);
 
   } else {
     // disgard every point between bg and ed
@@ -99,7 +95,7 @@ void Triangulation::_PolylineDouglasPeuckerRecursive(
 }
 
 // the iterative version
-std::vector<Vec2f> Triangulation::_PolylineDouglasPeuckerIterative(
+std::vector<Vec2f> PolylineDouglasPeuckerIterative(
     const std::vector<Vec2f>& in, float mTol) {
   if (in.size() <= 2) {
     return in;
@@ -149,110 +145,7 @@ std::vector<Vec2f> Triangulation::_PolylineDouglasPeuckerIterative(
   return out;
 }
 
-std::vector<Vec2f> Triangulation::Simplify(const std::vector<Vec2f>& in,
-                                           PolylineMethod m) {
-  if (in.size() <= 2) {
-    return in;
-  }
-
-  std::vector<Vec2f> out;
-  if (PolylineMethod::kDouglasPeucker == m) {
-    AABB bound = GetAABB(in);
-    Vec2f span = bound.upper_bound - bound.lower_bound;
-    float relTol = 5e-3;
-    float tol = std::max(span(0), span(1)) * relTol;
-    out = _PolylineDouglasPeuckerIterative(in, tol);
-  }
-  // std::cout << "polyline simplified: " << in.size() << " : " << out.size()
-  //          << std::endl;
-  return out;
-}
-
-bool isApproxZero(float t) {
-  const float tol = 1e-8;
-  return fabs(t) < tol;
-}
-
-// checking for collinear/degenerate case
-int CounterClockwise(const Vec2f& a, const Vec2f& b, const Vec2f& c) {
-  Eigen::Vector3f atob(b(0) - a(0), b(1) - a(1), 0);
-  Eigen::Vector3f btoc(c(0) - b(0), c(1) - b(1), 0);
-  float crossProduct = atob.cross(btoc)(2);
-  if (isApproxZero(crossProduct)) return 0;
-  if (crossProduct > 0) return 1;
-  return -1;
-}
-
-// checking for collinear/degenerate case
-int PointInCircumcenter(const Vec2f& a, const Vec2f& b, const Vec2f& c,
-                        const Vec2f& p) {
-  // a, b, c in counter clockwise order!
-  if (!CounterClockwise(a, b, c)) exit(-1);
-
-  Eigen::Matrix4f Det;
-  Det << a(0), a(1), a.adjoint() * a, 1, b(0), b(1), b.adjoint() * b, 1, c(0),
-      c(1), c.adjoint() * c, 1, p(0), p(1), p.adjoint() * p, 1;
-  float determinant = Det.determinant();
-  if (isApproxZero(determinant)) return 0;
-  if (determinant > 0) return 1;
-  return -1;
-}
-
-std::vector<Triangle2D> Triangulation::DelaunayTriangulation(
-    const std::vector<Vec2f>& path) {
-  return _DelaunaySweepline(path, nullptr);
-}
-
-std::vector<Triangle2D> Triangulation::DelaunayTriangulation(
-    const std::vector<Vec2f>& path,
-    const std::vector<std::vector<Vec2f> >& holes) {
-  return _DelaunaySweepline(path, &holes);
-}
-
-
-
-
-std::vector<Triangle2D> Triangulation::InflateAndTriangulate(
-    const std::vector<Vec2f>& path) {
-  // clipper only works on integer points
-  static const float kUScale = 1000.f;
-  static const float kDScale = 0.001f;
-  ClipperLib::Path in(path.size());
-
-  for (size_t i = 0; i < in.size(); ++i) {
-    in[i].X = path[i](0) * kUScale;
-    in[i].Y = path[i](1) * kUScale;
-  }
-
-  // try to clean it first;
-  // now inflate
-  ClipperLib::ClipperOffset co;
-  co.AddPath(in, ClipperLib::JoinType::jtMiter,
-             ClipperLib::EndType::etOpenButt);
-  ClipperLib::Paths inflated;
-  co.Execute(inflated, 1.5 * kUScale);
-  // this is important: prevent p2t from failing
-  ClipperLib::CleanPolygons(inflated);
-  // one out path
-  assert(inflated.size() == 1);
-  std::vector<Vec2f> pts(inflated[0].size());
-  
-  for (size_t i = 0; i < pts.size(); ++i) {
-    pts[i](0) = inflated[0][i].X;
-    pts[i](1) = inflated[0][i].Y;
-  }
-
-  // finally, downscale the points
-  std::vector<Triangle2D> out = _DelaunaySweepline(pts, nullptr);
-  for (auto& tri : out) {
-    tri.p0 = tri.p0 * kDScale;
-    tri.p1 = tri.p1 * kDScale;
-    tri.p2 = tri.p2 * kDScale;
-  }
-  return out;
-}
-
-std::vector<Triangle2D> Triangulation::_DelaunaySweepline(
+std::vector<Triangle2D> DelaunaySweepline(
     const std::vector<Vec2f>& path,
     const std::vector<std::vector<Vec2f> >* holes) {
   assert(path.size() >= 3);
@@ -298,6 +191,109 @@ std::vector<Triangle2D> Triangulation::_DelaunaySweepline(
         Vec2f(triangles[i]->GetPoint(2)->x, triangles[i]->GetPoint(2)->y);
   }
 
+  return out;
+}
+
+std::vector<Vec2f> Simplify(const std::vector<Vec2f>& in,
+                                           PolylineMethod m) {
+  if (in.size() <= 2) {
+    return in;
+  }
+
+  std::vector<Vec2f> out;
+  if (PolylineMethod::kDouglasPeucker == m) {
+    AABB bound = GetAABBWithPadding(in, 5e-2);
+    Vec2f span = bound.upper_bound - bound.lower_bound;
+    float relTol = 5e-3;
+    float tol = std::max(span(0), span(1)) * relTol;
+    out = PolylineDouglasPeuckerIterative(in, tol);
+  }
+  else {
+    // only one method implemented
+    assert(0);
+  }
+  return out;
+}
+
+bool isApproxZero(float t) {
+  const float tol = 1e-8;
+  return fabs(t) < tol;
+}
+
+// checking for collinear/degenerate case
+int CounterClockwise(const Vec2f& a, const Vec2f& b, const Vec2f& c) {
+  Eigen::Vector3f atob(b(0) - a(0), b(1) - a(1), 0);
+  Eigen::Vector3f btoc(c(0) - b(0), c(1) - b(1), 0);
+  float crossProduct = atob.cross(btoc)(2);
+  if (isApproxZero(crossProduct)) return 0;
+  if (crossProduct > 0) return 1;
+  return -1;
+}
+
+// checking for collinear/degenerate case
+int PointInCircumcenter(const Vec2f& a, const Vec2f& b, const Vec2f& c,
+                        const Vec2f& p) {
+  // a, b, c in counter clockwise order!
+  if (!CounterClockwise(a, b, c)) exit(-1);
+
+  Eigen::Matrix4f Det;
+  Det << a(0), a(1), a.adjoint() * a, 1, b(0), b(1), b.adjoint() * b, 1, c(0),
+      c(1), c.adjoint() * c, 1, p(0), p(1), p.adjoint() * p, 1;
+  float determinant = Det.determinant();
+  if (isApproxZero(determinant)) return 0;
+  if (determinant > 0) return 1;
+  return -1;
+}
+
+std::vector<Triangle2D> DelaunayTriangulation(
+    const std::vector<Vec2f>& path) {
+  return DelaunaySweepline(path, nullptr);
+}
+
+std::vector<Triangle2D> DelaunayTriangulation(
+    const std::vector<Vec2f>& path,
+    const std::vector<std::vector<Vec2f> >& holes) {
+  return DelaunaySweepline(path, &holes);
+}
+
+
+
+
+std::vector<Triangle2D> InflateAndTriangulate(
+    const std::vector<Vec2f>& path) {
+  // clipper only works on integer points
+  ClipperLib::Path in(path.size());
+
+  for (size_t i = 0; i < in.size(); ++i) {
+    in[i].X = path[i](0) * kUScale;
+    in[i].Y = path[i](1) * kUScale;
+  }
+
+  // inflate
+  ClipperLib::ClipperOffset co;
+  co.AddPath(in, ClipperLib::JoinType::jtMiter,
+             ClipperLib::EndType::etOpenButt);
+  ClipperLib::Paths inflated;
+  // inflate by 1.5 pixels;
+  co.Execute(inflated, 1.5 * kUScale);
+  // this is important: prevent p2t from failing
+  ClipperLib::CleanPolygons(inflated);
+  // one out path
+  assert(inflated.size() == 1);
+  std::vector<Vec2f> pts(inflated[0].size());
+  
+  for (size_t i = 0; i < pts.size(); ++i) {
+    pts[i](0) = inflated[0][i].X;
+    pts[i](1) = inflated[0][i].Y;
+  }
+
+  // finally, downscale the points
+  std::vector<Triangle2D> out = DelaunaySweepline(pts, nullptr);
+  for (auto& tri : out) {
+    tri.p0 = tri.p0 * kDScale;
+    tri.p1 = tri.p1 * kDScale;
+    tri.p2 = tri.p2 * kDScale;
+  }
   return out;
 }
 }

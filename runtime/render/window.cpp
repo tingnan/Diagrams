@@ -8,9 +8,9 @@ Window::Window(int w, int h, const char* title) : drawer_(world_) {
 
   world_.InitializeWorldDescription("path_simple.json");
   world_.InitializePhysicsEngine();
-  drawer_._GenPathBuffers();
-  drawer_._GenPolyBuffers();
-  drawer_._LoadShaders();
+  drawer_.GenPathBuffers();
+  drawer_.GenPolyBuffers();
+  drawer_.LoadShaders();
 }
 
 void Window::_InitializeWindow(int w, int h, const char* title) {
@@ -54,7 +54,7 @@ void Window::MainLoop() {
     // mTimer.BeginNextFrame();
     glfwPollEvents();
     world_.Step();
-    drawer_._Draw();
+    drawer_.Draw();
     glfwSwapBuffers(glfw_window_);
   }
 }

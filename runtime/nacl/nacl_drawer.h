@@ -12,19 +12,13 @@ namespace diagrammar {
 // we have a drawer class that draws opengl primitives
 // the drawer class visit the world, examine the objects and the draw all things
 class NaClDrawer {
- private:
-  const World& world_;
-  GLuint program_id_;
-
-  std::vector<GLuint> path_vert_vbo_;
-  std::vector<GLuint> path_vert_size_;
-  std::vector<GLuint> path_color_vbo_;
-  std::vector<Node*> path_node_;
-
-  std::vector<GLuint> poly_vert_vbo_;
-  std::vector<GLuint> poly_vert_size_;
-  std::vector<GLuint> poly_color_vbo_;
-  std::vector<Node*> poly_node_;
+ public:
+  NaClDrawer(const World& world);
+  // not copyable
+  NaClDrawer(const NaClDrawer& other) = delete;
+  // can move
+  NaClDrawer(NaClDrawer&&) = default;
+  void Draw();
  private:
   void LoadShaders();
   // generate vao and vbo for boundary path
@@ -34,13 +28,18 @@ class NaClDrawer {
   // drawing
   void DrawPaths();
   void DrawPolygons();
- public:
-  NaClDrawer(const World& world);
-  // not copyable
-  NaClDrawer(const NaClDrawer& other) = delete;
-  // can move
-  NaClDrawer(NaClDrawer&&) = default;
-  void Draw();
+
+  const World& world_;
+  GLuint program_id_;
+  std::vector<GLuint> path_vert_vbo_;
+  std::vector<GLuint> path_vert_size_;
+  std::vector<GLuint> path_color_vbo_;
+  std::vector<Node*> path_node_;
+
+  std::vector<GLuint> poly_vert_vbo_;
+  std::vector<GLuint> poly_vert_size_;
+  std::vector<GLuint> poly_color_vbo_;
+  std::vector<Node*> poly_node_;
 };
 }
 

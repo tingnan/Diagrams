@@ -12,10 +12,6 @@ namespace diagrammar {
 // Translation * Rotation * v
 // This CoordinateFrame part needs precaution when modifying
 class CoordinateFrame2D {
- private:
-  // our coordinate frame can be treated as a isometry
-  Eigen::Isometry2f frame_;
-
  public:
   CoordinateFrame2D();
 
@@ -42,8 +38,6 @@ class CoordinateFrame2D {
 
   void RotateAboutParentCenter(const Mat2f& rotmat);
   void RotateAboutParentCenter(const Eigen::Rotation2Df& rot);
-
- public:
   // utility methods acting on vectors according to the coordinate
   // transformation
   Vec2f TransformVector(const Vec2f& vec) const;
@@ -57,6 +51,9 @@ class CoordinateFrame2D {
 
   Vec2f GetTranslation();
   Eigen::Rotation2Df GetRotation();
+ private:
+  // our coordinate frame can be treated as a isometry
+  Eigen::Isometry2f frame_;
 };
 }
 

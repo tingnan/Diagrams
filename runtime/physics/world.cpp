@@ -1,5 +1,5 @@
 #include "world.h"
-#include "utility/json_parser.h"
+#include "utility/world_parser.h"
 #include "physics_engine_demo.h"
 #include "physics_engine_liquidfun.h"
 #include "geometry/aabb.h"
@@ -40,7 +40,7 @@ void World::InitializeWorldDescription(const Json::Value& world) {
 }
 
 void World::InitializeWorldDescription(const char* file) {
-  Json::Value WorldDescriptor = ReadWorldFromFile(file);
+  Json::Value WorldDescriptor = CreateJsonObject(file);
   _ConstructWorldFromDescriptor(WorldDescriptor);
   world_state_ |= WorldStateFlag::kInitialized;
 }

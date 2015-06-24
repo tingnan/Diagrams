@@ -10,24 +10,6 @@ class b2Body;
 namespace diagrammar {
 // this is a base class that is supposed to be overload
 class PhysicsEngineLiquidFun : public PhysicsEngine {
- private:
-  class b2World* b2world_;
-  int kVelocityIterations = 5;
-  int kPositionIterations = 5;
-  float kScaleUp = 10;
-  float kScaleDown = 0.1f;
-  float kDensity = 1.f;
-  float kRestitution = 1.f;
-  float kFriction = 0.1;
-
- private:
-  //
-  void _AddNodeToEngine(Node* ref);
-  void _AddPolygonToBody(const class Geometry2D&, b2Body*);
-  //
-  void _AddShapeToWorld(b2Body*);
-  void _AddChainToBody(const class Geometry2D&, b2Body*);
-
  public:
   // this engine is special in that it will directly modify
   // the objects in the world
@@ -37,11 +19,27 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
 
   void SendDataToWorld();
   void Step();
-
- public:
   // incase of a event, we also need apis to handle
   // to be implemented
   void HandleEvents(const Json::Value&);
+ private:
+  // method to transfer node between physics engine and the world class
+  // allow runtime adding things
+  void AddNodeFromWorldToEngine(Node* ref);
+  void AddNodeFromEngineToWorld(b2Body*);
+  // we can either add polygons to the body
+  void AddPolygonsToBody(const class ComplexShape2D&, b2Body*);
+  // or add chains to the body
+  void AddChainsToBody(const class ComplexShape2D&, b2Body*);
+
+  class b2World* b2world_;
+  int kVelocityIterations = 5;
+  int kPositionIterations = 5;
+  float kScaleUp = 10;
+  float kScaleDown = 0.1f;
+  float kDensity = 1.f;
+  float kRestitution = 1.f;
+  float kFriction = 0.1;
 };
 }
 

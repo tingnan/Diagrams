@@ -18,8 +18,6 @@ class PhysicsEngineDemo : public PhysicsEngine {
   // step the world
   void Step();
   void SendDataToWorld();
-
- public:
   // incase of a event, we also need apis to handle
   // to be implemented
   void HandleEvents(const Json::Value&);

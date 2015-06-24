@@ -1,5 +1,5 @@
 #include "drawer.h"
-#include "utility/json_parser.h"
+#include "utility/world_parser.h"
 #include <iostream>
 
 namespace {
@@ -43,7 +43,7 @@ GLuint CompileShaderFromFile(const char* fname, GLenum type) {
 }
 namespace diagrammar {
 
-void Drawer::_LoadShaders() {
+void Drawer::LoadShaders() {
   // read shaders
   GLuint vert_shader_id = CompileShaderFromFile("vert.shader", GL_VERTEX_SHADER);
   GLuint frag_shader_id = CompileShaderFromFile("frag.shader", GL_FRAGMENT_SHADER);
@@ -65,7 +65,7 @@ void Drawer::_LoadShaders() {
 }
 
 
-void Drawer::_GenPathBuffers() {
+void Drawer::GenPathBuffers() {
   path_vao_.reserve(world_.GetNumNodes());
   path_color_vbo_.reserve(world_.GetNumNodes());
   path_vertex_vbo_.reserve(world_.GetNumNodes());
@@ -75,7 +75,7 @@ void Drawer::_GenPathBuffers() {
     for (size_t geo_idx = 0; geo_idx < node_ptr->GetGeometryCount(); ++geo_idx) {
       // flattern
       assert(node_ptr != nullptr);
-      Geometry2D* geoptr = node_ptr->GetGeometry(geo_idx);
+      ComplexShape2D* geoptr = node_ptr->GetGeometry(geo_idx);
       unsigned num_paths = 1 + geoptr->GetNumHoles();
 
       for (size_t pa_idx = 0; pa_idx < num_paths; ++pa_idx) {
@@ -135,7 +135,7 @@ void Drawer::_GenPathBuffers() {
   }
 }
 
-void Drawer::_GenPolyBuffers() {
+void Drawer::GenPolyBuffers() {
   poly_vao_.reserve(world_.GetNumNodes());
   poly_color_vbo_.reserve(world_.GetNumNodes());
   poly_vertex_vbo_.reserve(world_.GetNumNodes());
@@ -143,7 +143,7 @@ void Drawer::_GenPolyBuffers() {
   for (size_t index = 0; index < world_.GetNumNodes(); ++index) {
     for (size_t geo_idx = 0; geo_idx < world_.GetNodeByIndex(index)->GetGeometryCount(); ++geo_idx) {
       poly_node_.emplace_back(world_.GetNodeByIndex(index));
-      Geometry2D* geo_ptr = world_.GetNodeByIndex(index)->GetGeometry(geo_idx);
+      ComplexShape2D* geo_ptr = world_.GetNodeByIndex(index)->GetGeometry(geo_idx);
       // only draw the first geometry
       GLuint vao_id;
       glGenVertexArrays(1, &vao_id);
@@ -194,11 +194,11 @@ void Drawer::_GenPolyBuffers() {
   }
 }
 
-void Drawer::_UpdateBuffer() {
+void Drawer::UpdateBuffer() {
   // only update when the shape changes
 }
 
-void Drawer::_DrawPaths() {
+void Drawer::DrawPaths() {
   for (size_t i = 0; i < path_vao_.size(); ++i) {
     // get transformation
     Eigen::Isometry3f transform(Eigen::Isometry3f::Identity());
@@ -213,7 +213,7 @@ void Drawer::_DrawPaths() {
   }
 }
 
-void Drawer::_DrawPolygons() {
+void Drawer::DrawPolygons() {
   for (size_t i = 0; i < poly_vao_.size(); ++i) {
     Eigen::Isometry3f transform(Eigen::Isometry3f::Identity());
     transform.linear().topLeftCorner<2, 2>() = poly_node_[i]->GetRotationMatrix();
@@ -225,12 +225,12 @@ void Drawer::_DrawPolygons() {
   }
 }
 
-void Drawer::_Draw() {
-  _UpdateBuffer();
+void Drawer::Draw() {
+  UpdateBuffer();
   glClearColor(0.3f, 0.3f, 0.3f, 0.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(program_id_);
-  _DrawPaths();
+  DrawPaths();
   //_DrawPolygons();
   glBindVertexArray(0);
   glUseProgram(0);

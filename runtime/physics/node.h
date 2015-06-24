@@ -8,6 +8,7 @@
 namespace diagrammar {
 
 class Node {
+ public:
   struct PhysicsParams {
     float restitution = 1;
     float friction = 0;
@@ -15,35 +16,19 @@ class Node {
     // in its fixed frame;
     Eigen::Matrix3f inertiaMatrix = Eigen::Matrix3f::Identity();
   };
-
- private:
-  // Geometry: note, we may allow composite geometries
-  // we can have a vector of collisionshapes
-  // attached to the same PhysicsObject
-  std::vector<std::unique_ptr<Geometry2D> > collision_shapes_;
-  // frame
-  CoordinateFrame2D coordinate_;
-  // physics property
-  PhysicsParams properties_;
-  // the unique ID (managed by World)
-  int id_ = 0xffffffff;
-  // the collision filtering ID, used for broad phase collision filtering only
-  int collision_group_id_;
-
- public:
+ 
   Node();
   Node(const Node&);
   Node& operator=(const Node&);
   Node(Node&&) = default;
   Node& operator=(Node&&) = default;
   // using the move stuff
-  Node(Geometry2D geo);
+  Node(ComplexShape2D geo);
 
- public:
   // manipulate geometry
-  const Geometry2D* GetGeometry(unsigned) const;
-  Geometry2D* GetGeometry(unsigned);
-  void AddGeometry(Geometry2D&& geo);
+  const ComplexShape2D* GetGeometry(unsigned) const;
+  ComplexShape2D* GetGeometry(unsigned);
+  void AddGeometry(ComplexShape2D&& geo);
   unsigned GetGeometryCount() const { return collision_shapes_.size(); }
 
   // get unique id
@@ -62,7 +47,20 @@ class Node {
   void SetPosition(const Vec2f&);
   void Translate(const Vec2f&);
 
- public:
+ private:
+  // Geometry: note, we may allow composite geometries
+  // we can have a vector of collisionshapes
+  // attached to the same PhysicsObject
+  std::vector<std::unique_ptr<ComplexShape2D> > collision_shapes_;
+  // frame
+  CoordinateFrame2D coordinate_;
+  // physics property
+  PhysicsParams properties_;
+  // the unique ID (managed by World)
+  int id_ = 0xffffffff;
+  // the collision filtering ID, used for broad phase collision filtering only
+  int collision_group_id_;
+
 };
 }
 

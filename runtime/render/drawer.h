@@ -17,8 +17,25 @@ class Drawer {
   // the Eigen libraries
   // we want the drawer only accessible from the window class
   friend class Window;
-
  private:
+  Drawer(const World& world) : world_(world) {}
+  // not copyable
+  Drawer(const Drawer& other) = delete;
+  // can move
+  Drawer(Drawer&&) = default;
+  void LoadShaders();
+
+  // generate vao and vbo for boundary path
+  void GenPathBuffers();
+  // generate vao and vbo for interior polygons
+  void GenPolyBuffers();
+  // not implemented
+  void UpdateBuffer();
+  void Draw();
+  void DrawPaths();
+  void DrawPolygons();
+
+  // data members
   const World& world_;
   std::vector<GLuint> path_vao_;
   std::vector<GLuint> path_vertex_vbo_;
@@ -33,33 +50,7 @@ class Drawer {
   std::vector<Node*> poly_node_;
 
   GLuint program_id_;
-
- private:
-  Drawer(const World& world) : world_(world) {}
-  // not copyable
-  Drawer(const Drawer& other) = delete;
-  // can move
-  Drawer(Drawer&&) = default;
-  void _LoadShaders();
-
-  // generate vao and vbo for boundary path
-  void _GenPathBuffers();
-  // generate vao and vbo for interior polygons
-  void _GenPolyBuffers();
-
-  // not implemented
-  void _UpdateBuffer();
-  void _Draw();
-  void _DrawPaths();
-  void _DrawPolygons();
-
- private:
-  // helper function
 };
-
-// have a few visitor class that convert the path, geometry to
-// opengl primitives (vertices and triangles) so the drawer
-// can be called
 }
 
 #endif

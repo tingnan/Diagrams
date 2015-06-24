@@ -3,7 +3,7 @@
 namespace diagrammar {
 
 template<typename EventType, template<typename> class QueueType>
-void event_queue<EventType, QueueType>::push(EventType data) {
+void ThreadSafeQueue<EventType, QueueType>::push(EventType data) {
   std::unique_lock<std::mutex> elock(mutex_);
   if (queue_.size() > max_size_)
   {
@@ -16,7 +16,7 @@ void event_queue<EventType, QueueType>::push(EventType data) {
 }
 
 template<typename EventType, template<typename> class QueueType>
-EventType event_queue<EventType, QueueType>::wait_and_pop() {
+EventType ThreadSafeQueue<EventType, QueueType>::wait_and_pop() {
   std::unique_lock<std::mutex> elock(mutex_);
   cvar_.wait(elock, [this] { return !queue_.empty();});
   EventType tmp = queue_.front();
@@ -25,7 +25,7 @@ EventType event_queue<EventType, QueueType>::wait_and_pop() {
 }
 
 template<typename EventType, template<typename> class QueueType>
-EventType event_queue<EventType, QueueType>::try_pop() {
+EventType ThreadSafeQueue<EventType, QueueType>::try_pop() {
   std::unique_lock<std::mutex> elock(mutex_);
   EventType tmp;
   if (queue_.empty())

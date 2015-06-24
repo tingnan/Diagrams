@@ -10,7 +10,7 @@ typedef struct AABB {
   Eigen::Vector2f upper_bound;
 } AABB;
 
-static AABB GetAABB(const std::vector<Eigen::Vector2f>& closure) {
+static AABB GetAABBWithPadding(const std::vector<Eigen::Vector2f>& closure, float pad_percent) {
   float xmin = closure[0](0);
   float xmax = closure[0](0);
   float ymin = closure[0](1);
@@ -23,7 +23,7 @@ static AABB GetAABB(const std::vector<Eigen::Vector2f>& closure) {
   }
 
   AABB bound;
-  Eigen::Vector2f padding(0.05 * (xmax - xmin), 0.05 * (ymax - ymin));
+  Eigen::Vector2f padding(pad_percent * (xmax - xmin), pad_percent * (ymax - ymin));
   bound.lower_bound(0) = xmin;
   bound.lower_bound(1) = ymin;
   bound.lower_bound -= padding;

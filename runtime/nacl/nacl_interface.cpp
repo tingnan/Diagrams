@@ -37,7 +37,7 @@ DiagrammarInterface::DiagrammarInterface(PP_Instance instance,
   mount("", "/http", "httpfs", 0, "");
 }
 
-void DiagrammarInterface::_SimulationLoop() {
+void DiagrammarInterface::SimulationLoop() {
   world_.InitializeTimer();
   while (true) {
     world_.Step();
@@ -46,19 +46,19 @@ void DiagrammarInterface::_SimulationLoop() {
   }
 }
 
-void DiagrammarInterface::_RenderLoop() {
+void DiagrammarInterface::RenderLoop() {
 }
 
-void DiagrammarInterface::_LaunchWorld() {
+void DiagrammarInterface::LaunchWorld() {
   glSetCurrentContextPPAPI(context_.pp_resource());
   world_.InitializeWorldDescription("/http/path_simple.json");
   world_.InitializePhysicsEngine();
   drawer_ = new NaClDrawer(world_);
-  _SimulationLoop();
+  SimulationLoop();
 }
 
 
-bool DiagrammarInterface::_InitGL(int32_t width, int32_t height) {
+bool DiagrammarInterface::InitGL(int32_t width, int32_t height) {
   if (!glInitializePPAPI(pp::Module::Get()->get_browser_interface())) {
     std::cerr << "Unable to initialize GL PPAPI!\n";
     return false;
@@ -91,11 +91,11 @@ void DiagrammarInterface::DidChangeView(const pp::View& view) {
   int32_t height = view.GetRect().height();
   std::cerr << "view changed\n";
   if (context_.is_null()) {
-    if (!_InitGL(width, height)) {
+    if (!InitGL(width, height)) {
       return;
     }
     // only launch once (created with opengl context)
-    simulation_thread_ = std::thread(&DiagrammarInterface::_LaunchWorld, this);
+    simulation_thread_ = std::thread(&DiagrammarInterface::LaunchWorld, this);
   } else {
     int32_t result = context_.ResizeBuffers(width, height);
     if (result < 0) std::cerr << "Unable to resize\n";

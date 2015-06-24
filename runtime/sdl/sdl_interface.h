@@ -4,17 +4,18 @@
 class SDL_Window;
 namespace diagrammar {
 class SDLInterfaceOpenGL {
-SDL_Window* window_;
-std::unique_ptr<class World> world_;
-std::unique_ptr<class NaClDrawer> drawer_;
-bool app_running_ = true;
-void HandleEvents();
-bool LoadFont();
-public:
+ public:
   SDLInterfaceOpenGL();
   bool Init(int, int);
   void Render();
   ~SDLInterfaceOpenGL();
+ private:
+  void HandleEvents();
+  bool LoadFont();
+  bool app_running_ = true;
+  SDL_Window* window_;
+  std::unique_ptr<class World> world_;
+  std::unique_ptr<class NaClDrawer> drawer_;
 };
 }
 

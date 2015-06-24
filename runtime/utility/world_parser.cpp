@@ -1,4 +1,4 @@
-#include "json_parser.h"
+#include "world_parser.h"
 #include "geometry/aabb.h"
 #include <json/json.h>
 #include <iostream>
@@ -18,6 +18,18 @@ std::string Stringify(const char* path) {
     std::cout << "cannot open file\n";
   }
   return text;
+}
+
+Json::Value CreateJsonObject(const char* file) {
+  std::string content = diagrammar::Stringify(file);
+  Json::Reader reader;
+  Json::Value json_obj;
+  bool success = reader.parse(content, json_obj);
+  if (!success) {
+    std::cout << "not a valid json file" << std::endl;
+    exit(-1);
+  }
+  return json_obj;
 }
 
 Eigen::Isometry2f ParseTransformation2D(const Json::Value& array) {
@@ -69,7 +81,7 @@ Node ParseNode(const Json::Value& nodeobj) {
     }
 
     if (itr.key().asString() == "path") {
-      Geometry2D geo;
+      ComplexShape2D geo;
       geo.SetPath(ParsePath2D(*itr));
       if (ntype == "open_path") {
         geo.SetPathClosed(false);
@@ -79,8 +91,8 @@ Node ParseNode(const Json::Value& nodeobj) {
 
     if (itr.key().asString() == "inner_path") {
       const std::vector<Vec2f>& path = ParsePath2D(*itr);
-      AABB bounding_box = GetAABB(path);
-      Geometry2D geo;
+      AABB bounding_box = GetAABBWithPadding(path, 5e-2);
+      ComplexShape2D geo;
       geo.AddHole(path);
       std::vector<Vec2f> box;
       Vec2f pt0 = bounding_box.lower_bound;
@@ -100,17 +112,5 @@ Node ParseNode(const Json::Value& nodeobj) {
   // TO DO;
   //
   return node;
-}
-
-Json::Value ReadWorldFromFile(const char* file) {
-  std::string content = diagrammar::Stringify(file);
-  Json::Reader world_parser;
-  Json::Value world_descriptor;
-  bool success = world_parser.parse(content, world_descriptor);
-  if (!success) {
-    std::cout << "not a valid json file" << std::endl;
-    exit(-1);
-  }
-  return world_descriptor;
 }
 }
