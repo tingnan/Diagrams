@@ -32,9 +32,7 @@ void Node::SetCollisionGroupID(int id) { collision_group_id_ = id; }
 
 float Node::GetRotationAngle() { return coordinate_.GetRotation().angle(); }
 
-void Node::SetRotationAngle(float a) {
-  coordinate_.SetRotation(Rotation2f(a));
-}
+void Node::SetRotationAngle(float a) { coordinate_.SetRotation(Rotation2f(a)); }
 
 void Node::SetRotationMatrix(const Matrix2f& rotmat) {
   coordinate_.SetRotation(rotmat);

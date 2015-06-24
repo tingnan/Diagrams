@@ -46,6 +46,7 @@ class NaClDrawer {
   GLuint text_vbo_;
 
   GLProgram program_;
+
  private:
   void LoadShaders();
   // generate vbo for boundary path
@@ -58,6 +59,7 @@ class NaClDrawer {
   void DrawPaths();
   void DrawPolygons();
   void DrawTexts();
+
  public:
   NaClDrawer(const World& world);
   // not copyable

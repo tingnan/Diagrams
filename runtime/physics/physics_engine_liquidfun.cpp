@@ -161,7 +161,8 @@ void PhysicsEngineLiquidFun::AddNodeFromWorldToEngine(Node* ref) {
 PhysicsEngineLiquidFun::~PhysicsEngineLiquidFun() {}
 
 void PhysicsEngineLiquidFun::Step() {
-  b2world_->Step(world_.time_step(), velocity_iterations_, position_iterations_);
+  b2world_->Step(world_.time_step(), velocity_iterations_,
+                 position_iterations_);
 }
 
 void PhysicsEngineLiquidFun::SendDataToWorld() {
@@ -169,7 +170,7 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
     Node* obj = reinterpret_cast<Node*>(b->GetUserData());
     if (obj) {
       Vector2f translation(b->GetPosition().x * kScaleUp,
-                        b->GetPosition().y * kScaleUp);
+                           b->GetPosition().y * kScaleUp);
       obj->SetPosition(translation);
       obj->SetRotationAngle(b->GetAngle());
     }

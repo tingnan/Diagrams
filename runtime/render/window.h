@@ -15,6 +15,7 @@ class Window {
   Window(const Window& other) = delete;
   ~Window() { glfwTerminate(); }
   void MainLoop();
+
  private:
   void _InitializeWindow(int w, int h, const char* title);
   // the main window

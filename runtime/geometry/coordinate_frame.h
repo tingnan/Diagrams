@@ -14,11 +14,11 @@ namespace diagrammar {
 class CoordinateFrame2D {
  public:
   CoordinateFrame2D();
-  explicit  CoordinateFrame2D(const Isometry2f& transform);
+  explicit CoordinateFrame2D(const Isometry2f& transform);
   CoordinateFrame2D(const CoordinateFrame2D&) = default;
   CoordinateFrame2D(CoordinateFrame2D&&) = default;
-  CoordinateFrame2D& operator = (const CoordinateFrame2D&) = default;
-  CoordinateFrame2D& operator = (CoordinateFrame2D&&) = default;
+  CoordinateFrame2D& operator=(const CoordinateFrame2D&) = default;
+  CoordinateFrame2D& operator=(CoordinateFrame2D&&) = default;
 
  public:
   // notice: it differs from SetTranslation because

@@ -9,6 +9,7 @@ class SDLInterfaceOpenGL {
   bool Init(int, int);
   void Render();
   ~SDLInterfaceOpenGL();
+
  private:
   void HandleEvents();
   bool LoadFont();

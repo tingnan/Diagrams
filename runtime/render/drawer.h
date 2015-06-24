@@ -17,6 +17,7 @@ class Drawer {
   // the Eigen libraries
   // we want the drawer only accessible from the window class
   friend class Window;
+
  private:
   Drawer(const World& world) : world_(world) {}
   // not copyable

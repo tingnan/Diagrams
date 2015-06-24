@@ -20,6 +20,7 @@ class NaClDrawer {
   // can move
   NaClDrawer(NaClDrawer&&) = default;
   void Draw();
+
  private:
   const World& world_;
   void LoadShaders();

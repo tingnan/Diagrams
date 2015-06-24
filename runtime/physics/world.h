@@ -23,7 +23,8 @@ namespace diagrammar {
 // the snapshot updating may be in a separate thread
 class Snapshot {};
 
-// it is a simulation world. A the wrapper class that communicate with a physics engine
+// it is a simulation world. A the wrapper class that communicate with a physics
+// engine
 class World {
  public:
   enum EngineType { kDemo, kLiquidFun, kChipmunk2D, kBullet, kODE };
@@ -32,7 +33,7 @@ class World {
   World(World&& other) = default;
   // not copyable
   World(const World& other) = delete;
-  
+
   // initialize the world structure with a description file
   void InitializeWorldDescription(const Json::Value& world);
   void InitializeWorldDescription(const char* file);
@@ -77,7 +78,7 @@ class World {
   void _ConstructWorldFromDescriptor(const Json::Value&);
   // assign a unique ID to the Node, if not already has
   void _GenerateID(Node*);
-  
+
   // world frame
   CoordinateFrame2D coordinate_;
 

@@ -23,6 +23,7 @@ class PhysicsEngine {
   // incase of a event, we also need apis to handle
   // to be implemented
   virtual void HandleEvents(const Json::Value&) = 0;
+
  protected:
   // maintain a reference layer
   class World& world_;

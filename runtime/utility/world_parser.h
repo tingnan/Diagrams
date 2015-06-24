@@ -19,7 +19,6 @@ Isometry2f ParseTransformation2D(const Json::Value& transformobj);
 std::vector<Vector2f> ParsePath2D(const Json::Value& pathobj);
 // parse a node;
 Node ParseNode(const Json::Value& nodeobj);
-
 }
 
 #endif

@@ -20,8 +20,8 @@ class ComplexShape2D {
   explicit ComplexShape2D(const std::vector<Vector2f>& pts);
   ComplexShape2D(const ComplexShape2D&) = default;
   ComplexShape2D(ComplexShape2D&&) = default;
-  ComplexShape2D& operator = (const ComplexShape2D&) = default;
-  ComplexShape2D& operator = (ComplexShape2D&&) = default;
+  ComplexShape2D& operator=(const ComplexShape2D&) = default;
+  ComplexShape2D& operator=(ComplexShape2D&&) = default;
   void SetPath(const std::vector<Vector2f>& pts);
   void SetHole(int i, const std::vector<Vector2f>& pts);
   void AddHole(const std::vector<Vector2f>& pts);
@@ -32,6 +32,7 @@ class ComplexShape2D {
   const std::vector<std::vector<Vector2f> >& GetHoles() const;
   void SetPathClosed(bool flag);
   bool IsPathClosed() const { return is_closed_; }
+
  private:
   std::vector<Vector2f> path_;
   bool is_closed_ = true;

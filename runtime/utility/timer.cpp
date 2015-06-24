@@ -8,8 +8,7 @@ const std::chrono::milliseconds k000ms = std::chrono::milliseconds(0);
 
 namespace diagrammar {
 
-Timer::Timer() {
-}
+Timer::Timer() {}
 void Timer::Initialize() {
   // is the time monotonic?
   init_time_ = std::chrono::high_resolution_clock::now();
@@ -45,12 +44,11 @@ double Timer::tick_time() const {
 }
 
 double Timer::now() const {
-  auto count = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - init_time_).count();
+  auto count = std::chrono::duration_cast<std::chrono::microseconds>(
+                   std::chrono::high_resolution_clock::now() - init_time_)
+                   .count();
   return double(count) * 0.001;
 }
 
-int64_t Timer::ticks() const {
-  return accu_ticks_;
-}
-
+int64_t Timer::ticks() const { return accu_ticks_; }
 }

@@ -15,6 +15,7 @@ class DiagrammarInterface : public pp::Instance {
   virtual ~DiagrammarInterface();
   virtual void HandleMessage(const pp::Var& var_message);
   virtual void DidChangeView(const pp::View& view);
+
  private:
   bool InitGL(int32_t width, int32_t height);
   void SimulationLoop();

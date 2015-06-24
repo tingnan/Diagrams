@@ -25,8 +25,7 @@ static AABB GetAABBWithPadding(const std::vector<Vector2f>& closure,
   }
 
   AABB bound;
-  Vector2f padding(pad_percent * (xmax - xmin),
-                          pad_percent * (ymax - ymin));
+  Vector2f padding(pad_percent * (xmax - xmin), pad_percent * (ymax - ymin));
   bound.lower_bound(0) = xmin;
   bound.lower_bound(1) = ymin;
   bound.lower_bound -= padding;
@@ -34,6 +33,6 @@ static AABB GetAABBWithPadding(const std::vector<Vector2f>& closure,
   bound.upper_bound(1) = ymax;
   bound.upper_bound += padding;
   return bound;
-} 
+}
 }  // namespace diagrammar
 #endif  // RUNTIME_GEOMETRY_AABB_H_

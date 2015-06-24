@@ -12,7 +12,8 @@
 
 namespace {
 // maybe we have a template class
-inline double dot(const diagrammar::Vector2f& a, const diagrammar::Vector2f& b) {
+inline double dot(const diagrammar::Vector2f& a,
+                  const diagrammar::Vector2f& b) {
   return a.adjoint() * b;
 }
 
@@ -105,8 +106,8 @@ void PolylineDouglasPeuckerRecursive(const size_t bg, const size_t ed,
 }
 
 // the iterative version
-std::vector<Vector2f> PolylineDouglasPeuckerIterative(const std::vector<Vector2f>& in,
-                                                   float mTol) {
+std::vector<Vector2f> PolylineDouglasPeuckerIterative(
+    const std::vector<Vector2f>& in, float mTol) {
   if (in.size() <= 2) {
     return in;
   }
@@ -204,7 +205,8 @@ std::vector<Triangle2D> DelaunaySweepline(
   return out;
 }
 
-std::vector<Vector2f> Simplify(const std::vector<Vector2f>& in, PolylineMethod m) {
+std::vector<Vector2f> Simplify(const std::vector<Vector2f>& in,
+                               PolylineMethod m) {
   if (in.size() <= 2) {
     return in;
   }
@@ -253,7 +255,8 @@ int PointInCircumcenter(const Vector2f& a, const Vector2f& b, const Vector2f& c,
   return -1;
 }
 
-std::vector<Triangle2D> DelaunayTriangulation(const std::vector<Vector2f>& path) {
+std::vector<Triangle2D> DelaunayTriangulation(
+    const std::vector<Vector2f>& path) {
   return DelaunaySweepline(path, nullptr);
 }
 
@@ -263,7 +266,8 @@ std::vector<Triangle2D> DelaunayTriangulation(
   return DelaunaySweepline(path, &holes);
 }
 
-std::vector<Triangle2D> InflateAndTriangulate(const std::vector<Vector2f>& path) {
+std::vector<Triangle2D> InflateAndTriangulate(
+    const std::vector<Vector2f>& path) {
   // clipper only works on integer points
   ClipperLib::Path in(path.size());
 

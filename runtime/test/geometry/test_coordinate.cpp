@@ -6,8 +6,7 @@ void CoordinateFrame2DTest::SetUp() {
   mFrameInternal.setIdentity();
 }
 
-void CoordinateFrame2DTest::TearDown() {
-}
+void CoordinateFrame2DTest::TearDown() {}
 
 #define FLOAT_ROUNDOFF 1e-3
 
@@ -23,8 +22,7 @@ TEST_F(CoordinateFrame2DTest, TranslateRotateOrder) {
 
   // the indernal order
   mFrameInternal.translate(disp).translate(disp).rotate(rot).rotate(rot);
-  Matrix2f diff =
-      mFrameInternal.linear() - coordinate_.GetRotation().matrix();
+  Matrix2f diff = mFrameInternal.linear() - coordinate_.GetRotation().matrix();
   ASSERT_LE(abs(diff(0, 0)), FLOAT_ROUNDOFF);
   ASSERT_LE(abs(diff(0, 1)), FLOAT_ROUNDOFF);
   ASSERT_LE(abs(diff(1, 0)), FLOAT_ROUNDOFF);
@@ -59,8 +57,7 @@ TEST_F(CoordinateFrame2DTest, TransformPoint) {
     // now transform a point (1, 1) from local frame to parent frame
     Vector2f p1 = coordinate_.TransformPoint(Vector2f(1, 1));
     // first rotate
-    Vector2f p1m(cos(rota) * 1 - sin(rota) * 1,
-                        sin(rota) * 1 + cos(rota) * 1);
+    Vector2f p1m(cos(rota) * 1 - sin(rota) * 1, sin(rota) * 1 + cos(rota) * 1);
     // then translate
     p1m += disp;
     ASSERT_LE(abs(p1(0) - p1m(0)), FLOAT_ROUNDOFF);

@@ -1,7 +1,7 @@
 // Copyright 2015 Native Client Authors
 #ifndef RUNTIME_INCLUDE_H_
 #define RUNTIME_INCLUDE_H_
-#include <Eigen/Core> 
+#include <Eigen/Core>
 #include <Eigen/Geometry>
 namespace diagrammar {
 typedef ::Eigen::Vector2f Vector2f;

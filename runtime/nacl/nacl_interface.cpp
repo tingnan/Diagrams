@@ -46,8 +46,7 @@ void DiagrammarInterface::SimulationLoop() {
   }
 }
 
-void DiagrammarInterface::RenderLoop() {
-}
+void DiagrammarInterface::RenderLoop() {}
 
 void DiagrammarInterface::LaunchWorld() {
   glSetCurrentContextPPAPI(context_.pp_resource());
@@ -56,7 +55,6 @@ void DiagrammarInterface::LaunchWorld() {
   drawer_ = new NaClDrawer(world_);
   SimulationLoop();
 }
-
 
 bool DiagrammarInterface::InitGL(int32_t width, int32_t height) {
   if (!glInitializePPAPI(pp::Module::Get()->get_browser_interface())) {

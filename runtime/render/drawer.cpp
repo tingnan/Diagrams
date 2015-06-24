@@ -39,14 +39,16 @@ GLuint CompileShaderFromFile(const char* fname, GLenum type) {
   const char* shader_text_cstr = shader_text.c_str();
 
   return CompileShaderFromSource(shader_text_cstr, type);
-}  
+}
 }
 namespace diagrammar {
 
 void Drawer::LoadShaders() {
   // read shaders
-  GLuint vert_shader_id = CompileShaderFromFile("vert.shader", GL_VERTEX_SHADER);
-  GLuint frag_shader_id = CompileShaderFromFile("frag.shader", GL_FRAGMENT_SHADER);
+  GLuint vert_shader_id =
+      CompileShaderFromFile("vert.shader", GL_VERTEX_SHADER);
+  GLuint frag_shader_id =
+      CompileShaderFromFile("frag.shader", GL_FRAGMENT_SHADER);
   // now we can link the program
 
   program_id_ = glCreateProgram();
@@ -64,7 +66,6 @@ void Drawer::LoadShaders() {
   glDeleteShader(frag_shader_id);
 }
 
-
 void Drawer::GenPathBuffers() {
   path_vao_.reserve(world_.GetNumNodes());
   path_color_vbo_.reserve(world_.GetNumNodes());
@@ -72,7 +73,8 @@ void Drawer::GenPathBuffers() {
   path_array_size_.reserve(world_.GetNumNodes());
   for (size_t index = 0; index < world_.GetNumNodes(); ++index) {
     Node* node_ptr = world_.GetNodeByIndex(index);
-    for (size_t geo_idx = 0; geo_idx < node_ptr->GetGeometryCount(); ++geo_idx) {
+    for (size_t geo_idx = 0; geo_idx < node_ptr->GetGeometryCount();
+         ++geo_idx) {
       // flattern
       assert(node_ptr != nullptr);
       ComplexShape2D* geoptr = node_ptr->GetGeometry(geo_idx);
@@ -91,7 +93,8 @@ void Drawer::GenPathBuffers() {
         glBindBuffer(GL_ARRAY_BUFFER, vert_vbo);
         // serialize the vector of 2S points to GLfloat
         // the rendering is in three dimension
-        const std::vector<Vector2f>& points = pa_idx == 0 ? geoptr->GetPath() : geoptr->GetHole(pa_idx - 1);
+        const std::vector<Vector2f>& points =
+            pa_idx == 0 ? geoptr->GetPath() : geoptr->GetHole(pa_idx - 1);
 
         std::vector<GLfloat> vertices(points.size() * 3);
         for (size_t j = 0; j < points.size(); ++j) {
@@ -124,7 +127,7 @@ void Drawer::GenPathBuffers() {
           colors[3 * j + 1] = 1.f;
           colors[3 * j + 2] = 1.f;
         }
-      
+
         glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat),
                      colors.data(), GL_STATIC_DRAW);
         glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -141,9 +144,12 @@ void Drawer::GenPolyBuffers() {
   poly_vertex_vbo_.reserve(world_.GetNumNodes());
   poly_array_size_.reserve(world_.GetNumNodes());
   for (size_t index = 0; index < world_.GetNumNodes(); ++index) {
-    for (size_t geo_idx = 0; geo_idx < world_.GetNodeByIndex(index)->GetGeometryCount(); ++geo_idx) {
+    for (size_t geo_idx = 0;
+         geo_idx < world_.GetNodeByIndex(index)->GetGeometryCount();
+         ++geo_idx) {
       poly_node_.emplace_back(world_.GetNodeByIndex(index));
-      ComplexShape2D* geo_ptr = world_.GetNodeByIndex(index)->GetGeometry(geo_idx);
+      ComplexShape2D* geo_ptr =
+          world_.GetNodeByIndex(index)->GetGeometry(geo_idx);
       // only draw the first geometry
       GLuint vao_id;
       glGenVertexArrays(1, &vao_id);
@@ -202,7 +208,8 @@ void Drawer::DrawPaths() {
   for (size_t i = 0; i < path_vao_.size(); ++i) {
     // get transformation
     Isometry3f transform(Isometry3f::Identity());
-    transform.linear().topLeftCorner<2, 2>() = path_node_[i]->GetRotationMatrix();
+    transform.linear().topLeftCorner<2, 2>() =
+        path_node_[i]->GetRotationMatrix();
     transform.translation().head<2>() = path_node_[i]->GetPosition();
     GLint loc = glGetUniformLocation(program_id_, "modelToEyeMat");
     glUniformMatrix4fv(loc, 1, false, transform.data());
@@ -216,7 +223,8 @@ void Drawer::DrawPaths() {
 void Drawer::DrawPolygons() {
   for (size_t i = 0; i < poly_vao_.size(); ++i) {
     Isometry3f transform(Isometry3f::Identity());
-    transform.linear().topLeftCorner<2, 2>() = poly_node_[i]->GetRotationMatrix();
+    transform.linear().topLeftCorner<2, 2>() =
+        poly_node_[i]->GetRotationMatrix();
     transform.translation().head<2>() = poly_node_[i]->GetPosition();
     GLint loc = glGetUniformLocation(program_id_, "modelToEyeMat");
     glUniformMatrix4fv(loc, 1, false, transform.data());

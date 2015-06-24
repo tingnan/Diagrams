@@ -1,7 +1,7 @@
 #ifndef UTILITY_STL_MEMORY_
 #define UTILITY_STL_MEMORY_
 #include <memory>
-// make_unique is only availble in c++14, 
+// make_unique is only availble in c++14,
 // we implement it here for c++11
 namespace diagrammar {
 template <typename T, typename... Args>
