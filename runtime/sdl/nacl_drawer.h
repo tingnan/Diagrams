@@ -1,9 +1,11 @@
-#ifndef SDL_NACL_DRAWER_
-#define SDL_NACL_DRAWER_
-#include "physics/world.h"
+// Copyright 2015 Native Client Authors.
+#ifndef RUNTIME_SDL_NACL_DRAWER_H_
+#define RUNTIME_SDL_NACL_DRAWER_H_
+#include <GLES2/gl2.h>
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include <GLES2/gl2.h>
+#include <vector>
+#include "physics/world.h"
 
 namespace diagrammar {
 // currently I am not going to polute other
@@ -61,13 +63,13 @@ class NaClDrawer {
   void DrawTexts();
 
  public:
-  NaClDrawer(const World& world);
+  explicit NaClDrawer(const World& world);
   // not copyable
   NaClDrawer(const NaClDrawer& other) = delete;
   // can move
   NaClDrawer(NaClDrawer&&) = default;
   void Draw();
 };
-}
+}  // namespace diagrammar
 
-#endif
+#endif  // RUNTIME_SDL_NACL_DRAWER_H_

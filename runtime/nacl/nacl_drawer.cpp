@@ -1,29 +1,35 @@
-#include <GLES2/gl2.h>
-#include "nacl_drawer.h"
-#include "utility/world_parser.h"
+// Copyright 2015 Native Client Authors.
 #include <iostream>
+#include <vector>
+#include <string>
+#include "sdl/nacl_drawer.h"
+#include "utility/world_parser.h"
 
 namespace {
 
-const GLuint kVertDim = 3;
+const GLuint kVertDim = 4;
 
 const char kFragShaderSource[] =
     "precision mediump float;\n"
-    "varying vec3 v_color;\n"
+    "varying vec4 v_color;\n"
+    "varying vec2 tex_coord;\n"
+    "uniform sampler2D texture_sampler;\n"
     "void main() {\n"
-    "  gl_FragColor = vec4(v_color, 1);\n"
+    "  gl_FragColor = v_color + texture2D(texture_sampler, tex_coord);\n"
     "}\n";
 
-// hard coded scaling in the shader
-const char kVertexShaderSource[] =
+const char kVertShaderSource[] =
+    "uniform float scale;\n"
     "uniform mat4 u_mvp;\n"
-    "attribute vec3 a_position;\n"
-    "attribute vec3 a_color;\n"
-    "varying vec3 v_color;\n"
+    "attribute vec4 position;\n"
+    "attribute vec4 color;\n"
+    "varying vec4 v_color;\n"
+    "varying vec2 tex_coord;\n"
     "void main() {\n"
-    "  gl_Position = u_mvp * vec4(a_position, 1.0) * 0.002;\n"
-    "  gl_Position.w = 1.0;\n"
-    "  v_color = a_color;\n"
+    "  gl_Position = u_mvp * vec4(position.xy, 0.0, 1.0);\n"
+    "  gl_Position.xy = gl_Position.xy * scale;\n"
+    "  tex_coord = position.zw;\n"
+    "  v_color = color;\n"
     "}\n";
 
 void ShaderErrorHandler(GLuint shader_id) {
@@ -60,37 +66,70 @@ GLuint CompileShaderFromSource(const char* data, GLenum type) {
 GLuint CompileShaderFromFile(const char* fname, GLenum type) {
   std::string shader_text = diagrammar::Stringify(fname);
   const char* shader_text_cstr = shader_text.c_str();
-
   return CompileShaderFromSource(shader_text_cstr, type);
 }
+
+void RenderString2D(FT_Face fc, std::string s, float x, float y, float sx,
+                    float sy) {
+  for (auto ch : s) {
+    if (FT_Load_Char(fc, ch, FT_LOAD_RENDER)) continue;
+    FT_GlyphSlot glyph = fc->glyph;
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glyph->bitmap.width,
+                 glyph->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE,
+                 glyph->bitmap.buffer);
+    // now we have added a texture
+    // let us create a box, the x and y are cursor position
+    // sx and sy are scale in each direction
+    GLfloat xpos = x + glyph->bitmap_left * sx;
+    GLfloat ypos = y + glyph->bitmap_top * sy;
+    GLfloat w = glyph->bitmap.width * sx;
+    GLfloat h = glyph->bitmap.rows * sy;
+    GLfloat char_box[16] = {xpos, ypos,     0, 0, xpos + w, ypos,     1, 0,
+                            xpos, ypos - h, 0, 1, xpos + w, ypos - h, 1, 1};
+    glBufferData(GL_ARRAY_BUFFER, sizeof(char_box), char_box, GL_DYNAMIC_DRAW);
+    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+    x += (glyph->advance.x >> 6) * sx;
+    y += (glyph->advance.y >> 6) * sy;
+  }
 }
+
+}  // namespace
 
 namespace diagrammar {
 
 NaClDrawer::NaClDrawer(const World& world) : world_(world) {
   LoadShaders();
+  GenTextBuffers();
   GenPathBuffers();
   GenPolyBuffers();
 }
+
 void NaClDrawer::LoadShaders() {
   // compile vert shader
   GLuint vert_shader_id =
-      CompileShaderFromSource(kVertexShaderSource, GL_VERTEX_SHADER);
+      CompileShaderFromSource(kVertShaderSource, GL_VERTEX_SHADER);
   GLuint frag_shader_id =
       CompileShaderFromSource(kFragShaderSource, GL_FRAGMENT_SHADER);
   // now we can link the program
 
-  program_id_ = glCreateProgram();
-  glAttachShader(program_id_, vert_shader_id);
-  glAttachShader(program_id_, frag_shader_id);
-  glLinkProgram(program_id_);
+  GLuint program_id = glCreateProgram();
+  glAttachShader(program_id, vert_shader_id);
+  glAttachShader(program_id, frag_shader_id);
+  glLinkProgram(program_id);
   GLint result;
-  glGetProgramiv(program_id_, GL_LINK_STATUS, &result);
+  glGetProgramiv(program_id, GL_LINK_STATUS, &result);
   if (result != GL_TRUE) {
-    ProgarmErrorHanlder(program_id_);
+    ProgarmErrorHanlder(program_id);
   }
   glDeleteShader(vert_shader_id);
   glDeleteShader(frag_shader_id);
+
+  program_.tex_loc = glGetUniformLocation(program_id, "texture_sampler");
+  program_.u_mvp_loc = glGetUniformLocation(program_id, "u_mvp");
+  program_.scale_loc = glGetUniformLocation(program_id, "scale");
+  program_.color_loc = glGetAttribLocation(program_id, "color");
+  program_.vertex_loc = glGetAttribLocation(program_id, "position");
+  program_.program_id = program_id;
 }
 
 void NaClDrawer::GenPathBuffers() {
@@ -112,22 +151,25 @@ void NaClDrawer::GenPathBuffers() {
         // the rendering is in three dimension
         const std::vector<Vector2f>& points =
             pa_idx == 0 ? geoptr->GetPath() : geoptr->GetHole(pa_idx - 1);
-
-        std::vector<GLfloat> vertices(points.size() * kVertDim);
+        size_t num_vertices = points.size();
+        std::vector<GLfloat> vertices(num_vertices * kVertDim);
         for (size_t j = 0; j < points.size(); ++j) {
           vertices[kVertDim * j + 0] = points[j](0);
           vertices[kVertDim * j + 1] = points[j](1);
           vertices[kVertDim * j + 2] = 0;
+          vertices[kVertDim * j + 3] = 1;
         }
         if (geoptr->IsPathClosed()) {
           vertices.emplace_back(points[0](0));
           vertices.emplace_back(points[0](1));
           vertices.emplace_back(0);
+          vertices.emplace_back(0);
+          num_vertices++;
         }
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat),
                      vertices.data(), GL_STATIC_DRAW);
         // count for closed loops
-        path_vert_size_.emplace_back(vertices.size() / kVertDim);
+        path_vert_size_.emplace_back(num_vertices);
 
         GLuint color_vbo;
         glGenBuffers(1, &color_vbo);
@@ -135,10 +177,11 @@ void NaClDrawer::GenPathBuffers() {
         glBindBuffer(GL_ARRAY_BUFFER, color_vbo);
 
         std::vector<GLfloat> colors(vertices.size());
-        for (size_t j = 0; j < colors.size() / 3; ++j) {
+        for (size_t j = 0; j < num_vertices; ++j) {
           colors[kVertDim * j + 0] = 1;
           colors[kVertDim * j + 1] = 1;
           colors[kVertDim * j + 2] = 1;
+          colors[kVertDim * j + 3] = 1;
         }
         glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat),
                      colors.data(), GL_STATIC_DRAW);
@@ -169,12 +212,15 @@ void NaClDrawer::GenPolyBuffers() {
         vert_array.emplace_back(tr.p0(0));
         vert_array.emplace_back(tr.p0(1));
         vert_array.emplace_back(0);
+        vert_array.emplace_back(1);
         vert_array.emplace_back(tr.p1(0));
         vert_array.emplace_back(tr.p1(1));
         vert_array.emplace_back(0);
+        vert_array.emplace_back(1);
         vert_array.emplace_back(tr.p2(0));
         vert_array.emplace_back(tr.p2(1));
         vert_array.emplace_back(0);
+        vert_array.emplace_back(1);
       }
       glBufferData(GL_ARRAY_BUFFER, vert_array.size() * sizeof(GLfloat),
                    vert_array.data(), GL_STATIC_DRAW);
@@ -185,16 +231,25 @@ void NaClDrawer::GenPolyBuffers() {
       glBindBuffer(GL_ARRAY_BUFFER, c_buffer);
       std::vector<GLfloat> colors(num_vertices * kVertDim);
       // each triangle is labeled with r g b
-      for (size_t cid = 0; cid < num_vertices / 3; ++cid) {
-        colors[9 * cid + 0] = 1;
-        colors[9 * cid + 1] = 0;
-        colors[9 * cid + 2] = 0;
-        colors[9 * cid + 3] = 0;
-        colors[9 * cid + 4] = 1;
-        colors[9 * cid + 5] = 0;
-        colors[9 * cid + 6] = 0;
-        colors[9 * cid + 7] = 0;
-        colors[9 * cid + 8] = 1;
+      for (size_t cid = 0; cid < num_vertices; ++cid) {
+        if (cid % 3 == 0) {
+          colors[kVertDim * cid + 0] = 1;
+          colors[kVertDim * cid + 1] = 1;
+          colors[kVertDim * cid + 2] = 0;
+          colors[kVertDim * cid + 3] = 1;
+        }
+        if (cid % 3 == 1) {
+          colors[kVertDim * cid + 0] = 1;
+          colors[kVertDim * cid + 1] = 0;
+          colors[kVertDim * cid + 2] = 1;
+          colors[kVertDim * cid + 3] = 1;
+        }
+        if (cid % 3 == 2) {
+          colors[kVertDim * cid + 0] = 0;
+          colors[kVertDim * cid + 1] = 1;
+          colors[kVertDim * cid + 2] = 1;
+          colors[kVertDim * cid + 3] = 1;
+        }
       }
       glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat),
                    colors.data(), GL_STATIC_DRAW);
@@ -205,56 +260,107 @@ void NaClDrawer::GenPolyBuffers() {
   }
 }
 
+void NaClDrawer::GenTextBuffers() {
+  FT_Library ft;
+  if (FT_Init_FreeType(&ft)) {
+    std::cerr << "Could not init freetype library\n";
+    return;
+  }
+  if (FT_New_Face(ft, "DejaVuSans.ttf", 0, &freetype_face_)) {
+    std::cerr << "Could not open font\n";
+    return;
+  }
+  FT_Set_Pixel_Sizes(freetype_face_, 0, 32);
+
+  glGenBuffers(1, &text_vbo_);
+  glGenTextures(1, &text_tex_);
+  glBindTexture(GL_TEXTURE_2D, text_tex_);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void NaClDrawer::DrawPaths() {
-  GLuint position_loc = glGetAttribLocation(program_id_, "a_position");
-  GLuint color_loc = glGetAttribLocation(program_id_, "a_color");
-  GLuint transform_loc = glGetUniformLocation(program_id_, "u_mvp");
+  GLProgram program = program_;
+  const float kGolbalScale = 1.f / 600.f;
   for (size_t i = 0; i < path_vert_vbo_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, path_vert_vbo_[i]);
-    glVertexAttribPointer(position_loc, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(position_loc);
+    glVertexAttribPointer(program.vertex_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
+                          0);
+    glEnableVertexAttribArray(program.vertex_loc);
 
     glBindBuffer(GL_ARRAY_BUFFER, path_color_vbo_[i]);
-    glVertexAttribPointer(color_loc, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(color_loc);
+    glVertexAttribPointer(program.color_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
+                          0);
+    glEnableVertexAttribArray(program.color_loc);
 
-    Isometry3f transform = Isometry3f::Identity();
-    transform.linear().topLeftCorner<2, 2>() =
+    Isometry3f u_mvp(Isometry3f::Identity());
+    u_mvp.linear().topLeftCorner<2, 2>() =
         path_node_[i]->GetRotationMatrix();
-    transform.translation().head<2>() = path_node_[i]->GetPosition();
-    glUniformMatrix4fv(transform_loc, 1, false, transform.data());
+    u_mvp.translation().head<2>() = path_node_[i]->GetPosition();
+    glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
+
+    glUniform1f(program.scale_loc, kGolbalScale);
+
     glDrawArrays(GL_LINE_STRIP, 0, path_vert_size_[i]);
   }
 }
 
 void NaClDrawer::DrawPolygons() {
-  GLuint position_loc = glGetAttribLocation(program_id_, "a_position");
-  GLuint color_loc = glGetAttribLocation(program_id_, "a_color");
-  GLuint transform_loc = glGetUniformLocation(program_id_, "u_mvp");
+  GLProgram program = program_;
+  const float kGolbalScale = 1.f / 600.f;
   for (size_t i = 0; i < poly_vert_vbo_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, poly_vert_vbo_[i]);
-    glVertexAttribPointer(position_loc, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(position_loc);
+    glVertexAttribPointer(program.vertex_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
+                          0);
+    glEnableVertexAttribArray(program.vertex_loc);
 
     glBindBuffer(GL_ARRAY_BUFFER, poly_color_vbo_[i]);
-    glVertexAttribPointer(color_loc, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
-    glEnableVertexAttribArray(color_loc);
+    glVertexAttribPointer(program.color_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
+                          0);
+    glEnableVertexAttribArray(program.color_loc);
 
-    Isometry3f transform = Isometry3f::Identity();
-    transform.linear().topLeftCorner<2, 2>() =
+    Isometry3f u_mvp(Isometry3f::Identity());
+    u_mvp.linear().topLeftCorner<2, 2>() =
         poly_node_[i]->GetRotationMatrix();
-    transform.translation().head<2>() = poly_node_[i]->GetPosition();
-    glUniformMatrix4fv(transform_loc, 1, false, transform.data());
+    u_mvp.translation().head<2>() = poly_node_[i]->GetPosition();
+    glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
+
+    glUniform1f(program.scale_loc, kGolbalScale);
 
     glDrawArrays(GL_TRIANGLES, 0, poly_vert_size_[i]);
   }
 }
 
+void NaClDrawer::DrawTexts() {
+  GLProgram program = program_;
+  glBindBuffer(GL_ARRAY_BUFFER, text_vbo_);
+  glVertexAttribPointer(program.vertex_loc, 4, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(program.vertex_loc);
+
+  Isometry3f u_mvp(Isometry3f::Identity());
+  glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
+
+  // set texture
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, text_tex_);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+  glUniform1i(program.tex_loc, 0);
+
+  std::string s("hello world!");
+  RenderString2D(freetype_face_, s, 0, 0, 1, 1);
+}
+
 void NaClDrawer::Draw() {
   glClearColor(0.3, 0.3, 0.3, 1);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glUseProgram(program_id_);
+  glUseProgram(program_.program_id);
+  DrawPolygons();
   DrawPaths();
-  // DrawPolygons();
+  // DrawTexts();
 }
-}
+
+}  // namespace diagrammar

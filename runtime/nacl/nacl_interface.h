@@ -1,11 +1,11 @@
+// Copyright 2015 Native Client Authors.
 #ifndef RUNTIME_NACL_NACL_INTERFACE_H_
 #define RUNTIME_NACL_NACL_INTERFACE_H_
-
-#include "physics/world.h"
-#include "ppapi/cpp/instance.h"
-#include "ppapi/cpp/module.h"
-#include "ppapi/cpp/graphics_3d.h"
+#include <ppapi/cpp/instance.h>
+#include <ppapi/cpp/module.h>
+#include <ppapi/cpp/graphics_3d.h>
 #include <thread>
+#include "physics/world.h"
 
 namespace diagrammar {
 

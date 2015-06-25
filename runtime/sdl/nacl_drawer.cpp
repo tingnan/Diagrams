@@ -1,6 +1,9 @@
-#include "nacl_drawer.h"
-#include "utility/world_parser.h"
+// Copyright 2015 Native Client Authors.
 #include <iostream>
+#include <vector>
+#include <string>
+#include "sdl/nacl_drawer.h"
+#include "utility/world_parser.h"
 
 namespace {
 
@@ -89,7 +92,8 @@ void RenderString2D(FT_Face fc, std::string s, float x, float y, float sx,
     y += (glyph->advance.y >> 6) * sy;
   }
 }
-}
+
+}  // namespace
 
 namespace diagrammar {
 
@@ -293,11 +297,11 @@ void NaClDrawer::DrawPaths() {
                           0);
     glEnableVertexAttribArray(program.color_loc);
 
-    Isometry3f transform(Isometry3f::Identity());
-    transform.linear().topLeftCorner<2, 2>() =
+    Isometry3f u_mvp(Isometry3f::Identity());
+    u_mvp.linear().topLeftCorner<2, 2>() =
         path_node_[i]->GetRotationMatrix();
-    transform.translation().head<2>() = path_node_[i]->GetPosition();
-    glUniformMatrix4fv(program.u_mvp_loc, 1, false, transform.data());
+    u_mvp.translation().head<2>() = path_node_[i]->GetPosition();
+    glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
     glUniform1f(program.scale_loc, kGolbalScale);
 
@@ -319,11 +323,11 @@ void NaClDrawer::DrawPolygons() {
                           0);
     glEnableVertexAttribArray(program.color_loc);
 
-    Isometry3f transform(Isometry3f::Identity());
-    transform.linear().topLeftCorner<2, 2>() =
+    Isometry3f u_mvp(Isometry3f::Identity());
+    u_mvp.linear().topLeftCorner<2, 2>() =
         poly_node_[i]->GetRotationMatrix();
-    transform.translation().head<2>() = poly_node_[i]->GetPosition();
-    glUniformMatrix4fv(program.u_mvp_loc, 1, false, transform.data());
+    u_mvp.translation().head<2>() = poly_node_[i]->GetPosition();
+    glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
     glUniform1f(program.scale_loc, kGolbalScale);
 
@@ -337,8 +341,8 @@ void NaClDrawer::DrawTexts() {
   glVertexAttribPointer(program.vertex_loc, 4, GL_FLOAT, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(program.vertex_loc);
 
-  Isometry3f transform(Isometry3f::Identity());
-  glUniformMatrix4fv(program.u_mvp_loc, 1, false, transform.data());
+  Isometry3f u_mvp(Isometry3f::Identity());
+  glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
   // set texture
   glActiveTexture(GL_TEXTURE0);
@@ -358,4 +362,5 @@ void NaClDrawer::Draw() {
   DrawPaths();
   // DrawTexts();
 }
-}
+
+}  // namespace diagrammar

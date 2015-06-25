@@ -1,9 +1,11 @@
-// Copyright 2015 Native Client authors
-#ifndef RUNTIME_NACL_NACL_DRAWER_
-#define RUNTIME_NACL_NACL_DRAWER_
-
-#include "physics/world.h"
+// Copyright 2015 Native Client Authors.
+#ifndef RUNTIME_SDL_NACL_DRAWER_H_
+#define RUNTIME_SDL_NACL_DRAWER_H_
 #include <GLES2/gl2.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <vector>
+#include "physics/world.h"
 
 namespace diagrammar {
 // currently I am not going to polute other
@@ -12,27 +14,25 @@ namespace diagrammar {
 
 // we have a drawer class that draws opengl primitives
 // the drawer class visit the world, examine the objects and the draw all things
-class NaClDrawer {
- public:
-  NaClDrawer(const World& world);
-  // not copyable
-  NaClDrawer(const NaClDrawer& other) = delete;
-  // can move
-  NaClDrawer(NaClDrawer&&) = default;
-  void Draw();
 
+struct GLProgram {
+  // texture
+  GLuint tex_loc;
+  // scaling
+  GLuint scale_loc;
+  // transformation matrix
+  GLuint u_mvp_loc;
+  // color location
+  GLuint color_loc;
+  // vertex location
+  GLuint vertex_loc;
+  // program
+  GLuint program_id;
+};
+
+class NaClDrawer {
  private:
   const World& world_;
-  void LoadShaders();
-  // generate vao and vbo for boundary path
-  void GenPathBuffers();
-  // generate vao and vbo for interior polygons
-  void GenPolyBuffers();
-  // drawing
-  void DrawPaths();
-  void DrawPolygons();
-
-  GLuint program_id_;
   std::vector<GLuint> path_vert_vbo_;
   std::vector<GLuint> path_vert_size_;
   std::vector<GLuint> path_color_vbo_;
@@ -42,7 +42,34 @@ class NaClDrawer {
   std::vector<GLuint> poly_vert_size_;
   std::vector<GLuint> poly_color_vbo_;
   std::vector<Node*> poly_node_;
+  FT_Face freetype_face_;
+
+  GLuint text_tex_;
+  GLuint text_vbo_;
+
+  GLProgram program_;
+
+ private:
+  void LoadShaders();
+  // generate vbo for boundary path
+  void GenPathBuffers();
+  // generate vbo for interior polygons
+  void GenPolyBuffers();
+  // generate vbo for fonts
+  void GenTextBuffers();
+  // drawing
+  void DrawPaths();
+  void DrawPolygons();
+  void DrawTexts();
+
+ public:
+  explicit NaClDrawer(const World& world);
+  // not copyable
+  NaClDrawer(const NaClDrawer& other) = delete;
+  // can move
+  NaClDrawer(NaClDrawer&&) = default;
+  void Draw();
 };
 }  // namespace diagrammar
 
-#endif  // RUNTIME_NACL_NACL_DRAWER_
+#endif  // RUNTIME_SDL_NACL_DRAWER_H_

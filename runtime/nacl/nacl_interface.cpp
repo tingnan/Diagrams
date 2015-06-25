@@ -1,13 +1,15 @@
+// Copyright 2015 Native Client Authors.
 #include <GLES2/gl2.h>
-#include "ppapi/gles2/gl2ext_ppapi.h"
-#include "nacl_interface.h"
-#include "nacl_drawer.h"
-#include "ppapi/cpp/var.h"
-#include "ppapi/cpp/completion_callback.h"
 #include <sys/mount.h>
-#include "nacl_io/nacl_io.h"
+#include <ppapi/gles2/gl2ext_ppapi.h>
+#include <nacl_io/nacl_io.h>
+#include <ppapi/cpp/var.h>
+#include <ppapi/cpp/completion_callback.h>
 #include <thread>
 #include <iostream>
+#include <string>
+#include "nacl/nacl_interface.h"
+#include "nacl/nacl_drawer.h"
 
 namespace diagrammar {
 
@@ -112,6 +114,7 @@ DiagrammarModule::~DiagrammarModule() {}
 pp::Instance* DiagrammarModule::CreateInstance(PP_Instance instance) {
   return new DiagrammarInterface(instance, this);
 }
-}
+
+}  // namespace diagrammar
 
 pp::Module* pp::CreateModule() { return new diagrammar::DiagrammarModule(); }

@@ -1,10 +1,11 @@
-#include "sdl_interface.h"
-#include "nacl_drawer.h"
-#include "physics/world.h"
+// Copyright 2015 Native Client Authors.
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengles2.h>
-#include <utility/stl_memory.h>
 #include <iostream>
+#include "sdl/sdl_interface.h"
+#include "sdl/nacl_drawer.h"
+#include "physics/world.h"
+#include "utility/stl_memory.h"
 
 namespace diagrammar {
 
@@ -61,4 +62,4 @@ SDLInterfaceOpenGL::~SDLInterfaceOpenGL() {
   SDL_DestroyWindow(window_);
   SDL_Quit();
 }
-}
+}  // namespace diagrammar
