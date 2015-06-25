@@ -48,6 +48,7 @@ class ComplexShape2D {
   std::vector<std::vector<Vector2f> > holes_;
   std::vector<Vector2f> SimplifyPath(const std::vector<Vector2f>&);
 };
+
 }  // namespace diagrammar
 
 #endif  // RUNTIME_GEOMETRY_GEOMETRY2_H_
