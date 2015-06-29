@@ -3,7 +3,8 @@
 #ifndef RUNTIME_INCLUDE_H_
 #define RUNTIME_INCLUDE_H_
 
-// 
+// we extensively use Eigen through out the project
+// for vector and matrices (and geometric transformation)
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 

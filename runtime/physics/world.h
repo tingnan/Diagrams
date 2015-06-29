@@ -1,9 +1,11 @@
 // Copyright 2015 Native Client authors
+
 #ifndef RUNTIME_PHYSICS_WORLD_H_
 #define RUNTIME_PHYSICS_WORLD_H_
-#include <list>
+
 #include <vector>
 #include <unordered_map>
+
 #include "utility/timer.h"
 #include "utility/stl_memory.h"
 #include "physics/node.h"

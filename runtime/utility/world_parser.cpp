@@ -1,8 +1,10 @@
 // Copyright 2015 Native Client Authors
+
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
+
 #include <json/json.h>
 #include "utility/world_parser.h"
 #include "geometry/aabb.h"

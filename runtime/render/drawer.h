@@ -3,8 +3,11 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
 #include <map>
+
 #include "physics/world.h"
+
 namespace diagrammar {
 // currently I am not going to polute other
 // files with opengl headers, so all opengl calls and drawings

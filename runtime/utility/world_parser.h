@@ -1,8 +1,10 @@
 // Copyright 2015 Native Client Authors.
+
 #ifndef RUNTIME_UTILITY_WORLD_PARSER_H_
 #define RUNTIME_UTILITY_WORLD_PARSER_H_
 
 #include <string>
+
 #include <physics/node.h>
 
 namespace Json {
