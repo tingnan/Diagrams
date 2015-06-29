@@ -2,6 +2,7 @@
 #ifndef RUNTIME_GEOMETRY_TRIANGULATE_H_
 #define RUNTIME_GEOMETRY_TRIANGULATE_H_
 #include <vector>
+#include <polyclipping/clipper.hpp>
 #include "include/typedefs.h"
 
 namespace diagrammar {
@@ -21,6 +22,16 @@ std::vector<Triangle2D> DelaunayTriangulation(
 // inflate an open path and then triangulate it
 std::vector<Triangle2D> InflateAndTriangulate(
     const std::vector<Vector2f>& path);
+
+// this function deos the following things:
+// 1, detect the self intersection in path
+// 2, union all the holes
+// 3, execute a difference operation on path using holes
+// the path and holes are then modified in place
+bool ResolveIntersections(std::vector<Vector2f>& path,
+                          std::vector<std::vector<Vector2f> >& holes
+                          );
+
 }  // namespace diagrammar
 
 #endif  // RUNTIME_GEOMETRY_TRIANGULATE_H_
