@@ -1,8 +1,10 @@
 // Copyright 2015 Native Client Authors.
+
 #ifndef RUNTIME_GEOMETRY_GEOMETRY2_H_
 #define RUNTIME_GEOMETRY_GEOMETRY2_H_
+
 #include <vector>
-#include "include/typedefs.h"
+#include "include/matrix_types.h"
 
 namespace diagrammar {
 
@@ -14,17 +16,15 @@ struct Triangle2D {
   Vector2f p2;
 };
 
-class ComplexShape2D {
+class ComplexPolygon {
  public:
-  // construct a empty shape
-  ComplexShape2D() = default;
+  ComplexPolygon() = default;
   // construct a shape with boundary described by input points
-  explicit ComplexShape2D(const std::vector<Vector2f>& pts);
-  // all defaut
-  ComplexShape2D(const ComplexShape2D&) = default;
-  ComplexShape2D(ComplexShape2D&&) = default;
-  ComplexShape2D& operator=(const ComplexShape2D&) = default;
-  ComplexShape2D& operator=(ComplexShape2D&&) = default;
+  explicit ComplexPolygon(const std::vector<Vector2f>& pts);
+  ComplexPolygon(const ComplexPolygon&) = default;
+  ComplexPolygon(ComplexPolygon&&) = default;
+  ComplexPolygon& operator=(const ComplexPolygon&) = default;
+  ComplexPolygon& operator=(ComplexPolygon&&) = default;
   // change the boundary path
   void SetPath(const std::vector<Vector2f>& pts);
   // change the hole at index i
@@ -43,10 +43,10 @@ class ComplexShape2D {
   bool IsPathClosed() const { return is_closed_; }
 
  private:
+
   std::vector<Vector2f> path_;
   bool is_closed_ = true;
   std::vector<std::vector<Vector2f> > holes_;
-  std::vector<Vector2f> SimplifyPath(const std::vector<Vector2f>&);
 };
 
 }  // namespace diagrammar

@@ -1,10 +1,13 @@
-// Copyright 2015 Native Client authors
+// Copyright 2015 Native Client Authors.
+
 #ifndef RUNTIME_PHYSICS_PHYSICS_ENGINE_LIQUIDFUN_H_
 #define RUNTIME_PHYSICS_PHYSICS_ENGINE_LIQUIDFUN_H_
 
 #include "physics/physics_engine.h"
+
 class b2World;
 class b2Body;
+
 namespace diagrammar {
 // this is a base class that is supposed to be overload
 class PhysicsEngineLiquidFun : public PhysicsEngine {
@@ -27,11 +30,11 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   void AddNodeFromWorldToEngine(Node* ref);
   void AddNodeFromEngineToWorld(b2Body* body);
   // we can either add polygons to the body
-  void AddPolygonsToBody(const class ComplexShape2D&, b2Body*);
+  void AddPolygonsToBody(const class ComplexPolygon&, b2Body*);
   // or add chains to the body
-  void AddChainsToBody(const class ComplexShape2D&, b2Body*);
+  void AddChainsToBody(const class ComplexPolygon&, b2Body*);
 
-  class b2World* b2world_;
+  b2World* b2world_;
   // a default set of constants
   int velocity_iterations_ = 5;
   int position_iterations_ = 5;

@@ -77,7 +77,7 @@ void Drawer::GenPathBuffers() {
          ++geo_idx) {
       // flattern
       assert(node_ptr != nullptr);
-      ComplexShape2D* geoptr = node_ptr->GetGeometry(geo_idx);
+      ComplexPolygon* geoptr = node_ptr->GetGeometry(geo_idx);
       unsigned num_paths = 1 + geoptr->GetNumHoles();
 
       for (size_t pa_idx = 0; pa_idx < num_paths; ++pa_idx) {
@@ -148,7 +148,7 @@ void Drawer::GenPolyBuffers() {
          geo_idx < world_.GetNodeByIndex(index)->GetGeometryCount();
          ++geo_idx) {
       poly_node_.emplace_back(world_.GetNodeByIndex(index));
-      ComplexShape2D* geo_ptr =
+      ComplexPolygon* geo_ptr =
           world_.GetNodeByIndex(index)->GetGeometry(geo_idx);
       // only draw the first geometry
       GLuint vao_id;

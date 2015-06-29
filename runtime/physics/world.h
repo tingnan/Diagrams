@@ -28,43 +28,41 @@ class Snapshot {};
 class World {
  public:
   enum EngineType { kDemo, kLiquidFun, kChipmunk2D, kBullet, kODE };
-  World();
+  World() = default;
   ~World();
   World(World&& other) = default;
   // not copyable
   World(const World& other) = delete;
 
-  // initialize the world structure with a description file
+  // initialize the world, the physics engine MUST be initialized after 
+  // the world description is loaded
   void InitializeWorldDescription(const Json::Value& world);
   void InitializeWorldDescription(const char* file);
-
-  // initialize a physics engine of user's choice
-  // default is liquidfun/Box2D
   void InitializePhysicsEngine(EngineType t = EngineType::kLiquidFun);
-
+  // called after physics engine is initialized
   void InitializeTimer();
-  // step the world!
+
+  // put in the main loop
   void Step();
 
-  // event handler
+  // event handler, to be implemented with state charts
   void HandleEvent();
 
-  // general get and set function
   float time_step() const;
   float now() const;
   float simulation_time() const;
-  // create an empty node
-  Node* AddNode();
-  // create a node from another
+  
+  // Copy a node to the world and assign an id
   Node* AddNode(Node);
   size_t GetNumNodes() const;
-  // get a ptr to a node by unique id
   Node* GetNodeByID(int id) const;
   // get a ptr to a node by index (only for interating purpose) 
   Node* GetNodeByIndex(int index) const;
 
  private:
+
   // the state machine that controls the flow of simulation
+  // will be replaced with boost state charts
   struct WorldStateFlag {
     static const int kCreated =
         0x0;  // it is just freshly baked and has nothing
@@ -75,26 +73,29 @@ class World {
     static const int kRunning = 0x3;  // Initialized | EngineReady bit flag set!
     static const int kHalt = 0x4;
   };
-
-  // using the Json object to construct an initial world
+  
+  // called by InitializeWorldDescription
   void _ConstructWorldFromDescriptor(const Json::Value&);
+
   // assign a unique ID to the Node, if not already has
   void _GenerateID(Node*);
 
   // world frame
   CoordinateFrame2D coordinate_;
 
-  // all the nodes in the world
   std::vector<std::unique_ptr<Node> > nodes_;
-  // a lookup table for quick access by unique id
+  // quick access to node by unique id
   std::unordered_map<int, Node*> node_table_;
-  // Timer that controls the simulation
+
+  // Timer that sync the simulation with real time
   Timer timer_;
   std::list<double> step_time_;
+
   // the pointer to the actual physics engine used;
   // we will allow user to switch engine;
   class PhysicsEngine* physics_engine_;
 
+  // will be replaced: initialize world state
   int world_state_ = WorldStateFlag::kCreated;
 };
 }  // namespace diagrammar

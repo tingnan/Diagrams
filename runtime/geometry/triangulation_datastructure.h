@@ -3,7 +3,7 @@
 #define RUNTIME_GEOMETRY_TRIANGULATIONDATASTRUCTURE_H_
 #include <vector>
 #include <memory>
-#include "include/typedefs.h"
+#include "include/matrix_types.h"
 
 namespace diagrammar {
 // the representation of triangulation

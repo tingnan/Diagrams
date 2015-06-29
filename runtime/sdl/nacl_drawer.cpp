@@ -139,7 +139,7 @@ void NaClDrawer::GenPathBuffers() {
     for (size_t geo_idx = 0; geo_idx < node_ptr->GetGeometryCount();
          ++geo_idx) {
       assert(node_ptr != nullptr);
-      ComplexShape2D* geoptr = node_ptr->GetGeometry(geo_idx);
+      ComplexPolygon* geoptr = node_ptr->GetGeometry(geo_idx);
       unsigned num_paths = 1 + geoptr->GetNumHoles();
       // loop through the paths and holes
       for (size_t pa_idx = 0; pa_idx < num_paths; ++pa_idx) {

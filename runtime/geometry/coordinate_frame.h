@@ -1,7 +1,9 @@
 // Copyright 2015 Native Client Authors.
+
 #ifndef RUNTIME_GEOMETRY_COORDINATE_FRAME_H_
 #define RUNTIME_GEOMETRY_COORDINATE_FRAME_H_
-#include "include/typedefs.h"
+
+#include "include/matrix_types.h"
 
 namespace diagrammar {
 // a frame that defines the transformation of the object
@@ -42,15 +44,10 @@ class CoordinateFrame2D {
   void RotateAboutParentCenter(const Matrix2f& rotmat);
   void RotateAboutParentCenter(const Rotation2f& rot);
 
-  // provide a vector in the local frame, get the transformed vector
-  // in the parent frame
   Vector2f TransformVector(const Vector2f& vec) const;
-  // provide a vector in the parent frame and get the trasformed vector
-  // in the local frame
   Vector2f InverseTransformVector(const Vector2f& vec) const;
-  // transform a point from local to parent frame
+
   Vector2f TransformPoint(const Vector2f& vec) const;
-  // transform the point from the parent to local frame
   Vector2f InverseTransformPoint(const Vector2f& vec) const;
 
   // get the translation of the frame (relative to the parent frame)

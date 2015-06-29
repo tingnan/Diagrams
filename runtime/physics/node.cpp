@@ -1,9 +1,9 @@
-// Copyright 2015 Native Client authors
+// Copyright 2015 Native Client authors.
+
 #include "physics/node.h"
 #include "utility/stl_memory.h"
 
 namespace diagrammar {
-Node::Node() {}
 
 Node::Node(const Node& rhs) :  
   coordinate_(rhs.coordinate_),
@@ -13,7 +13,7 @@ Node::Node(const Node& rhs) :
   // deep copy content of unique_ptr
   collision_shapes_.reserve(rhs.collision_shapes_.size());
   for (const auto& geo_ptr : rhs.collision_shapes_) {
-    collision_shapes_.emplace_back(make_unique<ComplexShape2D>(*geo_ptr));
+    collision_shapes_.emplace_back(make_unique<ComplexPolygon>(*geo_ptr));
   }
 }
 
@@ -31,21 +31,27 @@ void Node::swap(Node& rhs) {
   swap(collision_shapes_, rhs.collision_shapes_);
 }
 
-Node::Node(ComplexShape2D geo) {
-  collision_shapes_.emplace_back(make_unique<ComplexShape2D>(std::move(geo)));
+Node::Node(const ComplexPolygon& geo) {
+  collision_shapes_.emplace_back(make_unique<ComplexPolygon>(geo));
+}
+
+Node::Node(const std::vector<ComplexPolygon>& geo_list) {
+  for (const auto& geo : geo_list) {
+    collision_shapes_.emplace_back(make_unique<ComplexPolygon>(geo));
+  }
 }
 
 // member accessible functions
-const ComplexShape2D* Node::GetGeometry(unsigned i) const {
+const ComplexPolygon* Node::GetGeometry(unsigned i) const {
   return collision_shapes_[i].get();
 }
 
-ComplexShape2D* Node::GetGeometry(unsigned i) {
+ComplexPolygon* Node::GetGeometry(unsigned i) {
   return collision_shapes_[i].get();
 }
 
-void Node::AddGeometry(ComplexShape2D geo) {
-  collision_shapes_.emplace_back(make_unique<ComplexShape2D>(std::move(geo)));
+void Node::AddGeometry(ComplexPolygon geo) {
+  collision_shapes_.emplace_back(make_unique<ComplexPolygon>(std::move(geo)));
 }
 
 int Node::id() const { return id_; }

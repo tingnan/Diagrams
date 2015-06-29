@@ -70,7 +70,7 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(World& world)
 }
 
 void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
-  std::vector<ComplexShape2D> geo_list;
+  std::vector<ComplexPolygon> geo_list;
   for (b2Fixture* shape_fixture = body->GetFixtureList(); shape_fixture;
        shape_fixture = shape_fixture->GetNext()) {
     b2Shape::Type shape_type = shape_fixture->GetType();
@@ -83,7 +83,7 @@ void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
         b2Vec2 tmp = shape->GetVertex(i);
         vertices[i] = Vector2f(tmp.x, tmp.y) * kScaleUp;
       }
-      geo_list.emplace_back(ComplexShape2D(vertices));
+      geo_list.emplace_back(ComplexPolygon(vertices));
     }
     if (shape_type == b2Shape::e_circle) {
       b2CircleShape* shape =
@@ -97,17 +97,14 @@ void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
             shape->m_p.y + shape->m_radius * sin(float32(2 * i) / count * M_PI);
         vertices[i] = Vector2f(x, y) * kScaleUp;
       }
-      geo_list.emplace_back(ComplexShape2D(vertices));
+      geo_list.emplace_back(ComplexPolygon(vertices));
     }
   }
-  Node* tmp = world_.AddNode();
-  for (auto& geo : geo_list) {
-    tmp->AddGeometry(std::move(geo));
-  }
+  Node* tmp = world_.AddNode(Node(geo_list));
   body->SetUserData(tmp);
 }
 
-void PhysicsEngineLiquidFun::AddChainsToBody(const ComplexShape2D& geo,
+void PhysicsEngineLiquidFun::AddChainsToBody(const ComplexPolygon& geo,
                                              b2Body* b) {
   const std::vector<Vector2f>& pts = geo.GetPath();
   std::vector<b2Vec2> vertices(pts.size());
@@ -123,7 +120,7 @@ void PhysicsEngineLiquidFun::AddChainsToBody(const ComplexShape2D& geo,
   b->CreateFixture(&chain, 1);
 }
 
-void PhysicsEngineLiquidFun::AddPolygonsToBody(const ComplexShape2D& geo,
+void PhysicsEngineLiquidFun::AddPolygonsToBody(const ComplexPolygon& geo,
                                                b2Body* b) {
   std::vector<Triangle2D> pieces = geo.Triangulate();
   for (size_t i = 0; i < pieces.size(); ++i) {

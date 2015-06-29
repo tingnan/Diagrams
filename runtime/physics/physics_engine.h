@@ -1,15 +1,19 @@
 // Copyright 2015 Native Client authors
+
 #ifndef RUNTIME_PHYSICS_PHYSICS_ENGINE_H_
 #define RUNTIME_PHYSICS_PHYSICS_ENGINE_H_
 
 #include <vector>
+
 namespace Json {
 class Value;
 }  // namespace Json
 
 namespace diagrammar {
-// this is a base class that is supposed to be overload
+
 class Node;
+// this is a base class that is supposed to be overload
+// allow for different physics engines
 class PhysicsEngine {
  public:
   explicit PhysicsEngine(class World& world) : world_(world) {}

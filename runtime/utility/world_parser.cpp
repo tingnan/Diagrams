@@ -84,7 +84,7 @@ Node ParseNode(const Json::Value& nodeobj) {
     }
 
     if (itr.key().asString() == "path") {
-      ComplexShape2D geo;
+      ComplexPolygon geo;
       geo.SetPath(ParsePath2D(*itr));
       if (ntype == "open_path") {
         geo.SetPathClosed(false);
@@ -95,7 +95,7 @@ Node ParseNode(const Json::Value& nodeobj) {
     if (itr.key().asString() == "inner_path") {
       const std::vector<Vector2f>& path = ParsePath2D(*itr);
       AABB bounding_box = GetAABBWithPadding(path, 5e-2);
-      ComplexShape2D geo;
+      ComplexPolygon geo;
       geo.AddHole(path);
       std::vector<Vector2f> box;
       Vector2f pt0 = bounding_box.lower_bound;

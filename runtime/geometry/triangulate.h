@@ -1,34 +1,47 @@
 // Copyright 2015 Native Client Authors.
+
 #ifndef RUNTIME_GEOMETRY_TRIANGULATE_H_
 #define RUNTIME_GEOMETRY_TRIANGULATE_H_
+
 #include <vector>
+
 #include <polyclipping/clipper.hpp>
-#include "include/typedefs.h"
+#include "include/matrix_types.h"
 
 namespace diagrammar {
+
 struct Triangle2D;
+
+// currently only one method is supported
 enum PolylineMethod { kDouglasPeucker };
-// simplify an input curved, using the selected method
-std::vector<Vector2f> Simplify(
+
+std::vector<Vector2f> SimplifyPolyline(
     const std::vector<Vector2f>& in,
     PolylineMethod m = PolylineMethod::kDouglasPeucker);
-// triangulate a complex 2d shape, described by its boundary
-std::vector<Triangle2D> DelaunayTriangulation(
-    const std::vector<Vector2f>& path);
-// triangulate a complex 2d shape with holes
-std::vector<Triangle2D> DelaunayTriangulation(
-    const std::vector<Vector2f>& path,
-    const std::vector<std::vector<Vector2f> >& holes);
-// inflate an open path and then triangulate it
-std::vector<Triangle2D> InflateAndTriangulate(
-    const std::vector<Vector2f>& path);
 
-// this function deos the following things:
-// 1, detect the self intersection in path
+// input is the boundary polyline
+std::vector<Triangle2D> TriangulatePolygon(
+    const std::vector<Vector2f>& polyline);
+
+// triangulate a complex polygon with holes in it
+std::vector<Triangle2D> TriangulatePolygon(
+    const std::vector<Vector2f>& polyline,
+    const std::vector<std::vector<Vector2f> >& holes);
+
+// inflate a polyline and then triangulate it
+std::vector<Triangle2D> TriangulatePolyline(
+    const std::vector<Vector2f>& polyline);
+
+// the method takes a boundary polyline and a set of holes as input, then:
+// 1, detect the self intersection in the polyline
 // 2, union all the holes
-// 3, execute a difference operation on path using holes
-// the path and holes are then modified in place
-bool ResolveIntersections(std::vector<Vector2f>& path,
+// 3, execute a difference operation on path using the holes
+// the input polyline and holes are then modified in place.
+// the method can fail when:
+// 1, the boundary path is self intersecting
+// 2, the holes split or erase the polyline
+// TODO implementation
+bool ResolveIntersections(std::vector<Vector2f>& polyline,
                           std::vector<std::vector<Vector2f> >& holes
                           );
 

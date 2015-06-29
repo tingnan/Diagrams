@@ -1,16 +1,15 @@
-// Copyright 2015 Native Client authors
+// Copyright 2015 Native Client Authors.
+
 #include <random>
 #include <iostream>
 #include <algorithm>
+
 #include <json/json.h>
 #include "physics/world.h"
 #include "utility/world_parser.h"
-#include "physics/physics_engine_demo.h"
 #include "physics/physics_engine_liquidfun.h"
 
 namespace diagrammar {
-
-World::World() {}
 
 void World::_ConstructWorldFromDescriptor(const Json::Value& world) {
   // using the WorldDescptor to construct the initial world
@@ -112,14 +111,8 @@ Node* World::AddNode(Node obj) {
   return nodes_.back().get();
 }
 
-Node* World::AddNode() {
-  nodes_.emplace_back(make_unique<Node>());
-  _GenerateID(nodes_.back().get());
-  return nodes_.back().get();
-}
-
 Node* World::GetNodeByIndex(int i) const {
-  if (i < nodes_.size()) return nodes_[i].get();
+  if (i < nodes_.size() && i >= 0) return nodes_[i].get();
   return nullptr;
 }
 

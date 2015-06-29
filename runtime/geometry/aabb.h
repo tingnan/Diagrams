@@ -1,9 +1,11 @@
 // Copyright 2015 Native Client Authors.
+
 #ifndef RUNTIME_GEOMETRY_AABB_H_
 #define RUNTIME_GEOMETRY_AABB_H_
 
 #include <vector>
-#include "include/typedefs.h"
+
+#include "include/matrix_types.h"
 
 namespace diagrammar {
 typedef struct AABB {
