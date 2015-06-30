@@ -1,8 +1,11 @@
 // Copyright 2015 Native Client Authors.
+
 #ifndef RUNTIME_GEOMETRY_TRIANGULATIONDATASTRUCTURE_H_
 #define RUNTIME_GEOMETRY_TRIANGULATIONDATASTRUCTURE_H_
+
 #include <vector>
 #include <memory>
+
 #include "include/matrix_types.h"
 
 namespace diagrammar {

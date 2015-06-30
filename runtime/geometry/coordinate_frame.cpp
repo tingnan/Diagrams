@@ -1,4 +1,5 @@
 // Copyright 2015 Native Client Authors.
+
 #include "geometry/coordinate_frame.h"
 
 namespace diagrammar {
