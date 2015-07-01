@@ -16,6 +16,9 @@ struct Triangle2D {
   Vector2f p2;
 };
 
+
+// This is the glue code, for some physics engines we need to triangulate
+// the polylines. Other physics engine can use convex hull decomposition
 class ComplexPolygon {
  public:
   ComplexPolygon() = default;
@@ -23,19 +26,19 @@ class ComplexPolygon {
   explicit ComplexPolygon(const std::vector<Vector2f>& pts);
   ComplexPolygon(const ComplexPolygon&) = default;
   ComplexPolygon(ComplexPolygon&&) = default;
+  
   ComplexPolygon& operator=(const ComplexPolygon&) = default;
   ComplexPolygon& operator=(ComplexPolygon&&) = default;
-  // change the boundary path
+
+  std::vector<Vector2f> GetPath() const;
   void SetPath(const std::vector<Vector2f>& pts);
-  // change the hole at index i
-  void SetHole(int i, const std::vector<Vector2f>& pts);
-  // add a hole to the shape
-  void AddHole(const std::vector<Vector2f>& pts);
+  
   size_t GetNumHoles() { return holes_.size(); }
+  void SetHole(int i, const std::vector<Vector2f>& pts);
+  void AddHole(const std::vector<Vector2f>& pts);
+
   // return a triangulation of the shape
   std::vector<Triangle2D> Triangulate() const;
-  // get the boundary points
-  std::vector<Vector2f> GetPath() const;
   // get the hole at index i
   std::vector<Vector2f> GetHole(int i) const;
   // change the path type (open or close)

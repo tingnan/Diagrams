@@ -39,12 +39,12 @@ std::vector<Vector2f> ComplexPolygon::GetHole(int i) const {
   return holes_[i];
 }
 
-void ComplexPolygon::SetPathClosed(bool flag) {
+void ComplexPolygon::SetPathClosed(bool closed) {
   // if now we want to open the path
-  if (!flag) {
+  if (!closed) {
     holes_.clear();
   }
-  is_closed_ = flag;
+  is_closed_ = closed;
 }
 
 }  // namespace diagrammar

@@ -30,12 +30,11 @@ class Node {
   Node(Node&&) = default;
   Node& operator=(Node&&) = default;
   
-
+  unsigned GetGeometryCount() const { return collision_shapes_.size(); }
   const ComplexPolygon* GetGeometry(unsigned) const;
   ComplexPolygon* GetGeometry(unsigned);
   void AddGeometry(ComplexPolygon geo);
-  unsigned GetGeometryCount() const { return collision_shapes_.size(); }
-
+  
   int id() const;
   void set_id(int id);
   int collision_group_id() const;

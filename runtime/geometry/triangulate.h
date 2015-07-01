@@ -12,34 +12,33 @@ namespace diagrammar {
 
 struct Triangle2D;
 
-// currently only one method is supported
-enum PolylineMethod { kDouglasPeucker };
-
 std::vector<Vector2f> SimplifyPolyline(
-    const std::vector<Vector2f>& in,
-    PolylineMethod m = PolylineMethod::kDouglasPeucker);
+    const std::vector<Vector2f>& in);
 
-// input is the boundary polyline
+// Triangulates a polygon described by a closed polyline.
+// The polyline must not be self intersecting
 std::vector<Triangle2D> TriangulatePolygon(
     const std::vector<Vector2f>& polyline);
 
-// triangulate a complex polygon with holes in it
+// Triangulates a complex polygon with holes in it.
 std::vector<Triangle2D> TriangulatePolygon(
     const std::vector<Vector2f>& polyline,
     const std::vector<std::vector<Vector2f> >& holes);
 
-// inflate a polyline and then triangulate it
+// Inflates and triangulates an open polyline.
 std::vector<Triangle2D> TriangulatePolyline(
     const std::vector<Vector2f>& polyline);
 
-// the method takes a boundary polyline and a set of holes as input, then:
-// 1, detect the self intersection in the polyline
-// 2, union all the holes
-// 3, execute a difference operation on path using the holes
-// the input polyline and holes are then modified in place.
-// the method can fail when:
-// 1, the boundary path is self intersecting
-// 2, the holes split or erase the polyline
+// The method takes a boundary polyline and a set of holes as input, then:
+// - detect the self intersection in the polyline
+// - union all the holes
+// - execute a difference operation on the polygon using the holes
+// - the input polyline and holes are then modified in place.
+// The return value indicates if the operations succeeded. 
+// The method will fail when:
+// - the boundary path is self intersecting
+// - the holes split or erase the polygon
+
 // TODO implementation
 bool ResolveIntersections(std::vector<Vector2f>& polyline,
                           std::vector<std::vector<Vector2f> >& holes

@@ -267,23 +267,22 @@ int PointInCircumcenter(const diagrammar::Vector2f& a,
 
 namespace diagrammar {
 
-std::vector<Vector2f> SimplifyPolyline(const std::vector<Vector2f>& in,
-                                       PolylineMethod m) {
-  if (in.size() <= 2) {
-    return in;
+std::vector<Vector2f> SimplifyPolyline(const std::vector<Vector2f>& polyline) {
+  if (polyline.size() <= 2) {
+    return polyline;
   }
 
   std::vector<Vector2f> out;
-  if (PolylineMethod::kDouglasPeucker == m) {
+  if (true) {
     // we compute the boundary square size of the polyline
-    AABB bound = GetAABBWithPadding(in, 0);
+    AABB bound = GetAABBWithPadding(polyline, 0);
     Vector2f span = bound.upper_bound - bound.lower_bound;
     // set a tolerance to remove points that are too close to
     // each other. the relative tolerance is 0.5% of max size
     // so the simplified curve is still pretty smooth
     float rel_tol = 5e-3;
     float tol = std::max(span(0), span(1)) * rel_tol;
-    out = PolylineDouglasPeuckerIterative(in, tol);
+    out = PolylineDouglasPeuckerIterative(polyline, tol);
   } else {
     // only one method implemented
     // the douglas_peucker method may change the topology of input curves
