@@ -2,7 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include "sdl/nacl_drawer.h"
+#include "sdl/drawer.h"
 #include "utility/world_parser.h"
 
 namespace {
@@ -136,10 +136,10 @@ void NaClDrawer::GenPathBuffers() {
   for (size_t index = 0; index < world_.GetNumNodes(); ++index) {
     Node* node_ptr = world_.GetNodeByIndex(index);
     // loop through geometries
-    for (size_t geo_idx = 0; geo_idx < node_ptr->GetGeometryCount();
+    for (size_t geo_idx = 0; geo_idx < node_ptr->GetNumPolygon();
          ++geo_idx) {
       assert(node_ptr != nullptr);
-      ComplexPolygon* geoptr = node_ptr->GetGeometry(geo_idx);
+      ComplexPolygon* geoptr = node_ptr->GetPolygon(geo_idx);
       unsigned num_paths = 1 + geoptr->GetNumHoles();
       // loop through the paths and holes
       for (size_t pa_idx = 0; pa_idx < num_paths; ++pa_idx) {
@@ -194,10 +194,10 @@ void NaClDrawer::GenPathBuffers() {
 void NaClDrawer::GenPolyBuffers() {
   for (size_t index = 0; index < world_.GetNumNodes(); ++index) {
     Node* node_ptr = world_.GetNodeByIndex(index);
-    for (size_t geo_idx = 0; geo_idx < node_ptr->GetGeometryCount();
+    for (size_t geo_idx = 0; geo_idx < node_ptr->GetNumPolygon();
          ++geo_idx) {
-      std::vector<Triangle2D> triangles =
-          node_ptr->GetGeometry(geo_idx)->Triangulate();
+      std::vector<Triangle> triangles =
+          node_ptr->GetPolygon(geo_idx)->Triangulate();
       size_t num_vertices = triangles.size() * 3;
 
       GLuint v_buffer;

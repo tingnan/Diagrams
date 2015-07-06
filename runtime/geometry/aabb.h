@@ -8,6 +8,7 @@
 #include "include/matrix_types.h"
 
 namespace diagrammar {
+
 typedef struct AABB {
   Vector2f lower_bound;
   Vector2f upper_bound;
@@ -36,5 +37,7 @@ static AABB GetAABBWithPadding(const std::vector<Vector2f>& closure,
   bound.upper_bound += padding;
   return bound;
 }
+
 }  // namespace diagrammar
+
 #endif  // RUNTIME_GEOMETRY_AABB_H_

@@ -17,7 +17,7 @@ void World::_ConstructWorldFromDescriptor(const Json::Value& world) {
   Json::Value::const_iterator itr = world.begin();
   for (; itr != world.end(); ++itr) {
     if (itr.key().asString() == "transform") {
-      coordinate_ = CoordinateFrame2D(ParseTransformation2D(*itr));
+      frame_ = CoordinateFrame2D(ParseTransformation2D(*itr));
       // std::cout << mWorldTransformation.GetTransform().matrix() << std::endl;
     }
     if (itr.key().asString() == "children") {

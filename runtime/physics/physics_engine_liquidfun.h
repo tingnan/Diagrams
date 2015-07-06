@@ -3,6 +3,8 @@
 #ifndef RUNTIME_PHYSICS_PHYSICS_ENGINE_LIQUIDFUN_H_
 #define RUNTIME_PHYSICS_PHYSICS_ENGINE_LIQUIDFUN_H_
 
+#include <vector>
+
 #include "physics/physics_engine.h"
 
 class b2World;
@@ -29,11 +31,7 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   // allow runtime adding things
   void AddNodeFromWorldToEngine(Node* ref);
   void AddNodeFromEngineToWorld(b2Body* body);
-  // we can either add polygons to the body
-  void AddPolygonsToBody(const class ComplexPolygon&, b2Body*);
-  // or add chains to the body
-  void AddChainsToBody(const class ComplexPolygon&, b2Body*);
-
+  void AddTrianglesToBody(std::vector<class Triangle>, class b2Body*);
   b2World* b2world_;
   // a default set of constants
   int velocity_iterations_ = 5;

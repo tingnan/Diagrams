@@ -84,7 +84,7 @@ class World {
   void _GenerateID(Node*);
 
   // world frame
-  CoordinateFrame2D coordinate_;
+  CoordinateFrame2D frame_;
 
   std::vector<std::unique_ptr<Node> > nodes_;
   // quick access to node by unique id
@@ -98,7 +98,7 @@ class World {
   // we will allow user to switch engine;
   class PhysicsEngine* physics_engine_;
 
-  // will be replaced: initialize world state
+  // TODO(tingnan), replace with state machine
   int world_state_ = WorldStateFlag::kCreated;
 };
 }  // namespace diagrammar

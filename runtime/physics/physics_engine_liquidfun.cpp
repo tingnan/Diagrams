@@ -7,7 +7,7 @@
 #include "Box2D/Box2D.h"
 #include "physics/physics_engine_liquidfun.h"
 #include "physics/world.h"
-#include "geometry/triangulate.h"
+#include "geometry/geometry2.h"
 
 namespace {
 
@@ -72,7 +72,8 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(World& world)
 }
 
 void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
-  std::vector<ComplexPolygon> geo_list;
+  Node* new_node = world_.AddNode(Node());
+  body->SetUserData(new_node);
   for (b2Fixture* shape_fixture = body->GetFixtureList(); shape_fixture;
        shape_fixture = shape_fixture->GetNext()) {
     b2Shape::Type shape_type = shape_fixture->GetType();
@@ -85,7 +86,7 @@ void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
         b2Vec2 tmp = shape->GetVertex(i);
         vertices[i] = Vector2f(tmp.x, tmp.y) * kScaleUp;
       }
-      geo_list.emplace_back(ComplexPolygon(vertices));
+      new_node->AddGeometry(Polygon(vertices));
     }
     if (shape_type == b2Shape::e_circle) {
       b2CircleShape* shape =
@@ -99,40 +100,21 @@ void PhysicsEngineLiquidFun::AddNodeFromEngineToWorld(b2Body* body) {
             shape->m_p.y + shape->m_radius * sin(float32(2 * i) / count * M_PI);
         vertices[i] = Vector2f(x, y) * kScaleUp;
       }
-      geo_list.emplace_back(ComplexPolygon(vertices));
+      new_node->AddGeometry(Polygon(vertices));
     }
   }
-  Node* tmp = world_.AddNode(Node(geo_list));
-  body->SetUserData(tmp);
+  
+  
 }
 
-void PhysicsEngineLiquidFun::AddChainsToBody(const ComplexPolygon& geo,
-                                             b2Body* b) {
-  const std::vector<Vector2f>& pts = geo.GetPath();
-  std::vector<b2Vec2> vertices(pts.size());
-  for (size_t i = 0; i < vertices.size(); ++i) {
-    vertices[i].Set(pts[i](0) * kScaleDown, pts[i](1) * kScaleDown);
-  }
-  b2ChainShape chain;
-  if (geo.IsPathClosed()) {
-    chain.CreateLoop(vertices.data(), vertices.size());
-  } else {
-    chain.CreateChain(vertices.data(), vertices.size());
-  }
-  b->CreateFixture(&chain, 1);
-}
-
-void PhysicsEngineLiquidFun::AddPolygonsToBody(const ComplexPolygon& geo,
-                                               b2Body* b) {
-  std::vector<Triangle2D> pieces = geo.Triangulate();
-  for (size_t i = 0; i < pieces.size(); ++i) {
+void PhysicsEngineLiquidFun::AddTrianglesToBody(std::vector<Triangle> triangles, b2Body* b) {
+  for (size_t i = 0; i < triangles.size(); ++i) {
     b2Vec2 vertices[3];
-    vertices[0].Set(pieces[i].p0(0) * kScaleDown, pieces[i].p0(1) * kScaleDown);
-    vertices[1].Set(pieces[i].p1(0) * kScaleDown, pieces[i].p1(1) * kScaleDown);
-    vertices[2].Set(pieces[i].p2(0) * kScaleDown, pieces[i].p2(1) * kScaleDown);
+    vertices[0].Set(triangles[i].p0(0) * kScaleDown, triangles[i].p0(1) * kScaleDown);
+    vertices[1].Set(triangles[i].p1(0) * kScaleDown, triangles[i].p1(1) * kScaleDown);
+    vertices[2].Set(triangles[i].p2(0) * kScaleDown, triangles[i].p2(1) * kScaleDown);
     b2PolygonShape polygon;
     polygon.Set(vertices, 3);
-
     b2FixtureDef polyfixture;
     polyfixture.shape = &polygon;
     polyfixture.density = kDefaultDensity;
@@ -152,9 +134,16 @@ void PhysicsEngineLiquidFun::AddNodeFromWorldToEngine(Node* ref) {
   body->SetUserData(ref);
 
   // create a set of triangles, for each geometry the node has
-  for (unsigned count = 0; count < ref->GetGeometryCount(); ++count) {
-    AddPolygonsToBody(*ref->GetGeometry(count), body);
+  for (unsigned count = 0; count < ref->GetNumPolygon(); ++count) {
+    Polygon* poly = ref->GetPolygon(count);
+    AddTrianglesToBody(TriangulatePolygon(*poly), body);
   }
+
+  for (unsigned count = 0; count < ref->GetNumPolyline(); ++count) {
+    Polyline* line = ref->GetPolyline(count);
+    AddTrianglesToBody(TriangulatePolyline(*line, 1.5), body);
+  }
+
   // AddRevoluteJointToWorld(b2world_, body);
 }
 

@@ -3,7 +3,7 @@
 #include <SDL2/SDL_opengles2.h>
 #include <iostream>
 #include "sdl/sdl_interface.h"
-#include "sdl/nacl_drawer.h"
+#include "sdl/drawer.h"
 #include "physics/world.h"
 #include "utility/stl_memory.h"
 
@@ -33,7 +33,12 @@ bool SDLInterfaceOpenGL::Init(int w, int h) {
   world_ = make_unique<World>();
   world_->InitializeWorldDescription("path_simple.json");
   world_->InitializePhysicsEngine();
-  drawer_ = make_unique<NaClDrawer>(*world_.get());
+  drawer_ = make_unique<Canvas<NodePathDrawer> >(0.0015);
+
+  for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
+    drawer_->AddNode(world_->GetNodeByIndex(i));
+  }
+
   SDL_StartTextInput();
 
   return true;

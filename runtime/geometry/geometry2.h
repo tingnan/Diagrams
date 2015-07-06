@@ -8,49 +8,49 @@
 
 namespace diagrammar {
 
-// we may eventually add primitives to facilitate fast computation
-
-struct Triangle2D {
+struct Triangle {
   Vector2f p0;
   Vector2f p1;
   Vector2f p2;
 };
 
+typedef std::vector<Vector2f> Polyline;
 
-// This is the glue code, for some physics engines we need to triangulate
-// the polylines. Other physics engine can use convex hull decomposition
-class ComplexPolygon {
- public:
-  ComplexPolygon() = default;
-  // construct a shape with boundary described by input points
-  explicit ComplexPolygon(const std::vector<Vector2f>& pts);
-  ComplexPolygon(const ComplexPolygon&) = default;
-  ComplexPolygon(ComplexPolygon&&) = default;
-  
-  ComplexPolygon& operator=(const ComplexPolygon&) = default;
-  ComplexPolygon& operator=(ComplexPolygon&&) = default;
-
-  std::vector<Vector2f> GetPath() const;
-  void SetPath(const std::vector<Vector2f>& pts);
-  
-  size_t GetNumHoles() { return holes_.size(); }
-  void SetHole(int i, const std::vector<Vector2f>& pts);
-  void AddHole(const std::vector<Vector2f>& pts);
-
-  // return a triangulation of the shape
-  std::vector<Triangle2D> Triangulate() const;
-  // get the hole at index i
-  std::vector<Vector2f> GetHole(int i) const;
-  // change the path type (open or close)
-  void SetPathClosed(bool flag);
-  bool IsPathClosed() const { return is_closed_; }
-
- private:
-
-  std::vector<Vector2f> path_;
-  bool is_closed_ = true;
-  std::vector<std::vector<Vector2f> > holes_;
+struct Polygon {
+  Polyline path;
+  std::vector<Polyline> holes;
+  Polygon() = default;
+  explicit Polygon (Polyline p): path(std::move(p)) {}
 };
+
+// TODO(tingnan) document
+std::vector<Vector2f> SimplifyPolyline(
+    const Polyline& polyline, float rel_tol = 0.005);
+
+// Triangulates a polygon described by a closed polyline.
+// The polyline must not be self intersecting
+std::vector<Triangle> TriangulatePolygon(
+    const Polygon& polygon);
+
+// Inflates and triangulates an open polyline.
+// Inflate by the offset amount (same unit as the input polyline).
+std::vector<Triangle> TriangulatePolyline(
+    const Polyline& polyline, float offset);
+
+// The method takes a boundary polyline and a set of holes as input, then:
+// - detect the self intersection in the polyline
+// - union all the holes
+// - execute a difference operation on the polygon using the holes
+// - the input polyline and holes are then modified in place.
+// The return value indicates if the operations succeeded. 
+// The method will fail when:
+// - the boundary path is self intersecting
+// - the holes split or erase the polygon
+
+// TODO implementation
+bool ResolveIntersections(std::vector<Vector2f>& polyline,
+                          std::vector<std::vector<Vector2f> >& holes
+                          );
 
 }  // namespace diagrammar
 

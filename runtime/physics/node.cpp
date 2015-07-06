@@ -6,15 +6,21 @@
 namespace diagrammar {
 
 Node::Node(const Node& rhs) :  
-  coordinate_(rhs.coordinate_),
+  frame_(rhs.frame_),
   properties_(rhs.properties_),
   id_(rhs.id_),
   collision_group_id_(rhs.collision_group_id_) {
   // deep copy content of unique_ptr
-  collision_shapes_.reserve(rhs.collision_shapes_.size());
-  for (const auto& geo_ptr : rhs.collision_shapes_) {
-    collision_shapes_.emplace_back(make_unique<ComplexPolygon>(*geo_ptr));
+  polygons_.reserve(rhs.polygons_.size());
+  for (const auto& geo_ptr : rhs.polygons_) {
+    polygons_.emplace_back(make_unique<Polygon>(*geo_ptr));
   }
+
+  polylines_.reserve(rhs.polylines_.size());
+  for (const auto& geo_ptr : rhs.polylines_) {
+    polylines_.emplace_back(make_unique<Polyline>(*geo_ptr));
+  }
+
 }
 
 Node& Node::operator = (Node rhs) {
@@ -27,32 +33,27 @@ void Node::swap(Node& rhs) {
   swap(collision_group_id_, rhs.collision_group_id_);
   swap(id_, rhs.id_);
   swap(properties_, rhs.properties_);
-  swap(coordinate_, rhs.coordinate_);
-  swap(collision_shapes_, rhs.collision_shapes_);
+  swap(frame_, rhs.frame_);
+  swap(polygons_, rhs.polygons_);
+  swap(polylines_, rhs.polylines_);
 }
 
-Node::Node(const ComplexPolygon& geo) {
-  collision_shapes_.emplace_back(make_unique<ComplexPolygon>(geo));
+Polygon* Node::GetPolygon(unsigned i) const {
+  return polygons_[i].get();
 }
 
-Node::Node(const std::vector<ComplexPolygon>& geo_list) {
-  for (const auto& geo : geo_list) {
-    collision_shapes_.emplace_back(make_unique<ComplexPolygon>(geo));
-  }
+Polyline* Node::GetPolyline(unsigned i) const {
+  return polylines_[i].get();
 }
 
-// member accessible functions
-const ComplexPolygon* Node::GetGeometry(unsigned i) const {
-  return collision_shapes_[i].get();
+void Node::AddGeometry(Polygon geo) {
+  polygons_.emplace_back(make_unique<Polygon>(std::move(geo)));
 }
 
-ComplexPolygon* Node::GetGeometry(unsigned i) {
-  return collision_shapes_[i].get();
+void Node::AddGeometry(Polyline geo) {
+  polylines_.emplace_back(make_unique<Polyline>(std::move(geo)));
 }
 
-void Node::AddGeometry(ComplexPolygon geo) {
-  collision_shapes_.emplace_back(make_unique<ComplexPolygon>(std::move(geo)));
-}
 
 int Node::id() const { return id_; }
 
@@ -62,23 +63,23 @@ int Node::collision_group_id() const { return collision_group_id_; }
 
 void Node::set_collision_group_id(int id) { collision_group_id_ = id; }
 
-float Node::GetRotationAngle() const { return coordinate_.GetRotationAngle(); }
+float Node::GetRotationAngle() const { return frame_.GetRotationAngle(); }
 
-void Node::SetRotationAngle(float a) { coordinate_.SetRotation(Rotation2f(a)); }
+void Node::SetRotationAngle(float a) { frame_.SetRotation(Rotation2f(a)); }
 
 void Node::SetRotationMatrix(const Matrix2f& rotmat) {
-  coordinate_.SetRotation(rotmat);
+  frame_.SetRotation(rotmat);
 }
 
 Matrix2f Node::GetRotationMatrix() const {
-  return coordinate_.GetRotationMatrix();
+  return frame_.GetRotationMatrix();
 }
 
-void Node::Rotate(float a) { coordinate_.Rotate(Rotation2f(a)); }
+void Node::Rotate(float a) { frame_.Rotate(Rotation2f(a)); }
 
-Vector2f Node::GetPosition() const { return coordinate_.GetTranslation(); }
+Vector2f Node::GetPosition() const { return frame_.GetTranslation(); }
 
-void Node::SetPosition(const Vector2f& pos) { coordinate_.SetTranslation(pos); }
+void Node::SetPosition(const Vector2f& pos) { frame_.SetTranslation(pos); }
 
-void Node::Translate(const Vector2f& ds) { coordinate_.Translate(ds); }
+void Node::Translate(const Vector2f& ds) { frame_.Translate(ds); }
 }  // namespace diagrammar

@@ -49,8 +49,8 @@ Isometry2f ParseTransformation2D(const Json::Value& array) {
   return t;
 }
 
-std::vector<Vector2f> ParsePath2D(const Json::Value& pathobj) {
-  std::vector<Vector2f> mypath;
+Polyline ParsePath2D(const Json::Value& pathobj) {
+  Polyline mypath;
 
   Json::Value::const_iterator itr = pathobj.begin();
   for (; itr != pathobj.end(); ++itr) {
@@ -86,19 +86,17 @@ Node ParseNode(const Json::Value& nodeobj) {
     }
 
     if (itr.key().asString() == "path") {
-      ComplexPolygon geo;
-      geo.SetPath(ParsePath2D(*itr));
-      if (ntype == "open_path") {
-        geo.SetPathClosed(false);
+      if (ntype == "node") {
+        node.AddGeometry(Polygon(ParsePath2D(*itr)));
       }
-      node.AddGeometry(std::move(geo));
+      if (ntype == "open_path") {
+        node.AddGeometry(ParsePath2D(*itr));
+      }
     }
 
     if (itr.key().asString() == "inner_path") {
       const std::vector<Vector2f>& path = ParsePath2D(*itr);
       AABB bounding_box = GetAABBWithPadding(path, 5e-2);
-      ComplexPolygon geo;
-      geo.AddHole(path);
       std::vector<Vector2f> box;
       Vector2f pt0 = bounding_box.lower_bound;
       Vector2f pt2 = bounding_box.upper_bound;
@@ -108,7 +106,8 @@ Node ParseNode(const Json::Value& nodeobj) {
       box.emplace_back(pt1);
       box.emplace_back(pt2);
       box.emplace_back(pt3);
-      geo.SetPath(box);
+      Polygon geo(box);
+      geo.holes.emplace_back(path);
       node.AddGeometry(std::move(geo));
     }
   }

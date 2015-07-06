@@ -9,7 +9,7 @@
 #include <iostream>
 #include <string>
 #include "nacl/nacl_interface.h"
-#include "nacl/nacl_drawer.h"
+#include "nacl/drawer.h"
 
 namespace diagrammar {
 

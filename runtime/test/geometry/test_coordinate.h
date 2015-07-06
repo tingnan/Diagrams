@@ -7,6 +7,6 @@ class CoordinateFrame2DTest : public ::testing::Test {
   virtual void SetUp();
   // called after each test
   virtual void TearDown();
-  diagrammar::CoordinateFrame2D coordinate_;
-  diagrammar::Isometry2f mFrameInternal;
+  diagrammar::CoordinateFrame2D frame_;
+  diagrammar::Isometry2f frame_internal_;
 };

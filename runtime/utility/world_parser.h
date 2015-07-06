@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include <geometry/geometry2.h>
 #include <physics/node.h>
 
 namespace Json {
@@ -19,7 +20,7 @@ Json::Value CreateJsonObject(const char* file);
 // parse the coordinate transformation
 Isometry2f ParseTransformation2D(const Json::Value& transformobj);
 // parse a path;
-std::vector<Vector2f> ParsePath2D(const Json::Value& pathobj);
+Polyline ParsePath2D(const Json::Value& pathobj);
 // parse a node;
 Node ParseNode(const Json::Value& nodeobj);
 }  // namespace diagrammar

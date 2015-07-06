@@ -23,17 +23,17 @@ class Node {
   };
 
   Node() = default;
-  explicit Node(const ComplexPolygon& geo);
-  explicit Node(const std::vector<ComplexPolygon>& geos);
   Node(const Node&);
   Node& operator=(Node);
   Node(Node&&) = default;
   Node& operator=(Node&&) = default;
   
-  unsigned GetGeometryCount() const { return collision_shapes_.size(); }
-  const ComplexPolygon* GetGeometry(unsigned) const;
-  ComplexPolygon* GetGeometry(unsigned);
-  void AddGeometry(ComplexPolygon geo);
+  unsigned GetNumPolygon() const { return polygons_.size(); }
+  Polygon* GetPolygon(unsigned) const;
+  unsigned GetNumPolyline() const { return polylines_.size(); }
+  Polyline* GetPolyline(unsigned) const; 
+  void AddGeometry(Polygon polygon);
+  void AddGeometry(Polyline polyline);
   
   int id() const;
   void set_id(int id);
@@ -50,10 +50,12 @@ class Node {
   void Translate(const Vector2f&);
 
  private:
-  // swap the content with rhs
   void swap(Node& rhs);
-  std::vector<std::unique_ptr<ComplexPolygon> > collision_shapes_;
-  CoordinateFrame2D coordinate_;
+  
+  std::vector<std::unique_ptr<Polygon> > polygons_;
+  std::vector<std::unique_ptr<Polyline> > polylines_;
+
+  CoordinateFrame2D frame_;
   PhysicsParams properties_;
   // the unique ID (managed by World)
   int id_ = 0xffffffff;

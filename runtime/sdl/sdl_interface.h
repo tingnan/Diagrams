@@ -1,7 +1,11 @@
 // Copyright 2015 Native Client Authors.
+
 #ifndef RUNTIME_SDL_SDL_INTERFACE_H_
 #define RUNTIME_SDL_SDL_INTERFACE_H_
+
 #include <memory>
+
+#include "sdl/drawer.h"
 
 class SDL_Window;
 namespace diagrammar {
@@ -18,7 +22,7 @@ class SDLInterfaceOpenGL {
   bool app_running_ = true;
   SDL_Window* window_;
   std::unique_ptr<class World> world_;
-  std::unique_ptr<class NaClDrawer> drawer_;
+  std::unique_ptr<Canvas<NodePathDrawer> > drawer_;
 };
 }  // namespace diagrammar
 
