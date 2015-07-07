@@ -11,7 +11,7 @@
 
 namespace diagrammar {
 
-void World::_ConstructWorldFromDescriptor(const Json::Value& world) {
+void World::ParseWorld(const Json::Value& world) {
   // using the WorldDescptor to construct the initial world
   // here we will work on the json object
   Json::Value::const_iterator itr = world.begin();
@@ -23,7 +23,7 @@ void World::_ConstructWorldFromDescriptor(const Json::Value& world) {
     if (itr.key().asString() == "children") {
       Json::Value::const_iterator child_itr = (*itr).begin();
       for (; child_itr != (*itr).end(); ++child_itr) {
-        Node* ptr = AddNode(ParseNode(*child_itr));
+        AddNode(ParseNode(*child_itr));
       }
     }
   }
@@ -35,21 +35,32 @@ World::~World() {
   }
 }
 
-void World::InitializeWorldDescription(const Json::Value& world) {
-  _ConstructWorldFromDescriptor(world);
-  world_state_ |= WorldStateFlag::kInitialized;
+void World::Reset() {
+  nodes_.clear();
+  node_table_.clear();
+  frame_ = CoordinateFrame2D(Isometry2f::Identity());
+  step_time_.clear();
+  
+  if (physics_engine_) {
+    delete physics_engine_;
+  }
 }
 
-void World::InitializeWorldDescription(const char* file) {
+void World::LoadWorld(const char* file) {
+  Reset();
   Json::Value WorldDescriptor = CreateJsonObject(file);
-  _ConstructWorldFromDescriptor(WorldDescriptor);
-  world_state_ |= WorldStateFlag::kInitialized;
+  ParseWorld(WorldDescriptor);
 }
 
 void World::InitializePhysicsEngine(EngineType t) {
-  physics_engine_ = new PhysicsEngineLiquidFun(*this);
+  physics_engine_ = new PhysicsEngineLiquidFun(time_step());
+  
+  for (auto itr = node_table_.begin(); itr != node_table_.end(); ++itr) {
+    physics_engine_->AddNode(itr->second);
+  }
+  
+  // Now generate some sample particles
 
-  world_state_ |= WorldStateFlag::kEngineReady;
 }
 
 void World::InitializeTimer() { timer_.Initialize(); }
@@ -57,7 +68,7 @@ void World::InitializeTimer() { timer_.Initialize(); }
 void World::Step() {
   // threaded support, handle the stepping in another thread
   // while the main thread continuously update the rendering context;
-  if (world_state_ != WorldStateFlag::kRunning) return;
+  if (!physics_engine_) return;
   int num_ticks = timer_.BeginNextFrame();
   assert(num_ticks >= 0);
   double before_step = timer_.now();
@@ -87,7 +98,7 @@ void World::Step() {
   physics_engine_->SendDataToWorld();
 }
 
-void World::_GenerateID(Node* node_ptr) {
+void World::GenerateID(Node* node_ptr) {
   std::random_device rd;
   std::mt19937 engine(rd());
   std::uniform_int_distribution<int> distro;
@@ -107,7 +118,7 @@ void World::_GenerateID(Node* node_ptr) {
 
 Node* World::AddNode(Node obj) {
   nodes_.emplace_back(make_unique<Node>(std::move(obj)));
-  _GenerateID(nodes_.back().get());
+  GenerateID(nodes_.back().get());
   return nodes_.back().get();
 }
 

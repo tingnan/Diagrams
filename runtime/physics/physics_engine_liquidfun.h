@@ -4,7 +4,9 @@
 #define RUNTIME_PHYSICS_PHYSICS_ENGINE_LIQUIDFUN_H_
 
 #include <vector>
+#include <unordered_map>
 
+#include "physics/node.h"
 #include "physics/physics_engine.h"
 
 class b2World;
@@ -17,22 +19,21 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   // this engine is special in that it will directly modify
   // the objects in the world
   // other physics engines only obtain immutable copies
-  explicit PhysicsEngineLiquidFun(World&);
+  explicit PhysicsEngineLiquidFun(float time_step);
   ~PhysicsEngineLiquidFun();
 
   void SendDataToWorld();
   void Step();
-  // incase of a event, we also need apis to handle
-  // to be implemented
-  void HandleEvents(const Json::Value&);
-
+  void AddNode(Node* node);
+  void RemoveNodeByID(id_t id);
  private:
   // method to transfer node between physics engine and the world class
   // allow runtime adding things
-  void AddNodeFromWorldToEngine(Node* ref);
-  void AddNodeFromEngineToWorld(b2Body* body);
   void AddTrianglesToBody(std::vector<class Triangle>, class b2Body*);
+
   b2World* b2world_;
+  std::unordered_map<id_t, b2Body*> body_table_;
+
   // a default set of constants
   int velocity_iterations_ = 5;
   int position_iterations_ = 5;

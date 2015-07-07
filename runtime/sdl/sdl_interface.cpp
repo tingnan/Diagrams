@@ -31,7 +31,7 @@ bool SDLInterfaceOpenGL::Init(int w, int h) {
   }
 
   world_ = make_unique<World>();
-  world_->InitializeWorldDescription("path_simple.json");
+  world_->LoadWorld("path_simple.json");
   world_->InitializePhysicsEngine();
   drawer_ = make_unique<Canvas<NodePathDrawer> >(0.0015);
 

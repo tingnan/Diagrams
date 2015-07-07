@@ -17,17 +17,8 @@ class Value;
 
 namespace diagrammar {
 
-// proposed.
-// can create a snapshop of the world
-// can be used to reset the system
-// support roll back (std::queue<snapshot>, which has fixed length)
-// will not implement this untill we have pretty much
-// all the modules functioning
-// the snapshot updating may be in a separate thread
-class Snapshot {};
-
-// it is a simulation world. A the wrapper class that communicate with a physics
-// engine
+// This is a simulation world. A the wrapper class that communicates with a physics
+// engine.
 class World {
  public:
   enum EngineType { kDemo, kLiquidFun, kChipmunk2D, kBullet, kODE };
@@ -39,8 +30,7 @@ class World {
 
   // initialize the world, the physics engine MUST be initialized after 
   // the world description is loaded
-  void InitializeWorldDescription(const Json::Value& world);
-  void InitializeWorldDescription(const char* file);
+  void LoadWorld(const char* file);
   void InitializePhysicsEngine(EngineType t = EngineType::kLiquidFun);
   // called after physics engine is initialized
   void InitializeTimer();
@@ -57,38 +47,29 @@ class World {
   
   // Copy a node to the world and assign an id
   Node* AddNode(Node);
+  Node* GetNodeByID(id_t id) const;
+
+  // to iterate over index
+  Node* GetNodeByIndex(int i) const;
   size_t GetNumNodes() const;
-  Node* GetNodeByID(int id) const;
-  // get a ptr to a node by index (only for interating purpose) 
-  Node* GetNodeByIndex(int index) const;
 
  private:
+      
+  // Clear everything in the world, reset the state to just created (not initialized).
+  void Reset();
 
-  // the state machine that controls the flow of simulation
-  // will be replaced with boost state charts
-  struct WorldStateFlag {
-    static const int kCreated =
-        0x0;  // it is just freshly baked and has nothing
-    static const int kInitialized =
-        0x1;  // now we at least initialized the world with sth
-    static const int kEngineReady =
-        0x2;  // we have enabled the physics engine to run the world
-    static const int kRunning = 0x3;  // Initialized | EngineReady bit flag set!
-    static const int kHalt = 0x4;
-  };
-  
   // called by InitializeWorldDescription
-  void _ConstructWorldFromDescriptor(const Json::Value&);
+  void ParseWorld(const Json::Value&);
 
   // assign a unique ID to the Node, if not already has
-  void _GenerateID(Node*);
+  void GenerateID(Node*);
 
   // world frame
   CoordinateFrame2D frame_;
 
   std::vector<std::unique_ptr<Node> > nodes_;
   // quick access to node by unique id
-  std::unordered_map<int, Node*> node_table_;
+  std::unordered_map<id_t, Node*> node_table_;
 
   // Timer that sync the simulation with real time
   Timer timer_;
@@ -98,8 +79,9 @@ class World {
   // we will allow user to switch engine;
   class PhysicsEngine* physics_engine_;
 
-  // TODO(tingnan), replace with state machine
-  int world_state_ = WorldStateFlag::kCreated;
+  // node id counter
+  int id_counter_ = 0;
+  
 };
 }  // namespace diagrammar
 

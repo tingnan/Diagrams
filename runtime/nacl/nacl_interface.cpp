@@ -52,7 +52,7 @@ void DiagrammarInterface::RenderLoop() {}
 
 void DiagrammarInterface::LaunchWorld() {
   glSetCurrentContextPPAPI(context_.pp_resource());
-  world_.InitializeWorldDescription("/http/path_simple.json");
+  world_.LoadWorld("/http/path_simple.json");
   world_.InitializePhysicsEngine();
   drawer_ = new NaClDrawer(world_);
   SimulationLoop();

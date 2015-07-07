@@ -12,7 +12,7 @@ namespace diagrammar {
 
 Timer::Timer() {}
 void Timer::Initialize() {
-  // is the time monotonic?
+  accu_ticks_ = 0;
   init_time_ = std::chrono::high_resolution_clock::now();
   last_time_ = std::chrono::high_resolution_clock::now();
   accu_time_ = std::chrono::microseconds::zero();
