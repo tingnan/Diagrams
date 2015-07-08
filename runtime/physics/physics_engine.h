@@ -33,8 +33,8 @@ class PhysicsEngine {
   // Remove a node using id
   virtual void RemoveNodeByID(id_t) = 0;
 
-  // Add a constraint from its json description
-  virtual void AddConstraint(Json::Value&) {}
+  // Add a constraint
+  virtual void AddJoint(Joint*) = 0;
 
  protected:
   float time_step_;

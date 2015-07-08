@@ -57,10 +57,18 @@ class CoordinateFrame2D {
   // get the rotatio matrix
   Matrix2f GetRotationMatrix() const;
 
+  // Get local velocity
+  Vector2f GetVelocity() const;
+  float GetAngularVelocity() const;
+
+  void SetVelocity(Vector2f);
+  void SetAngularVelocity(float);
  private:
   // our coordinate frame can be treated as a isometry
   // 3x3 matrix
   Isometry2f frame_;
+  // and the velocity/angular speed of the frame
+  Vector3f velocity_;
 };
 }  // namespace diagrammar
 

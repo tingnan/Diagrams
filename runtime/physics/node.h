@@ -6,11 +6,14 @@
 #include <memory>
 #include <vector>
 
+#include <json/json.h>
 #include "geometry/geometry2.h"
 #include "geometry/coordinate_frame.h"
 
 namespace diagrammar {
+
 typedef int id_t;
+
 class Node {
  public:
   
@@ -35,33 +38,82 @@ class Node {
   void AddGeometry(Polygon polygon);
   void AddGeometry(Polyline polyline);
   
-  id_t id() const;
-  void set_id(id_t id);
-  id_t collision_group_id() const;
-  void set_collision_group_id(id_t id);
+  id_t id() const { return id_; }
+  void set_id(id_t id) { id_ = id; }
+  id_t collision_group_id() const { return collision_group_id_; }
+  void set_collision_group_id(id_t id) { collision_group_id_ = id; }
+  bool is_dynamic() const { return is_dynamic_; };
+  void set_dynamic(bool dynamic) { is_dynamic_ = dynamic; } 
 
   float GetRotationAngle() const;
   Matrix2f GetRotationMatrix() const;
   void SetRotationAngle(float angle);
-  void SetRotationMatrix(const Matrix2f&);
+  void SetRotationMatrix(Matrix2f mat);
   void Rotate(float angle);
+  
   Vector2f GetPosition() const;
   void SetPosition(const Vector2f&);
   void Translate(const Vector2f&);
+
+  // Get local velocity
+  Vector2f GetVelocity() const;
+  float GetAngularVelocity() const;
+
+  void SetVelocity(Vector2f);
+  void SetAngularVelocity(float);
+
 
  private:
   void swap(Node& rhs);
   
   std::vector<std::unique_ptr<Polygon> > polygons_;
   std::vector<std::unique_ptr<Polyline> > polylines_;
-
+  std::vector<std::unique_ptr<Circle> > circles_;
   CoordinateFrame2D frame_;
+
   PhysicsParams properties_;
-  // the unique ID (managed by World)
+  // The unique ID (managed by World)
   id_t id_ = 0xffffffff;
-  // the collision filtering ID, used for broad phase collision filtering only
+  // The collision filtering ID, used for broad phase collision filtering only
   id_t collision_group_id_;
+  // Type of node : stationary or dynamic
+  bool is_dynamic_ = false;
 };
+
+
+// Joint
+
+struct Joint {
+  id_t id;
+  Node* node_ptr_0 = nullptr;
+  Node* node_ptr_1 = nullptr;
+  // The local anchor set the position of the joint in the node's local frame. 
+  // With both anchors we can define the relative spatial configuration of the two 
+  // connected nodes.
+  Vector2f local_anchor_0;
+  Vector2f local_anchor_1;
+  bool enable_limit = false;
+  bool enable_motor = false;
+};
+
+struct RevoluteJoint : Joint {
+  // Ahe limit to the rotation angle
+  float lower_angle;
+  float upper_angle;
+  float motor_speed;
+  float max_motor_torque;
+};
+
+struct PrismaticJoint : Joint {
+  // Along which direction the two nodes can move relative to each other
+  Vector2f local_axis_0;
+  // the displacement limit along the local_axis_0
+  float lower_translation;
+  float upper_translation;
+  float motor_speed;
+  float max_motor_force;
+};
+
 
 }  // namespace diagrammar
 

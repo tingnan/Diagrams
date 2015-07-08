@@ -3,7 +3,10 @@
 #include "geometry/coordinate_frame.h"
 
 namespace diagrammar {
-CoordinateFrame2D::CoordinateFrame2D() { frame_ = Isometry2f::Identity(); }
+CoordinateFrame2D::CoordinateFrame2D() { 
+  frame_ = Isometry2f::Identity();
+  velocity_ = Vector3f(0, 0, 0);
+}
 
 CoordinateFrame2D::CoordinateFrame2D(const Isometry2f& transform)
     : frame_(transform) {}
@@ -74,5 +77,21 @@ float CoordinateFrame2D::GetRotationAngle() const {
 Matrix2f CoordinateFrame2D::GetRotationMatrix() const {
   return frame_.linear();
 }
+
+Vector2f CoordinateFrame2D::GetVelocity() const {
+  return velocity_.head(2);
+}
+
+float CoordinateFrame2D::GetAngularVelocity() const {
+  return velocity_(2);
+}
+
+void CoordinateFrame2D::SetVelocity(Vector2f v) {
+  velocity_.head(2) = v;
+}
+void CoordinateFrame2D::SetAngularVelocity(float omega) {
+  velocity_(3) = omega;
+}
+
 
 }  // namespace diagrammar

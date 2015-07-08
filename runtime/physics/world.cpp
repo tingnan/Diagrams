@@ -36,10 +36,10 @@ World::~World() {
 }
 
 void World::Reset() {
-  nodes_.clear();
   node_table_.clear();
   frame_ = CoordinateFrame2D(Isometry2f::Identity());
   step_time_.clear();
+  id_counter_ = 0;
   
   if (physics_engine_) {
     delete physics_engine_;
@@ -52,14 +52,37 @@ void World::LoadWorld(const char* file) {
   ParseWorld(WorldDescriptor);
 }
 
-void World::InitializePhysicsEngine(EngineType t) {
+void World::InitializePhysicsEngine(EngineType t) {  
+  // Now generate some sample particles
+  {
+    std::random_device rd;
+    std::uniform_real_distribution<float> pos_distx(-250, 50.f);
+    std::uniform_real_distribution<float> pos_disty(50.f, 100.f);
+    std::uniform_real_distribution<float> vel_dist(-50.f, 50.f);
+    std::default_random_engine generator(rd());
+
+
+    // create a circle
+
+    Polyline circle;
+    const size_t num_vertices = 4;
+    for (int i = 0; i < num_vertices; ++i) {
+      circle.emplace_back(5 * Vector2f(cos(float(2 * i) * M_PI / num_vertices), sin(float(2 * i) * M_PI / num_vertices)));
+    }
+    for (int i = 0; i < 250; ++i) {
+      Node* node_ptr = AddNode(Node());
+      node_ptr->AddGeometry(Polygon(circle));
+      node_ptr->set_dynamic(true);
+      node_ptr->SetPosition(Vector2f(pos_distx(generator), pos_disty(generator)));
+      node_ptr->SetVelocity(Vector2f(vel_dist(generator), vel_dist(generator)));
+    }
+  }
+
   physics_engine_ = new PhysicsEngineLiquidFun(time_step());
   
-  for (auto itr = node_table_.begin(); itr != node_table_.end(); ++itr) {
-    physics_engine_->AddNode(itr->second);
+  for (auto itr = nodes_.begin(); itr != nodes_.end(); ++itr) {
+    physics_engine_->AddNode(itr->get());
   }
-  
-  // Now generate some sample particles
 
 }
 
@@ -98,43 +121,48 @@ void World::Step() {
   physics_engine_->SendDataToWorld();
 }
 
-void World::GenerateID(Node* node_ptr) {
-  std::random_device rd;
-  std::mt19937 engine(rd());
-  std::uniform_int_distribution<int> distro;
-  if (node_table_.find(node_ptr->id()) == node_table_.end()) {
-    node_table_.insert(std::make_pair(node_ptr->id(), node_ptr));
-  } else {
-    // try to generate a new id
-    int id = distro(engine);
-    while (node_table_.find(id) != node_table_.end()) {
-      id = distro(engine);
-    }
-    // std::cout << id << std::endl;
-    node_ptr->set_id(id);
-    node_table_.insert(std::make_pair(id, node_ptr));
-  }
-}
 
 Node* World::AddNode(Node obj) {
-  nodes_.emplace_back(make_unique<Node>(std::move(obj)));
-  GenerateID(nodes_.back().get());
-  return nodes_.back().get();
+  // The vector actually stores the pointer to the nodes
+  // while the lookup table maps the unique id to the location in the vector
+  nodes_.emplace_back(make_unique<Node>(obj));
+  auto node_ptr = nodes_.back().get();
+  // Currently id_t is just an integer (increased counter)
+  // We may decide later to recycle the ids, or purely assign the id from outside
+  id_counter_++;
+  node_ptr->set_id(id_counter_);
+  node_table_.insert(std::make_pair(id_counter_, nodes_.size() - 1));
+  return node_ptr;
 }
 
-Node* World::GetNodeByIndex(int i) const {
-  if (i < nodes_.size() && i >= 0) return nodes_[i].get();
-  return nullptr;
-}
-
-Node* World::GetNodeByID(int id) const {
+void World::RemoveNodeByID(id_t id) {
   if (node_table_.find(id) != node_table_.end()) {
-    return node_table_.find(id)->second;
+    size_t index = node_table_.find(id)->second;
+    if (index != nodes_.size() - 1) {
+      // Swap the back of nodes_ with current one
+      nodes_[index].swap(nodes_.back());
+      node_table_[nodes_[index]->id()] = index;
+    }
+    node_table_.erase(id);
+    nodes_.pop_back();
+  }
+}
+
+Node* World::GetNodeByID(id_t id) const {
+  if (node_table_.find(id) != node_table_.end()) {
+    return nodes_[node_table_.find(id)->second].get();
   }
   return nullptr;
 }
 
-size_t World::GetNumNodes() const { return nodes_.size(); }
+Node* World::GetNodeByIndex(size_t index) const {
+  assert(index < nodes_.size());
+  return nodes_[index].get();
+}
+
+size_t World::GetNumNodes() {
+  return nodes_.size();
+}
 
 float World::time_step() const { return timer_.tick_time(); }
 

@@ -47,29 +47,23 @@ class World {
   
   // Copy a node to the world and assign an id
   Node* AddNode(Node);
-  Node* GetNodeByID(id_t id) const;
-
-  // to iterate over index
-  Node* GetNodeByIndex(int i) const;
-  size_t GetNumNodes() const;
-
+  Node* GetNodeByID(id_t) const;
+  Node* GetNodeByIndex(size_t) const;
+  size_t GetNumNodes();
+  void RemoveNodeByID(id_t);
  private:
-      
   // Clear everything in the world, reset the state to just created (not initialized).
   void Reset();
 
   // called by InitializeWorldDescription
   void ParseWorld(const Json::Value&);
 
-  // assign a unique ID to the Node, if not already has
-  void GenerateID(Node*);
-
   // world frame
   CoordinateFrame2D frame_;
 
-  std::vector<std::unique_ptr<Node> > nodes_;
   // quick access to node by unique id
-  std::unordered_map<id_t, Node*> node_table_;
+  std::unordered_map<size_t, size_t> node_table_;
+  std::vector<std::unique_ptr<Node> > nodes_;
 
   // Timer that sync the simulation with real time
   Timer timer_;

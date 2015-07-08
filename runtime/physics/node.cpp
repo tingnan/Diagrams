@@ -54,20 +54,11 @@ void Node::AddGeometry(Polyline geo) {
   polylines_.emplace_back(make_unique<Polyline>(std::move(geo)));
 }
 
-
-int Node::id() const { return id_; }
-
-void Node::set_id(int id) { id_ = id; }
-
-int Node::collision_group_id() const { return collision_group_id_; }
-
-void Node::set_collision_group_id(int id) { collision_group_id_ = id; }
-
 float Node::GetRotationAngle() const { return frame_.GetRotationAngle(); }
 
 void Node::SetRotationAngle(float a) { frame_.SetRotation(Rotation2f(a)); }
 
-void Node::SetRotationMatrix(const Matrix2f& rotmat) {
+void Node::SetRotationMatrix(Matrix2f rotmat) {
   frame_.SetRotation(rotmat);
 }
 
@@ -82,4 +73,22 @@ Vector2f Node::GetPosition() const { return frame_.GetTranslation(); }
 void Node::SetPosition(const Vector2f& pos) { frame_.SetTranslation(pos); }
 
 void Node::Translate(const Vector2f& ds) { frame_.Translate(ds); }
+
+
+Vector2f Node::GetVelocity() const {
+  return frame_.GetVelocity();
+}
+
+float Node::GetAngularVelocity() const {
+  return frame_.GetAngularVelocity();
+}
+
+void Node::SetVelocity(Vector2f v) {
+  frame_.SetVelocity(v);
+}
+
+void Node::SetAngularVelocity(float omega) {
+  frame_.SetAngularVelocity(omega);
+}
+
 }  // namespace diagrammar

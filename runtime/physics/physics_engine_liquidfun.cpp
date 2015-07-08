@@ -30,45 +30,80 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(float time_step) : PhysicsEngine(
   // we now try to also create a box2d world
   b2Vec2 gravity(0.f, -4.9f);
   b2world_ = new b2World(gravity);
+}
 
-  // better to initialize from world !!
-  // now we initialize the world using existing nodeects
-  {
-    std::random_device rd;
-    std::uniform_real_distribution<float> pos_distx(-25.f, 5.f);
-    std::uniform_real_distribution<float> pos_disty(5.f, 10.f);
-    std::uniform_real_distribution<float> vel_dist(-5.f, 5.f);
-    std::default_random_engine generator(rd());
-    for (size_t i = 0; i < 250; ++i) {
-      b2BodyDef particle_def;
-      float x = pos_distx(generator);
-      float y = pos_disty(generator);
-      particle_def.position.Set(x, y);
-      particle_def.type = b2_dynamicBody;
-      b2Body* particle = b2world_->CreateBody(&particle_def);
+void PhysicsEngineLiquidFun::AddTrianglesToBody(std::vector<Triangle> triangles, b2Body* b) {
+  for (size_t i = 0; i < triangles.size(); ++i) {
+    b2Vec2 vertices[3];
+    vertices[0].Set(triangles[i].p0(0) * kScaleDown, triangles[i].p0(1) * kScaleDown);
+    vertices[1].Set(triangles[i].p1(0) * kScaleDown, triangles[i].p1(1) * kScaleDown);
+    vertices[2].Set(triangles[i].p2(0) * kScaleDown, triangles[i].p2(1) * kScaleDown);
+    b2PolygonShape polygon;
+    polygon.Set(vertices, 3);
+    b2FixtureDef polyfixture;
+    polyfixture.shape = &polygon;
+    polyfixture.density = kDefaultDensity;
+    polyfixture.friction = kDefaultFriction;
+    polyfixture.restitution = kDefaultRestitution;
+    b->CreateFixture(&polyfixture);
+  }
+}
 
-      float vx = vel_dist(generator);
-      float vy = vel_dist(generator);
+void PhysicsEngineLiquidFun::AddNode(Node* node) {
+  b2BodyDef body_def;
+  Vector2f pos = node->GetPosition();
+  body_def.position.Set(pos(0) * kScaleDown, pos(1) * kScaleDown);
+  body_def.angle = node->GetRotationAngle();
+  if (node->is_dynamic()) {
+    body_def.type = b2_dynamicBody;
+    body_def.angularVelocity = node->GetAngularVelocity();
+    Vector2f velocity = node->GetVelocity();
+    body_def.linearVelocity.Set(velocity(0) * kScaleDown, velocity(1) * kScaleDown);
+  }
+  b2Body* body = b2world_->CreateBody(&body_def);
 
-      particle->SetLinearVelocity(b2Vec2(vx, vy));
-      b2CircleShape particle_shape;
-      particle_shape.m_radius = 0.4f;
-      // b2PolygonShape particle_shape;
-      // particle_shape.SetAsBox(0.2f, 0.2f);
+  // the body will keep a pointer to the node
+  body->SetUserData(node);
 
-      b2FixtureDef particle_fixture;
-      particle_fixture.shape = &particle_shape;
-      particle_fixture.density = kDefaultDensity;
-      particle_fixture.friction = kDefaultFriction;
-      particle_fixture.restitution = kDefaultRestitution;
+  // create a set of triangles, for each geometry the node has
+  for (unsigned count = 0; count < node->GetNumPolygon(); ++count) {
+    Polygon* poly = node->GetPolygon(count);
+    AddTrianglesToBody(TriangulatePolygon(*poly), body);
+  }
 
-      particle->CreateFixture(&particle_fixture);
-      // AddNodeFromEngineToWorld(particle);
+  for (unsigned count = 0; count < node->GetNumPolyline(); ++count) {
+    Polyline* line = node->GetPolyline(count);
+    // Expand by 1.5 unit
+    AddTrianglesToBody(TriangulatePolyline(*line, 1.5), body);
+  }
+
+}
+
+PhysicsEngineLiquidFun::~PhysicsEngineLiquidFun() {}
+
+void PhysicsEngineLiquidFun::Step() {
+  b2world_->Step(time_step_, velocity_iterations_,
+                 position_iterations_);
+}
+
+void PhysicsEngineLiquidFun::SendDataToWorld() {
+  for (b2Body* b = b2world_->GetBodyList(); b; b = b->GetNext()) {
+    Node* node = reinterpret_cast<Node*>(b->GetUserData());
+    if (node) {
+      Vector2f translation(b->GetPosition().x * kScaleUp,
+                           b->GetPosition().y * kScaleUp);
+      node->SetPosition(translation);
+      node->SetRotationAngle(b->GetAngle());
     }
   }
 }
-/*
-void AddNodeFromEngineToWorld(b2Body* body, World* world) {
+
+void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
+
+}
+
+/* // The code is not used
+void PhysicsEngineLiquidFun::AddNodeToWorld(b2Body* body, World* world) {
   Node* new_node = world->AddNode(Node());
   body->SetUserData(new_node);
   for (b2Fixture* shape_fixture = body->GetFixtureList(); shape_fixture;
@@ -104,68 +139,5 @@ void AddNodeFromEngineToWorld(b2Body* body, World* world) {
   }  
 }
 */
-
-void PhysicsEngineLiquidFun::AddTrianglesToBody(std::vector<Triangle> triangles, b2Body* b) {
-  for (size_t i = 0; i < triangles.size(); ++i) {
-    b2Vec2 vertices[3];
-    vertices[0].Set(triangles[i].p0(0) * kScaleDown, triangles[i].p0(1) * kScaleDown);
-    vertices[1].Set(triangles[i].p1(0) * kScaleDown, triangles[i].p1(1) * kScaleDown);
-    vertices[2].Set(triangles[i].p2(0) * kScaleDown, triangles[i].p2(1) * kScaleDown);
-    b2PolygonShape polygon;
-    polygon.Set(vertices, 3);
-    b2FixtureDef polyfixture;
-    polyfixture.shape = &polygon;
-    polyfixture.density = kDefaultDensity;
-    polyfixture.friction = kDefaultFriction;
-    polyfixture.restitution = kDefaultRestitution;
-    b->CreateFixture(&polyfixture);
-  }
-}
-
-void PhysicsEngineLiquidFun::AddNode(Node* node) {
-  b2BodyDef def;
-  Vector2f pos = node->GetPosition();
-  def.position.Set(pos(0) * kScaleDown, pos(1) * kScaleDown);
-  def.angle = node->GetRotationAngle();
-  b2Body* body = b2world_->CreateBody(&def);
-  // the body will keep a pointer to the node
-  body->SetUserData(node);
-
-  // create a set of triangles, for each geometry the node has
-  for (unsigned count = 0; count < node->GetNumPolygon(); ++count) {
-    Polygon* poly = node->GetPolygon(count);
-    AddTrianglesToBody(TriangulatePolygon(*poly), body);
-  }
-
-  for (unsigned count = 0; count < node->GetNumPolyline(); ++count) {
-    Polyline* line = node->GetPolyline(count);
-    AddTrianglesToBody(TriangulatePolyline(*line, 1.5), body);
-  }
-
-  // AddRevoluteJointToWorld(b2world_, body);
-}
-
-PhysicsEngineLiquidFun::~PhysicsEngineLiquidFun() {}
-
-void PhysicsEngineLiquidFun::Step() {
-  b2world_->Step(time_step_, velocity_iterations_,
-                 position_iterations_);
-}
-
-void PhysicsEngineLiquidFun::SendDataToWorld() {
-  for (b2Body* b = b2world_->GetBodyList(); b; b = b->GetNext()) {
-    Node* node = reinterpret_cast<Node*>(b->GetUserData());
-    if (node) {
-      Vector2f translation(b->GetPosition().x * kScaleUp,
-                           b->GetPosition().y * kScaleUp);
-      node->SetPosition(translation);
-      node->SetRotationAngle(b->GetAngle());
-    }
-  }
-}
-
-void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
-  
-}
 
 }  // namespace diagrammar

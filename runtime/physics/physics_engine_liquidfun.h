@@ -25,6 +25,7 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   void SendDataToWorld();
   void Step();
   void AddNode(Node* node);
+  void AddJoint(Joint* joint) {}
   void RemoveNodeByID(id_t id);
  private:
   // method to transfer node between physics engine and the world class

@@ -3,15 +3,29 @@
 #ifndef RUNTIME_GEOMETRY_GEOMETRY2_H_
 #define RUNTIME_GEOMETRY_GEOMETRY2_H_
 
+#include <string>
 #include <vector>
+
 #include "include/matrix_types.h"
 
 namespace diagrammar {
+
+// TODO (tingnan), without primitives (e.g. circle), 
+// it is hard to make sphere balls inside the physics engine
+// Making a fine polygon is not a good solution
+// We might want to do a polymorphism
+
+
+
 
 struct Triangle {
   Vector2f p0;
   Vector2f p1;
   Vector2f p2;
+};
+
+struct Circle {
+  float radius;
 };
 
 typedef std::vector<Vector2f> Polyline;
@@ -23,7 +37,7 @@ struct Polygon {
   explicit Polygon (Polyline p): path(std::move(p)) {}
 };
 
-// TODO(tingnan) document
+// Simplify a polyline with a relative tolerance
 std::vector<Vector2f> SimplifyPolyline(
     const Polyline& polyline, float rel_tol = 0.005);
 
