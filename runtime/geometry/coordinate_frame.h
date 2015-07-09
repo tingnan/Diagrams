@@ -63,6 +63,7 @@ class CoordinateFrame2D {
 
   void SetVelocity(Vector2f);
   void SetAngularVelocity(float);
+
  private:
   // our coordinate frame can be treated as a isometry
   // 3x3 matrix

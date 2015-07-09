@@ -14,6 +14,8 @@ namespace diagrammar {
 
 typedef int id_t;
 
+
+// Do we want to make the node a struct ?
 class Node {
  public:
   
@@ -21,7 +23,7 @@ class Node {
     float restitution = 1;
     float friction = 0;
     float mass = 1;
-    // in its fixed frame;
+    // In its fixed frame;
     Matrix3f inertiaMatrix = Matrix3f::Identity();
   };
 
