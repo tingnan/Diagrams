@@ -1,9 +1,9 @@
 #ifndef RENDER_WINDOW_
 #define RENDER_WINDOW_
 
-#include "drawer.h"
 #include <GLFW/glfw3.h>
 
+#include "gl/drawer.h"
 #include "physics/world.h"
 
 namespace diagrammar {

@@ -16,9 +16,9 @@ Node::Node(const Node& rhs) :
     polygons_.emplace_back(make_unique<Polygon>(*geo_ptr));
   }
 
-  polylines_.reserve(rhs.polylines_.size());
-  for (const auto& geo_ptr : rhs.polylines_) {
-    polylines_.emplace_back(make_unique<Polyline>(*geo_ptr));
+  paths_.reserve(rhs.paths_.size());
+  for (const auto& geo_ptr : rhs.paths_) {
+    paths_.emplace_back(make_unique<Path>(*geo_ptr));
   }
 
 }
@@ -35,23 +35,23 @@ void Node::swap(Node& rhs) {
   swap(properties_, rhs.properties_);
   swap(frame_, rhs.frame_);
   swap(polygons_, rhs.polygons_);
-  swap(polylines_, rhs.polylines_);
+  swap(paths_, rhs.paths_);
 }
 
 Polygon* Node::GetPolygon(unsigned i) const {
   return polygons_[i].get();
 }
 
-Polyline* Node::GetPolyline(unsigned i) const {
-  return polylines_[i].get();
+Path* Node::GetPath(unsigned i) const {
+  return paths_[i].get();
 }
 
 void Node::AddGeometry(Polygon geo) {
   polygons_.emplace_back(make_unique<Polygon>(std::move(geo)));
 }
 
-void Node::AddGeometry(Polyline geo) {
-  polylines_.emplace_back(make_unique<Polyline>(std::move(geo)));
+void Node::AddGeometry(Path geo) {
+  paths_.emplace_back(make_unique<Path>(std::move(geo)));
 }
 
 float Node::GetRotationAngle() const { return frame_.GetRotationAngle(); }

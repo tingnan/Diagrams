@@ -10,46 +10,40 @@
 
 namespace diagrammar {
 
-// TODO (tingnan), without primitives (e.g. circle), 
-// it is hard to make sphere balls inside the physics engine
-// Making a fine polygon is not a good solution
-// We might want to do a polymorphism
 
-
-
-
-struct Triangle {
-  Vector2f p0;
-  Vector2f p1;
-  Vector2f p2;
+struct TriangleMesh {
+  std::vector<Vector2f> vertices;
+  // each face stores 3 indices to the actual point in the vertices vector
+  std::vector<std::array<size_t, 3> > faces;
 };
 
-struct Circle {
-  float radius;
-};
 
-typedef std::vector<Vector2f> Polyline;
+typedef std::vector<Vector2f> Path;
 
 struct Polygon {
-  Polyline path;
-  std::vector<Polyline> holes;
+  Path path;
+  std::vector<Path> holes;
   Polygon() = default;
-  explicit Polygon (Polyline p): path(std::move(p)) {}
+  explicit Polygon (Path p): path(std::move(p)) {}
 };
 
 // Simplify a polyline with a relative tolerance
-std::vector<Vector2f> SimplifyPolyline(
-    const Polyline& polyline, float rel_tol = 0.005);
+Path SimplifyPolyline(
+    const Path& polyline, float rel_tol = 0.005);
 
 // Triangulates a polygon described by a closed polyline.
 // The polyline must not be self intersecting
-std::vector<Triangle> TriangulatePolygon(
+TriangleMesh TriangulatePolygon(
     const Polygon& polygon);
 
 // Inflates and triangulates an open polyline.
 // Inflate by the offset amount (same unit as the input polyline).
-std::vector<Triangle> TriangulatePolyline(
-    const Polyline& polyline, float offset);
+TriangleMesh TriangulatePolyline(
+    const Path& polyline, float offset);
+
+std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon); 
+
+// Using HACD to decompose a complex polygon to convexhulls
 
 // The method takes a boundary polyline and a set of holes as input, then:
 // - detect the self intersection in the polyline
@@ -62,8 +56,8 @@ std::vector<Triangle> TriangulatePolyline(
 // - the holes split or erase the polygon
 
 // TODO implementation
-bool ResolveIntersections(std::vector<Vector2f>& polyline,
-                          std::vector<std::vector<Vector2f> >& holes
+bool ResolveIntersections(Path& polyline,
+                          std::vector<Path>& holes
                           );
 
 }  // namespace diagrammar

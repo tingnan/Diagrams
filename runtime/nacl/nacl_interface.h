@@ -22,7 +22,7 @@ class DiagrammarInterface : public pp::Instance {
   void LaunchWorld();
   void RenderLoop();
   World world_;
-  class NaClDrawer* drawer_;
+  class Drawer* drawer_;
   pp::Graphics3D context_;
   std::thread simulation_thread_;
 };

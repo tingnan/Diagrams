@@ -30,16 +30,20 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
  private:
   // method to transfer node between physics engine and the world class
   // allow runtime adding things
-  void AddTrianglesToBody(std::vector<class Triangle>, class b2Body*);
+  void AddTrianglesToBody(const TriangleMesh& mesh, class b2Body*);
 
   b2World* b2world_;
   std::unordered_map<id_t, b2Body*> body_table_;
 
-  // a default set of constants
+  // Used internally for the LCP solver
+  // DONOT modify unless you know what it is 
   int velocity_iterations_ = 5;
   int position_iterations_ = 5;
+
+  // The engine is running on a different scale
   const float kScaleUp = 10;
   const float kScaleDown = 0.1f;
+  // Material params
   const float kDefaultDensity = 1.f;
   const float kDefaultRestitution = 1.f;
   const float kDefaultFriction = 0.1;

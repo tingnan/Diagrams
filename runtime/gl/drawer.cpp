@@ -8,7 +8,7 @@
 #include <vector>
 #include <string>
 
-#include "sdl/drawer.h"
+#include "gl/drawer.h"
 #include "geometry/geometry2.h"
 #include "utility/world_parser.h"
 #include "utility/stl_memory.h"
@@ -110,7 +110,7 @@ NodePathDrawer::NodePathDrawer(Node* node) {
   GenBuffers();
 }
 
-void NodePathDrawer::GenPolylineBuffer(const Polyline& polyline, bool is_closed) {
+void NodePathDrawer::GenPathBuffer(const Path& polyline, bool is_closed) {
   GLuint vert_vbo;
   glGenBuffers(1, &vert_vbo);
   vertex_buffer_.emplace_back(vert_vbo);
@@ -164,13 +164,13 @@ void NodePathDrawer::GenBuffers() {
     for (size_t pa_idx = 0; pa_idx < num_paths; ++pa_idx) {
       const std::vector<Vector2f>& polyline =
           pa_idx == 0 ? geoptr->path : geoptr->holes[pa_idx - 1];
-      GenPolylineBuffer(polyline, true);
+      GenPathBuffer(polyline, true);
     }
   }
 
   // All open path
-  for (size_t geo_idx = 0; geo_idx < node_->GetNumPolyline(); ++geo_idx) {
-    GenPolylineBuffer(*(node_->GetPolyline(geo_idx)), false);
+  for (size_t geo_idx = 0; geo_idx < node_->GetNumPath(); ++geo_idx) {
+    GenPathBuffer(*(node_->GetPath(geo_idx)), false);
   }
 
 }
@@ -213,22 +213,23 @@ void NodePolyDrawer::GenBuffers() {
   for (size_t geo_idx = 0; geo_idx < node_->GetNumPolygon();
          ++geo_idx) {
     Polygon* geo_ptr = node_->GetPolygon(geo_idx);
-    std::vector<Triangle> triangles = TriangulatePolygon(*geo_ptr);
-    GenTriangleBuffer(triangles);
+    auto mesh = TriangulatePolygon(*geo_ptr);
+    GenTriangleBuffer(mesh);
   }
 
   // All open path
-  for (size_t geo_idx = 0; geo_idx < node_->GetNumPolyline(); ++geo_idx) {
-    Polyline* geo_ptr = node_->GetPolyline(geo_idx);
-    std::vector<Triangle> triangles = TriangulatePolyline(*geo_ptr, 1.5);
-    GenTriangleBuffer(triangles);
+  for (size_t geo_idx = 0; geo_idx < node_->GetNumPath(); ++geo_idx) {
+    Path* geo_ptr = node_->GetPath(geo_idx);
+    auto mesh = TriangulatePolyline(*geo_ptr, 1.5);
+    GenTriangleBuffer(mesh);
   }
 
 }
 
-void NodePolyDrawer::GenTriangleBuffer(const std::vector<Triangle>& triangles) {
+// TODO (tingnan), fix rendering
+void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh& mesh) {
   
-  size_t num_vertices = triangles.size() * 3;
+  size_t num_vertices = mesh.vertices.size();
   vertex_size_.emplace_back(num_vertices);
 
   GLuint v_buffer;
@@ -239,22 +240,28 @@ void NodePolyDrawer::GenTriangleBuffer(const std::vector<Triangle>& triangles) {
   // the vertes array
   std::vector<GLfloat> vert_array;
   vert_array.reserve(num_vertices * kVertDim);
-  for (auto tr : triangles) {
-    vert_array.emplace_back(tr.p0(0));
-    vert_array.emplace_back(tr.p0(1));
+  for (auto& vt : mesh.vertices) {
+    vert_array.emplace_back(vt(0));
+    vert_array.emplace_back(vt(1));
     vert_array.emplace_back(0);
-    vert_array.emplace_back(1);
-    vert_array.emplace_back(tr.p1(0));
-    vert_array.emplace_back(tr.p1(1));
     vert_array.emplace_back(0);
-    vert_array.emplace_back(1);
-    vert_array.emplace_back(tr.p2(0));
-    vert_array.emplace_back(tr.p2(1));
-    vert_array.emplace_back(0);
-    vert_array.emplace_back(1);
   }
   glBufferData(GL_ARRAY_BUFFER, vert_array.size() * sizeof(GLfloat),
                vert_array.data(), GL_STATIC_DRAW);
+
+  GLuint i_buffer;
+  glGenBuffers(1, &i_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, i_buffer);
+  index_buffer_.emplace_back(i_buffer);
+  std::vector<GLuint> indices;
+  indices.reserve(mesh.faces.size() * 3);
+  for (auto& face : mesh.faces) {
+    for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
+      indices.emplace_back(face[vt_idx]);
+    }
+  }
+  index_size_.emplace_back(indices.size());
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
 
   GLuint c_buffer;
   glGenBuffers(1, &c_buffer);
@@ -286,9 +293,11 @@ void NodePolyDrawer::GenTriangleBuffer(const std::vector<Triangle>& triangles) {
                colors.data(), GL_STATIC_DRAW);
 }
 
+
 void NodePolyDrawer::Draw(GLProgram program, float scale) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
+
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
     glVertexAttribPointer(program.vertex_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
                           0);
@@ -307,7 +316,8 @@ void NodePolyDrawer::Draw(GLProgram program, float scale) {
 
     glUniform1f(program.scale_loc, scale);
 
-    glDrawArrays(GL_TRIANGLES, 0, vertex_size_[i]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_[i]);
+    glDrawElements(GL_TRIANGLES, index_size_[i], GL_UNSIGNED_INT, 0);
   }  
 }
 

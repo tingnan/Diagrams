@@ -33,10 +33,10 @@ class Node {
   
   unsigned GetNumPolygon() const { return polygons_.size(); }
   Polygon* GetPolygon(unsigned) const;
-  unsigned GetNumPolyline() const { return polylines_.size(); }
-  Polyline* GetPolyline(unsigned) const; 
+  unsigned GetNumPath() const { return paths_.size(); }
+  Path* GetPath(unsigned) const; 
   void AddGeometry(Polygon polygon);
-  void AddGeometry(Polyline polyline);
+  void AddGeometry(Path polyline);
   
   id_t id() const { return id_; }
   void set_id(id_t id) { id_ = id; }
@@ -67,8 +67,7 @@ class Node {
   void swap(Node& rhs);
   
   std::vector<std::unique_ptr<Polygon> > polygons_;
-  std::vector<std::unique_ptr<Polyline> > polylines_;
-  std::vector<std::unique_ptr<Circle> > circles_;
+  std::vector<std::unique_ptr<Path> > paths_;
   CoordinateFrame2D frame_;
 
   PhysicsParams properties_;

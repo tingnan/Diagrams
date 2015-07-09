@@ -5,7 +5,7 @@
 
 #include <memory>
 
-#include "sdl/drawer.h"
+#include "gl/drawer.h"
 
 class SDL_Window;
 namespace diagrammar {
@@ -22,7 +22,7 @@ class SDLInterfaceOpenGL {
   bool app_running_ = true;
   SDL_Window* window_;
   std::unique_ptr<class World> world_;
-  std::unique_ptr<Canvas<NodePathDrawer> > drawer_;
+  std::unique_ptr<Canvas<NodePolyDrawer> > drawer_;
 };
 }  // namespace diagrammar
 

@@ -1,5 +1,5 @@
-INCLUDE_DIRECTORIES("/usr/include/freetype2")
 FILE(GLOB sources "*.cpp") 
 FILE(GLOB headers "*.h")
-ADD_LIBRARY(diagrender ${sources} ${headers})
-TARGET_LINK_LIBRARIES(diagrender diagphysics diaggeometry diagutility ${JSONLIBS} ${POLY2TRILIBS} ${LIQUIDFUN_LIBRARIES} ${OPENGL_LIBRARIES} ${FREETYPELIBS})
+ADD_LIBRARY(diaginterface ${sources} ${headers})
+TARGET_LINK_LIBRARIES(diaginterface diagrender diagphysics diaggeometry diagutility)
+# ${JSON_LIBRARIES} ${POLY2TRI_LIBRARIES} ${LIQUIDFUN_LIBRARIES} ${OPENGL_LIBRARIES} ${FREETYPE_LIBRARIES}

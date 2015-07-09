@@ -32,12 +32,13 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(float time_step) : PhysicsEngine(
   b2world_ = new b2World(gravity);
 }
 
-void PhysicsEngineLiquidFun::AddTrianglesToBody(std::vector<Triangle> triangles, b2Body* b) {
-  for (size_t i = 0; i < triangles.size(); ++i) {
+void PhysicsEngineLiquidFun::AddTrianglesToBody(const TriangleMesh& mesh, b2Body* b) {
+  for (size_t i = 0; i < mesh.faces.size(); ++i) {
     b2Vec2 vertices[3];
-    vertices[0].Set(triangles[i].p0(0) * kScaleDown, triangles[i].p0(1) * kScaleDown);
-    vertices[1].Set(triangles[i].p1(0) * kScaleDown, triangles[i].p1(1) * kScaleDown);
-    vertices[2].Set(triangles[i].p2(0) * kScaleDown, triangles[i].p2(1) * kScaleDown);
+    for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
+      auto vertex = mesh.vertices[mesh.faces[i][vt_idx]];
+      vertices[vt_idx].Set(vertex(0) * kScaleDown, vertex(1) * kScaleDown);
+    }
     b2PolygonShape polygon;
     polygon.Set(vertices, 3);
     b2FixtureDef polyfixture;
@@ -71,8 +72,8 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
     AddTrianglesToBody(TriangulatePolygon(*poly), body);
   }
 
-  for (unsigned count = 0; count < node->GetNumPolyline(); ++count) {
-    Polyline* line = node->GetPolyline(count);
+  for (unsigned count = 0; count < node->GetNumPath(); ++count) {
+    Path* line = node->GetPath(count);
     // Expand by 1.5 unit
     AddTrianglesToBody(TriangulatePolyline(*line, 1.5), body);
   }

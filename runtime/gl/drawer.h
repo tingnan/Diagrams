@@ -47,7 +47,7 @@ class NodePathDrawer : public NodeDrawer {
   void Draw(GLProgram program, GLfloat scale);
 
  private:
-  void GenPolylineBuffer(const Polyline&, bool);
+  void GenPathBuffer(const Path&, bool);
   void GenBuffers();
 
 };
@@ -62,8 +62,12 @@ class NodePolyDrawer : public NodeDrawer {
 
  private:
   
-  void GenTriangleBuffer(const std::vector<Triangle>&);
+  void GenTriangleBuffer(const TriangleMesh&);
   void GenBuffers();
+
+  std::vector<GLuint> index_buffer_;
+  std::vector<GLuint> index_size_;
+
 };
 
 template<class DrawerType>

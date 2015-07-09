@@ -54,6 +54,7 @@ void World::LoadWorld(const char* file) {
 
 void World::InitializePhysicsEngine(EngineType t) {  
   // Now generate some sample particles
+  if (true)
   {
     std::random_device rd;
     std::uniform_real_distribution<float> pos_distx(-250, 50.f);
@@ -64,12 +65,12 @@ void World::InitializePhysicsEngine(EngineType t) {
 
     // create a circle
 
-    Polyline circle;
+    Path circle;
     const size_t num_vertices = 4;
     for (int i = 0; i < num_vertices; ++i) {
       circle.emplace_back(5 * Vector2f(cos(float(2 * i) * M_PI / num_vertices), sin(float(2 * i) * M_PI / num_vertices)));
     }
-    for (int i = 0; i < 250; ++i) {
+    for (int i = 0; i < 1; ++i) {
       Node* node_ptr = AddNode(Node());
       node_ptr->AddGeometry(Polygon(circle));
       node_ptr->set_dynamic(true);
@@ -132,6 +133,12 @@ Node* World::AddNode(Node obj) {
   id_counter_++;
   node_ptr->set_id(id_counter_);
   node_table_.insert(std::make_pair(id_counter_, nodes_.size() - 1));
+
+  // now we also would like to add/remove the same node from the underlying engine
+  if (physics_engine_) {
+    physics_engine_->AddNode(node_ptr);
+  }
+
   return node_ptr;
 }
 
@@ -145,6 +152,11 @@ void World::RemoveNodeByID(id_t id) {
     }
     node_table_.erase(id);
     nodes_.pop_back();
+
+    // Now remove from the physics engine
+    if (physics_engine_) {
+      physics_engine_->RemoveNodeByID(id);
+    }
   }
 }
 

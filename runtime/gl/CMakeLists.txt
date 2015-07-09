@@ -1,0 +1,5 @@
+INCLUDE_DIRECTORIES("/usr/include/freetype2")
+FILE(GLOB sources "*.cpp") 
+FILE(GLOB headers "*.h")
+ADD_LIBRARY(diagrender ${sources} ${headers})
+TARGET_LINK_LIBRARIES(diagrender diaggeometry ${OPENGL_LIBRARIES} ${FREETYPE_LIBRARIES})

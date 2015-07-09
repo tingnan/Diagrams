@@ -6,12 +6,14 @@ PROJECT (diagrammarcpp)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 # need c++11 
-
-
 IF(NOT NACL)
   SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
   INCLUDE_DIRECTORIES(/usr/include/jsoncpp /usr/include/eigen3 ./ ./third_party/poly2tri ./third_party/clipper)
-  FIND_LIBRARY(JSONLIBS NAMES jsoncpp PATHS /usr/lib/x86_64-linux-gnu)
+  INCLUDE_DIRECTORIES(/opt/physics/include)
+
+  FIND_LIBRARY(LIQUIDFUN_LIBRARIES liquidfun /opt/physics/lib)
+  FIND_LIBRARY(VHACD_LIBRARIES VHACD_LIB /opt/physics/lib)
+  FIND_LIBRARY(JSON_LIBRARIES NAMES jsoncpp PATHS /usr/lib/x86_64-linux-gnu)
 
   SET(SDL 1)
   # OpenGL
@@ -19,7 +21,7 @@ IF(NOT NACL)
   IF(NOT SDL)
     FIND_PACKAGE(GLEW)
     FIND_LIBRARY(GLFW_LIBRARIES glfw3 /opt/physics/lib)
-    SET(ADDITIONAL_LIBS
+    SET(ADDITIONAL_LIBRARIES
     -lpthread
     -lXcursor
     -lXinerama
@@ -28,23 +30,20 @@ IF(NOT NACL)
     -lXi
     )
   ELSE()
-    FIND_LIBRARY(SDLLIBS NAMES SDL2)
-    FIND_LIBRARY(FREETYPELIBS NAMES freetype)
-  ENDIF()
-  INCLUDE_DIRECTORIES(/opt/physics/include)
-  # liquidfun
-  FIND_LIBRARY(LIQUIDFUN_LIBRARIES liquidfun /opt/physics/lib)
+    FIND_LIBRARY(SDL_LIBRARIES NAMES SDL2)
+    FIND_LIBRARY(FREETYPE_LIBRARIES NAMES freetype)
+  ENDIF()  
 
-  
   ADD_SUBDIRECTORY(third_party/poly2tri)
-  SET(POLY2TRILIBS poly2tri)
+  SET(POLY2TRI_LIBRARIES poly2tri)
   ADD_SUBDIRECTORY(third_party/clipper)
-  SET(CLIPPERLIBS polyclipping)
+  SET(CLIPPER_LIBRARIES polyclipping)
   ADD_SUBDIRECTORY(utility)
   ADD_SUBDIRECTORY(geometry)
   ADD_SUBDIRECTORY(physics)
+  ADD_SUBDIRECTORY(gl)
   IF(NOT SDL)
-    ADD_SUBDIRECTORY(render)
+    ADD_SUBDIRECTORY(glfw)
   ELSE()
     ADD_SUBDIRECTORY(sdl)
   ENDIF()
@@ -57,9 +56,9 @@ ELSE()
    "${CMAKE_FIND_ROOT_PATH}/usr/include/poly2tri"
    ./)
   MESSAGE(STATUS "PATH: " ${NACL_TOOLCHAIN_ROOT}/${NACL_CROSS_PREFIX})
-  FIND_LIBRARY(JSONLIBS NAMES jsoncpp)
-  FIND_LIBRARY(CLIPPERLIBS NAMES polyclipping)
-  FIND_LIBRARY(POLY2TRILIBS NAMES poly2tri)
+  FIND_LIBRARY(JSON_LIBRARIES NAMES jsoncpp)
+  FIND_LIBRARY(CLIPPER_LIBRARIES NAMES polyclipping)
+  FIND_LIBRARY(POLY2TRI_LIBRARIES NAMES poly2tri)
   FIND_LIBRARY(LIQUIDFUN_LIBRARIES NAMES Box2D)
   ADD_SUBDIRECTORY(geometry)
   ADD_SUBDIRECTORY(physics)

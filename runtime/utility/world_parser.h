@@ -20,7 +20,7 @@ Json::Value CreateJsonObject(const char* file);
 // parse the coordinate transformation
 Isometry2f ParseTransformation2D(const Json::Value& transformobj);
 // parse a path;
-Polyline ParsePath2D(const Json::Value& pathobj);
+Path ParsePath2D(const Json::Value& pathobj);
 // parse a node;
 Node ParseNode(const Json::Value& nodeobj);
 }  // namespace diagrammar

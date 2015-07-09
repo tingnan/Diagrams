@@ -1,6 +1,8 @@
-#include "window.h"
 #include <cstdlib>
 #include <iostream>
+
+#include "window.h"
+
 namespace diagrammar {
 Window::Window(int w, int h, const char* title) : drawer_(world_) {
   // first we use GLFW to create a OpenGL context

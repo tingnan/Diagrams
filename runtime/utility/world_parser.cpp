@@ -49,8 +49,8 @@ Isometry2f ParseTransformation2D(const Json::Value& array) {
   return t;
 }
 
-Polyline ParsePath2D(const Json::Value& pathobj) {
-  Polyline mypath;
+Path ParsePath2D(const Json::Value& pathobj) {
+  Path mypath;
 
   Json::Value::const_iterator itr = pathobj.begin();
   for (; itr != pathobj.end(); ++itr) {
@@ -75,6 +75,7 @@ Node ParseNode(const Json::Value& nodeobj) {
 
   Json::Value::const_iterator itr = nodeobj.begin();
   for (; itr != nodeobj.end(); ++itr) {
+    
     if (itr.key().asString() == "id") {
       node.set_id((*itr).asInt());
     }
@@ -111,6 +112,7 @@ Node ParseNode(const Json::Value& nodeobj) {
       node.AddGeometry(std::move(geo));
     }
   }
+
   return node;
 }
 }  // namespace diagrammar
