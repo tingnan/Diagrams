@@ -1,4 +1,4 @@
-FILE(GLOB sources "*.cpp") 
-FILE(GLOB headers "*.h")
-ADD_LIBRARY(diaginterface ${sources} ${headers})
-TARGET_LINK_LIBRARIES(diagrender diagutility diagphysics diaggeometry)
+file(GLOB sources "*.cpp") 
+file(GLOB headers "*.h")
+add_library(diaginterface ${sources} ${headers})
+target_link_libraries(diagrender diagutility diagphysics diaggeometry)

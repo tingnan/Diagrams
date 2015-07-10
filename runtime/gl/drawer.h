@@ -4,6 +4,7 @@
 
 #include <GLES2/gl2.h>
 
+#include <memory>
 #include <vector>
 #include <unordered_map>
 

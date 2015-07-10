@@ -8,8 +8,8 @@ Window::Window(int w, int h, const char* title) : drawer_(world_) {
   // first we use GLFW to create a OpenGL context
   _InitializeWindow(w, h, title);
 
-  world_.LoadWorld("path_simple.json");
-  world_.InitializePhysicsEngine();
+  world_.Read("path_simple.json");
+  world_.Start();
   drawer_.GenPathBuffers();
   drawer_.GenPolyBuffers();
   drawer_.LoadShaders();

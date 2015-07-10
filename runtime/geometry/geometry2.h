@@ -6,6 +6,7 @@
 #include <string>
 #include <vector>
 
+#include <json/json.h>
 #include "include/matrix_types.h"
 
 namespace diagrammar {
@@ -18,7 +19,18 @@ struct TriangleMesh {
 
 typedef std::vector<Vector2f> Path;
 
+enum class OptimizedShapeType {
+  // We may add more later (depending on if the physics engine used has a special shape primitive)
+  kNone,
+  kSphere2D
+};
+
+// We can have different choices for this metadata: boost::any or Json::Value
+typedef Json::Value Metadata;
+
 struct Polygon {
+  OptimizedShapeType shape_type = OptimizedShapeType::kNone;
+  Metadata meta_data;
   Path path;
   std::vector<Path> holes;
   Polygon() = default;

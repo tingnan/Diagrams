@@ -6,11 +6,18 @@
 
 #include "sdl/sdl_interface.h"
 #include "physics/world.h"
+#include "utility/world_parser.h"
 #include "utility/stl_memory.h"
 
 namespace diagrammar {
 
 SDLInterfaceOpenGL::SDLInterfaceOpenGL() {}
+SDLInterfaceOpenGL::~SDLInterfaceOpenGL() {
+  SDL_StopTextInput();
+  SDL_DestroyWindow(window_);
+  SDL_Quit();
+}
+
 
 bool SDLInterfaceOpenGL::LoadFont() { return true; }
 
@@ -31,13 +38,12 @@ bool SDLInterfaceOpenGL::Init(int w, int h) {
     return false;
   }
 
-  world_ = make_unique<World>();
-  world_->LoadWorld("path_simple.json");
-  world_->InitializePhysicsEngine();
+  world_.Read(CreateJsonObject("path_simple.json"));
+  world_.Start();
   drawer_ = make_unique<Canvas<NodePolyDrawer> >(0.0015);
 
-  for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
-    drawer_->AddNode(world_->GetNodeByIndex(i));
+  for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
+    drawer_->AddNode(world_.GetNodeByIndex(i));
   }
 
   SDL_StartTextInput();
@@ -57,15 +63,11 @@ void SDLInterfaceOpenGL::HandleEvents() {
 void SDLInterfaceOpenGL::Render() {
   while (app_running_) {
     HandleEvents();
-    world_->Step();
+    world_.Step();
     drawer_->Draw();
     SDL_GL_SwapWindow(window_);
   }
 }
 
-SDLInterfaceOpenGL::~SDLInterfaceOpenGL() {
-  SDL_StopTextInput();
-  SDL_DestroyWindow(window_);
-  SDL_Quit();
-}
+
 }  // namespace diagrammar

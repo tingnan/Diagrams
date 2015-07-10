@@ -5,9 +5,11 @@
 #include <nacl_io/nacl_io.h>
 #include <ppapi/cpp/var.h>
 #include <ppapi/cpp/completion_callback.h>
+
 #include <thread>
 #include <iostream>
 #include <string>
+
 #include "nacl/nacl_interface.h"
 #include "gl/drawer.h"
 
@@ -52,8 +54,8 @@ void DiagrammarInterface::RenderLoop() {}
 
 void DiagrammarInterface::LaunchWorld() {
   glSetCurrentContextPPAPI(context_.pp_resource());
-  world_.LoadWorld("/http/path_simple.json");
-  world_.InitializePhysicsEngine();
+  world_.Read(CreateJsonObject("/http/path_simple.json"));
+  world_.Start();
   drawer_ = new NaClDrawer(world_);
   SimulationLoop();
 }

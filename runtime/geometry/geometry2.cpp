@@ -186,14 +186,12 @@ diagrammar::Path PolylineDouglasPeuckerIterative(const diagrammar::Path& path,
 diagrammar::TriangleMesh DelaunaySweepline(
     const diagrammar::Path& path, const std::vector<diagrammar::Path>& holes) {
   assert(path.size() >= 3);
-
   std::vector<p2t::Point> cleaned_path = CleanPolygon(path);
   std::vector<p2t::Point*> path_ptr(cleaned_path.size());
-  for (size_t i = 0; i < path.size(); ++i) {
+  for (size_t i = 0; i < cleaned_path.size(); ++i) {
     path_ptr[i] = &cleaned_path[i];
   }
   p2t::CDT cdt(path_ptr);
-
   std::vector<std::vector<p2t::Point> > polyhole = CleanPolygon(holes);
   for (size_t i = 0; i < polyhole.size(); ++i) {
     std::vector<p2t::Point*> polyholeptr(polyhole[i].size());
@@ -215,7 +213,6 @@ diagrammar::TriangleMesh DelaunaySweepline(
   for (auto& hole : polyhole) {
     num_vertices += hole.size();
   }
-
   std::unordered_map<p2t::Point*, size_t> pt2index;
   diagrammar::TriangleMesh mesh;
   mesh.vertices.reserve(num_vertices);
@@ -355,11 +352,53 @@ bool ResolveIntersections(Path& path, std::vector<Path>& holes) {
 
 std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
   using VHACD::IVHACD;
-  std::vector<Polygon> polygons;
+
+  TriangleMesh mesh = TriangulatePolygon(polygon);
+  std::vector<float> points;
+  points.reserve(3 * mesh.vertices.size());
+  for (auto& vertex : mesh.vertices) {
+    points.emplace_back(vertex(0));
+    points.emplace_back(vertex(1));
+    points.emplace_back(0);
+  }
+
+  std::vector<int> triangle_indices;
+  triangle_indices.reserve(mesh.faces.size() * 3);
+  for (auto& tr_idx : mesh.faces) {
+    triangle_indices.emplace_back(tr_idx[0]);
+    triangle_indices.emplace_back(tr_idx[1]);
+    triangle_indices.emplace_back(tr_idx[2]);
+  }
 
   IVHACD::Parameters params;
-  IVHACD* interface = VHACD::CreateVHACD();
+  //
+  params.m_maxNumVerticesPerCH = 8;
+  IVHACD* vhacd_interface = VHACD::CreateVHACD();
+  std::cout << mesh.vertices.size() << std::endl;
+  bool res = vhacd_interface->Compute(points.data(), 3, mesh.vertices.size(),
+                                      triangle_indices.data(), 3,
+                                      mesh.faces.size(), params);
+  std::vector<Polygon> polygons;
+  if (res) {
+    size_t num_hulls = vhacd_interface->GetNConvexHulls();
+    IVHACD::ConvexHull hull;
+    for (size_t p = 0; p < num_hulls; ++p) {
+      vhacd_interface->GetConvexHull(p, hull);
+      for (size_t v = 0, idx = 0; v < hull.m_nPoints; ++v, idx+=3) {
+        std::cout << p << " ";
+        std::cout << hull.m_points[idx + 0] << " ";
+        std::cout << hull.m_points[idx + 1] << " ";
+        std::cout << hull.m_points[idx + 2] << "\n";
+      }
+    }
+  } else {
+    std::cerr << "convex hull decomposition not successfull! fall back to "
+                 "triangulation!\n";
+  }
 
+  vhacd_interface->Clean();
+  vhacd_interface->Release();
+  exit(0);
   return polygons;
 }
 

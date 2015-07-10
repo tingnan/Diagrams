@@ -3,8 +3,7 @@
 #ifndef RUNTIME_PHYSICS_NODE_H_
 #define RUNTIME_PHYSICS_NODE_H_
 
-#include <memory>
-#include <vector>
+#include <list>
 
 #include <json/json.h>
 #include "geometry/geometry2.h"
@@ -15,72 +14,28 @@ namespace diagrammar {
 typedef int id_t;
 
 
-// Do we want to make the node a struct ?
-class Node {
- public:
+struct Node {
+
+  std::list<Polygon> polygons;
+  std::list<Path> paths;
   
-  struct PhysicsParams {
-    float restitution = 1;
-    float friction = 0;
-    float mass = 1;
-    // In its fixed frame;
-    Matrix3f inertiaMatrix = Matrix3f::Identity();
-  };
+  CoordinateFrame2D frame;
+  Vector2f velocity;
+  float angular_velocity;
 
-  Node() = default;
-  Node(const Node&);
-  Node& operator=(Node);
-  Node(Node&&) = default;
-  Node& operator=(Node&&) = default;
-  
-  unsigned GetNumPolygon() const { return polygons_.size(); }
-  Polygon* GetPolygon(unsigned) const;
-  unsigned GetNumPath() const { return paths_.size(); }
-  Path* GetPath(unsigned) const; 
-  void AddGeometry(Polygon polygon);
-  void AddGeometry(Path polyline);
-  
-  id_t id() const { return id_; }
-  void set_id(id_t id) { id_ = id; }
-  id_t collision_group_id() const { return collision_group_id_; }
-  void set_collision_group_id(id_t id) { collision_group_id_ = id; }
-  bool is_dynamic() const { return is_dynamic_; };
-  void set_dynamic(bool dynamic) { is_dynamic_ = dynamic; } 
-
-  float GetRotationAngle() const;
-  Matrix2f GetRotationMatrix() const;
-  void SetRotationAngle(float angle);
-  void SetRotationMatrix(Matrix2f mat);
-  void Rotate(float angle);
-  
-  Vector2f GetPosition() const;
-  void SetPosition(const Vector2f&);
-  void Translate(const Vector2f&);
-
-  // Get local velocity
-  Vector2f GetVelocity() const;
-  float GetAngularVelocity() const;
-
-  void SetVelocity(Vector2f);
-  void SetAngularVelocity(float);
-
-
- private:
-  void swap(Node& rhs);
-  
-  std::vector<std::unique_ptr<Polygon> > polygons_;
-  std::vector<std::unique_ptr<Path> > paths_;
-  CoordinateFrame2D frame_;
-
-  PhysicsParams properties_;
+  float restitution = 1;
+  float friction = 0;
+  float density = 1;
+  // In its fixed frame;
+  Matrix3f inertia_matrix = Matrix3f::Identity();
   // The unique ID (managed by World)
-  id_t id_ = 0xffffffff;
+  id_t id = 0xffffffff;
   // The collision filtering ID, used for broad phase collision filtering only
-  id_t collision_group_id_;
+  id_t collision_group_id;
   // Type of node : stationary or dynamic
-  bool is_dynamic_ = false;
+  bool is_dynamic = false;
+  bool is_collidable = true;
 };
-
 
 // Joint
 

@@ -64,34 +64,35 @@ Path ParsePath2D(const Json::Value& pathobj) {
 
 // load a "children" node from the json descriptor
 Node ParseNode(const Json::Value& nodeobj) {
-  Node node;
   if (!nodeobj.isMember("type")) {
-    return node;
+    assert(0);
   }
   std::string ntype = nodeobj["type"].asString();
   if (ntype != "node" && ntype != "open_path") {
-    return node;
+    std::cout << ntype << std::endl;
+    assert(0);
   }
 
+  Node node;
   Json::Value::const_iterator itr = nodeobj.begin();
   for (; itr != nodeobj.end(); ++itr) {
     
     if (itr.key().asString() == "id") {
-      node.set_id((*itr).asInt());
+      node.id = (*itr).asInt();
     }
 
     if (itr.key().asString() == "transform") {
       const Isometry2f tr = ParseTransformation2D(*itr);
-      node.SetRotationMatrix(tr.linear());
-      node.SetPosition(tr.translation());
+      node.frame.SetRotation(tr.linear());
+      node.frame.SetTranslation(tr.translation());
     }
 
     if (itr.key().asString() == "path") {
       if (ntype == "node") {
-        node.AddGeometry(Polygon(ParsePath2D(*itr)));
+        node.polygons.emplace_back(Polygon(ParsePath2D(*itr)));
       }
       if (ntype == "open_path") {
-        node.AddGeometry(ParsePath2D(*itr));
+        node.paths.emplace_back(ParsePath2D(*itr));
       }
     }
 
@@ -109,7 +110,7 @@ Node ParseNode(const Json::Value& nodeobj) {
       box.emplace_back(pt3);
       Polygon geo(box);
       geo.holes.emplace_back(path);
-      node.AddGeometry(std::move(geo));
+      node.polygons.emplace_back(std::move(geo));
     }
   }
 

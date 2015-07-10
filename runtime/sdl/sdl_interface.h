@@ -5,23 +5,26 @@
 
 #include <memory>
 
+#include "physics/world.h"
 #include "gl/drawer.h"
 
 class SDL_Window;
 namespace diagrammar {
 class SDLInterfaceOpenGL {
  public:
+  
   SDLInterfaceOpenGL();
+  ~SDLInterfaceOpenGL();
   bool Init(int, int);
   void Render();
-  ~SDLInterfaceOpenGL();
-
+  
  private:
+  
   void HandleEvents();
   bool LoadFont();
   bool app_running_ = true;
   SDL_Window* window_;
-  std::unique_ptr<class World> world_;
+  World world_;
   std::unique_ptr<Canvas<NodePolyDrawer> > drawer_;
 };
 }  // namespace diagrammar

@@ -6,13 +6,13 @@
 #include <vector>
 #include <unordered_map>
 
-#include "physics/node.h"
 #include "physics/physics_engine.h"
 
 class b2World;
 class b2Body;
 
 namespace diagrammar {
+class Node;
 // this is a base class that is supposed to be overload
 class PhysicsEngineLiquidFun : public PhysicsEngine {
  public:

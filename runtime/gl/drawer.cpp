@@ -157,20 +157,18 @@ void NodePathDrawer::GenBuffers() {
   assert(node_ != nullptr);
 
   // All closed path
-  for (size_t geo_idx = 0; geo_idx < node_->GetNumPolygon();
-         ++geo_idx) {
-    Polygon* geoptr = node_->GetPolygon(geo_idx);
-    unsigned num_paths = 1 + geoptr->holes.size();
+  for (auto& polygon : node_->polygons) {
+    unsigned num_paths = 1 + polygon.holes.size();
     for (size_t pa_idx = 0; pa_idx < num_paths; ++pa_idx) {
       const std::vector<Vector2f>& polyline =
-          pa_idx == 0 ? geoptr->path : geoptr->holes[pa_idx - 1];
+          pa_idx == 0 ? polygon.path : polygon.holes[pa_idx - 1];
       GenPathBuffer(polyline, true);
     }
   }
 
   // All open path
-  for (size_t geo_idx = 0; geo_idx < node_->GetNumPath(); ++geo_idx) {
-    GenPathBuffer(*(node_->GetPath(geo_idx)), false);
+  for (auto& path : node_->paths) {
+    GenPathBuffer(path, false);
   }
 
 }
@@ -190,8 +188,8 @@ void NodePathDrawer::Draw(GLProgram program, float scale) {
 
     Isometry3f u_mvp(Isometry3f::Identity());
     u_mvp.linear().topLeftCorner<2, 2>() =
-        node_->GetRotationMatrix();
-    u_mvp.translation().head<2>() = node_->GetPosition();
+        node_->frame.GetRotationMatrix();
+    u_mvp.translation().head<2>() = node_->frame.GetTranslation();
     glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
     glUniform1f(program.scale_loc, scale);
@@ -210,17 +208,14 @@ void NodePolyDrawer::GenBuffers() {
   assert(node_ != nullptr);
 
   // All closed path
-  for (size_t geo_idx = 0; geo_idx < node_->GetNumPolygon();
-         ++geo_idx) {
-    Polygon* geo_ptr = node_->GetPolygon(geo_idx);
-    auto mesh = TriangulatePolygon(*geo_ptr);
+  for (auto& polygon : node_->polygons) {
+    auto mesh = TriangulatePolygon(polygon);
     GenTriangleBuffer(mesh);
   }
 
   // All open path
-  for (size_t geo_idx = 0; geo_idx < node_->GetNumPath(); ++geo_idx) {
-    Path* geo_ptr = node_->GetPath(geo_idx);
-    auto mesh = TriangulatePolyline(*geo_ptr, 1.5);
+  for (auto& path : node_->paths) {
+    auto mesh = TriangulatePolyline(path, 1.5);
     GenTriangleBuffer(mesh);
   }
 
@@ -310,8 +305,8 @@ void NodePolyDrawer::Draw(GLProgram program, float scale) {
 
     Isometry3f u_mvp(Isometry3f::Identity());
     u_mvp.linear().topLeftCorner<2, 2>() =
-        node_->GetRotationMatrix();
-    u_mvp.translation().head<2>() = node_->GetPosition();
+        node_->frame.GetRotationMatrix();
+    u_mvp.translation().head<2>() = node_->frame.GetTranslation();
     glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
     glUniform1f(program.scale_loc, scale);
@@ -329,7 +324,7 @@ Canvas<DrawerType>::Canvas(float scale) : scale_(scale) {
 
 template<class DrawerType>
 void Canvas<DrawerType>::AddNode(Node* node) {
-  drawers_[node->id()] = make_unique<DrawerType>(node);
+  drawers_[node->id] = make_unique<DrawerType>(node);
 }
 
 template<class DrawerType>

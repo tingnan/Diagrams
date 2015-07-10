@@ -21,8 +21,8 @@ namespace diagrammar {
 // engine.
 class World {
  public:
-  enum EngineType { kDemo, kLiquidFun, kChipmunk2D, kBullet, kODE };
-  World() = default;
+  enum EngineType { kLiquidFun, kChipmunk2D, kBullet, kODE };
+  World();
   ~World();
   World(World&& other) = default;
   // not copyable
@@ -30,10 +30,9 @@ class World {
 
   // initialize the world, the physics engine MUST be initialized after 
   // the world description is loaded
-  void LoadWorld(const char* file);
-  void InitializePhysicsEngine(EngineType t = EngineType::kLiquidFun);
-  // called after physics engine is initialized
-  void InitializeTimer();
+  // TODO Change to Read and Start
+  void Read(const Json::Value&);
+  void Start(EngineType t = EngineType::kLiquidFun);
 
   // put in the main loop
   void Step();
@@ -51,27 +50,31 @@ class World {
   Node* GetNodeByIndex(size_t) const;
   size_t GetNumNodes();
   void RemoveNodeByID(id_t);
+
  private:
-  // Clear everything in the world, reset the state to just created (not initialized).
+
+  // Clear everything in the world.
   void Reset();
 
   // called by InitializeWorldDescription
   void ParseWorld(const Json::Value&);
 
-  // world frame
-  CoordinateFrame2D frame_;
+  // TODO world_frame_
+  CoordinateFrame2D frame;
 
-  // quick access to node by unique id
-  std::unordered_map<size_t, size_t> node_table_;
   std::vector<std::unique_ptr<Node> > nodes_;
-
+  // quick access to node by unique id
+  std::unordered_map<id_t, size_t> node_table_;
+  
   // Timer that sync the simulation with real time
   Timer timer_;
+  
+  // Circular buffer
   std::list<double> step_time_;
 
   // the pointer to the actual physics engine used;
   // we will allow user to switch engine;
-  class PhysicsEngine* physics_engine_;
+  std::unique_ptr<class PhysicsEngine> physics_engine_;
 
   // node id counter
   int id_counter_ = 0;

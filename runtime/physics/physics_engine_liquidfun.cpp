@@ -26,13 +26,15 @@ void AddRevoluteJointToWorld(b2World* world, b2Body* body1, b2Body* body2) {
 
 namespace diagrammar {
 
-PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(float time_step) : PhysicsEngine(time_step) {
+PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(float time_step)
+    : PhysicsEngine(time_step) {
   // we now try to also create a box2d world
   b2Vec2 gravity(0.f, -4.9f);
   b2world_ = new b2World(gravity);
 }
 
-void PhysicsEngineLiquidFun::AddTrianglesToBody(const TriangleMesh& mesh, b2Body* b) {
+void PhysicsEngineLiquidFun::AddTrianglesToBody(const TriangleMesh& mesh,
+                                                b2Body* b) {
   for (size_t i = 0; i < mesh.faces.size(); ++i) {
     b2Vec2 vertices[3];
     for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
@@ -52,14 +54,15 @@ void PhysicsEngineLiquidFun::AddTrianglesToBody(const TriangleMesh& mesh, b2Body
 
 void PhysicsEngineLiquidFun::AddNode(Node* node) {
   b2BodyDef body_def;
-  Vector2f pos = node->GetPosition();
+  Vector2f pos = node->frame.GetTranslation();
   body_def.position.Set(pos(0) * kScaleDown, pos(1) * kScaleDown);
-  body_def.angle = node->GetRotationAngle();
-  if (node->is_dynamic()) {
+  body_def.angle = node->frame.GetRotationAngle();
+  if (node->is_dynamic) {
     body_def.type = b2_dynamicBody;
-    body_def.angularVelocity = node->GetAngularVelocity();
-    Vector2f velocity = node->GetVelocity();
-    body_def.linearVelocity.Set(velocity(0) * kScaleDown, velocity(1) * kScaleDown);
+    body_def.angularVelocity = node->angular_velocity;
+    Vector2f velocity = node->velocity;
+    body_def.linearVelocity.Set(velocity(0) * kScaleDown,
+                                velocity(1) * kScaleDown);
   }
   b2Body* body = b2world_->CreateBody(&body_def);
 
@@ -67,24 +70,20 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
   body->SetUserData(node);
 
   // create a set of triangles, for each geometry the node has
-  for (unsigned count = 0; count < node->GetNumPolygon(); ++count) {
-    Polygon* poly = node->GetPolygon(count);
-    AddTrianglesToBody(TriangulatePolygon(*poly), body);
+  for (auto& polygon : node->polygons) {
+    AddTrianglesToBody(TriangulatePolygon(polygon), body);
   }
 
-  for (unsigned count = 0; count < node->GetNumPath(); ++count) {
-    Path* line = node->GetPath(count);
+  for (auto& path : node->paths) {
     // Expand by 1.5 unit
-    AddTrianglesToBody(TriangulatePolyline(*line, 1.5), body);
+    AddTrianglesToBody(TriangulatePolyline(path, 1.5), body);
   }
-
 }
 
 PhysicsEngineLiquidFun::~PhysicsEngineLiquidFun() {}
 
 void PhysicsEngineLiquidFun::Step() {
-  b2world_->Step(time_step_, velocity_iterations_,
-                 position_iterations_);
+  b2world_->Step(time_step_, velocity_iterations_, position_iterations_);
 }
 
 void PhysicsEngineLiquidFun::SendDataToWorld() {
@@ -93,52 +92,14 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
     if (node) {
       Vector2f translation(b->GetPosition().x * kScaleUp,
                            b->GetPosition().y * kScaleUp);
-      node->SetPosition(translation);
-      node->SetRotationAngle(b->GetAngle());
+      node->frame.SetTranslation(translation);
+      node->frame.SetRotation(b->GetAngle());
+      node->velocity = Vector2f(b->GetLinearVelocity().x * kScaleUp, 
+                                b->GetLinearVelocity().y * kScaleUp);
     }
   }
 }
 
-void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
-
-}
-
-/* // The code is not used
-void PhysicsEngineLiquidFun::AddNodeToWorld(b2Body* body, World* world) {
-  Node* new_node = world->AddNode(Node());
-  body->SetUserData(new_node);
-  for (b2Fixture* shape_fixture = body->GetFixtureList(); shape_fixture;
-       shape_fixture = shape_fixture->GetNext()) {
-    b2Shape::Type shape_type = shape_fixture->GetType();
-
-    if (shape_type == b2Shape::e_polygon) {
-      b2PolygonShape* shape =
-          dynamic_cast<b2PolygonShape*>(shape_fixture->GetShape());
-      size_t count = shape->GetVertexCount();
-      std::vector<Vector2f> vertices(count);
-      for (size_t i = 0; i < count; ++i) {
-        b2Vec2 tmp = shape->GetVertex(i);
-        vertices[i] = Vector2f(tmp.x, tmp.y) * kScaleUp;
-      }
-      new_node->AddGeometry(Polygon(vertices));
-    }
-
-    if (shape_type == b2Shape::e_circle) {
-      b2CircleShape* shape =
-          dynamic_cast<b2CircleShape*>(shape_fixture->GetShape());
-      size_t count = 10;
-      std::vector<Vector2f> vertices(count);
-      for (size_t i = 0; i < count; ++i) {
-        float32 x =
-            shape->m_p.x + shape->m_radius * cos(float32(2 * i) / count * M_PI);
-        float32 y =
-            shape->m_p.y + shape->m_radius * sin(float32(2 * i) / count * M_PI);
-        vertices[i] = Vector2f(x, y) * kScaleUp;
-      }
-      new_node->AddGeometry(Polygon(vertices));
-    }
-  }  
-}
-*/
+void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {}
 
 }  // namespace diagrammar
