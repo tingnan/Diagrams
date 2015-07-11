@@ -89,7 +89,8 @@ Node ParseNode(const Json::Value& nodeobj) {
 
     if (itr.key().asString() == "path") {
       if (ntype == "node") {
-        node.polygons.emplace_back(Polygon(ParsePath2D(*itr)));
+        Polygon parsed_polygon = Polygon(ParsePath2D(*itr));
+        node.polygons = ResolveIntersections(parsed_polygon);
       }
       if (ntype == "open_path") {
         node.paths.emplace_back(ParsePath2D(*itr));
@@ -98,7 +99,7 @@ Node ParseNode(const Json::Value& nodeobj) {
 
     if (itr.key().asString() == "inner_path") {
       const std::vector<Vector2f>& path = ParsePath2D(*itr);
-      AABB bounding_box = GetAABBWithPadding(path, 5e-2);
+      AABB bounding_box = GetAABBWithPadding(path, 2e-2);
       std::vector<Vector2f> box;
       Vector2f pt0 = bounding_box.lower_bound;
       Vector2f pt2 = bounding_box.upper_bound;
@@ -110,7 +111,7 @@ Node ParseNode(const Json::Value& nodeobj) {
       box.emplace_back(pt3);
       Polygon geo(box);
       geo.holes.emplace_back(path);
-      node.polygons.emplace_back(std::move(geo));
+      node.polygons = ResolveIntersections(geo);
     }
   }
 

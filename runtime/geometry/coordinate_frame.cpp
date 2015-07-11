@@ -3,9 +3,7 @@
 #include "geometry/coordinate_frame.h"
 
 namespace diagrammar {
-CoordinateFrame2D::CoordinateFrame2D() {
-  frame_ = Isometry2f::Identity();
-}
+CoordinateFrame2D::CoordinateFrame2D() { frame_ = Isometry2f::Identity(); }
 
 CoordinateFrame2D::CoordinateFrame2D(const Isometry2f& transform)
     : frame_(transform) {}

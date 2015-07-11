@@ -96,7 +96,7 @@ std::vector<p2t::Point> CleanPolygon(const diagrammar::Path& path) {
   return DScalePathClipperToPoly(scaled_path);
 }
 
-std::vector<std::vector<p2t::Point> > CleanPolygon(
+std::vector<std::vector<p2t::Point> > CleanPolygons(
     const std::vector<diagrammar::Path>& paths) {
   std::vector<std::vector<p2t::Point> > out;
   out.reserve(paths.size());
@@ -192,7 +192,7 @@ diagrammar::TriangleMesh DelaunaySweepline(
     path_ptr[i] = &cleaned_path[i];
   }
   p2t::CDT cdt(path_ptr);
-  std::vector<std::vector<p2t::Point> > polyhole = CleanPolygon(holes);
+  std::vector<std::vector<p2t::Point> > polyhole = CleanPolygons(holes);
   for (size_t i = 0; i < polyhole.size(); ++i) {
     std::vector<p2t::Point*> polyholeptr(polyhole[i].size());
     for (size_t j = 0; j < polyhole[i].size(); ++j) {
@@ -261,6 +261,72 @@ int PointInCircumcenter(const diagrammar::Vector2f& a,
   return -1;
 }
 
+// The method will create a set of strictly simple polygons (described by the
+// boundary paths)
+// Please check
+// http://stackoverflow.com/questions/23578760/how-to-simplify-a-single-complex-uibezierpath-polygon-in-ios
+std::vector<diagrammar::Path> ResolveIntersectionsClosedPath(
+    const diagrammar::Path& path) {
+  ClipperLib::Path scaled_path = UScalePathDiaToClipper(path);
+  ClipperLib::Clipper clipper;
+  clipper.AddPath(scaled_path, ClipperLib::ptSubject, true);
+  ClipperLib::Paths intermediate_paths;
+  clipper.Execute(ClipperLib::ctUnion, intermediate_paths,
+                  ClipperLib::pftNonZero, ClipperLib::pftNonZero);
+  clipper.Clear();
+
+  for (auto& line : intermediate_paths) {
+    if (ClipperLib::Orientation(line)) {
+      ClipperLib::ReversePath(line);
+    }
+  }
+  clipper.AddPaths(intermediate_paths, ClipperLib::ptSubject, true);
+  ClipperLib::Paths unioned_paths;
+  clipper.StrictlySimple(true);
+  clipper.Execute(ClipperLib::ctUnion, unioned_paths, ClipperLib::pftNonZero,
+                  ClipperLib::pftNonZero);
+  clipper.Clear();
+  std::vector<diagrammar::Path> resolved_paths;
+  for (auto& p : unioned_paths) {
+    resolved_paths.emplace_back(DScalePathClipperToDia(p));
+  }
+  return resolved_paths;
+}
+
+// This is a very expensive operation!
+std::vector<diagrammar::Path> ResolveIntersectionsClosedPaths(
+    const std::vector<diagrammar::Path>& paths) {
+  ClipperLib::Clipper clipper;
+
+  for (auto& path : paths) {
+    ClipperLib::Path scaled_path = UScalePathDiaToClipper(path);
+    clipper.AddPath(scaled_path, ClipperLib::ptSubject, true);
+  }
+  ClipperLib::Paths intermediate_paths;
+  clipper.Execute(ClipperLib::ctUnion, intermediate_paths,
+                  ClipperLib::pftNonZero, ClipperLib::pftNonZero);
+  clipper.Clear();
+
+  for (auto& line : intermediate_paths) {
+    if (ClipperLib::Orientation(line)) {
+      ClipperLib::ReversePath(line);
+    }
+  }
+  clipper.AddPaths(intermediate_paths, ClipperLib::ptSubject, true);
+  ClipperLib::Paths unioned_paths;
+  clipper.StrictlySimple(true);
+  clipper.Execute(ClipperLib::ctUnion, unioned_paths, ClipperLib::pftNonZero,
+                  ClipperLib::pftNonZero);
+  clipper.Clear();
+
+  std::vector<diagrammar::Path> resolved_paths;
+  for (auto& p : unioned_paths) {
+    resolved_paths.emplace_back(DScalePathClipperToDia(p));
+  }
+
+  return resolved_paths;
+}
+
 }  // namespace
 
 namespace diagrammar {
@@ -307,47 +373,10 @@ TriangleMesh TriangulatePolyline(const Path& path, float offset) {
 
   // one out path
   // for now, we do not allow the holes to appear in the inflated path
-  // maybe we allow this later
-  assert(inflated.size() == 1 && "inflated path has holes");
+  // maybe we allow this later using union
+  // assert(inflated.size() == 1 && "inflated path has holes");
   std::vector<Vector2f> pts = DScalePathClipperToDia(inflated[0]);
   return DelaunaySweepline(pts, std::vector<Path>());
-}
-
-// the execution is expensive, we should not call it frequently
-bool ResolveIntersections(Path& path, std::vector<Path>& holes) {
-  // deep union
-  ClipperLib::Path scaled_path = UScalePathDiaToClipper(path);
-  ClipperLib::Clipper clipper;
-  clipper.AddPath(scaled_path, ClipperLib::ptSubject, true);
-  ClipperLib::Paths intermediate_paths;
-  clipper.Execute(ClipperLib::ctUnion, intermediate_paths,
-                  ClipperLib::pftNonZero, ClipperLib::pftNonZero);
-  clipper.Clear();
-
-  for (auto& line : intermediate_paths) {
-    if (ClipperLib::Orientation(line)) {
-      ClipperLib::ReversePath(line);
-    }
-  }
-  clipper.AddPaths(intermediate_paths, ClipperLib::ptSubject, true);
-  ClipperLib::Paths unioned_paths;
-  clipper.StrictlySimple(true);
-  clipper.Execute(ClipperLib::ctUnion, unioned_paths, ClipperLib::pftNonZero,
-                  ClipperLib::pftNonZero);
-  clipper.Clear();
-
-  if (unioned_paths.size() > 1) {
-    return false;
-  }
-
-  path = DScalePathClipperToDia(unioned_paths[0]);
-
-  // now do a deep union of all the holes
-  for (auto& hole : holes) {
-    ClipperLib::Path scaled_hole;
-  }
-
-  return true;
 }
 
 std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
@@ -355,11 +384,10 @@ std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
 
   TriangleMesh mesh = TriangulatePolygon(polygon);
   std::vector<float> points;
-  points.reserve(3 * mesh.vertices.size());
+  points.reserve(2 * mesh.vertices.size());
   for (auto& vertex : mesh.vertices) {
     points.emplace_back(vertex(0));
     points.emplace_back(vertex(1));
-    points.emplace_back(0);
   }
 
   std::vector<int> triangle_indices;
@@ -372,10 +400,10 @@ std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
 
   IVHACD::Parameters params;
   //
-  params.m_maxNumVerticesPerCH = 8;
+  // params.m_maxNumVerticesPerCH = 8;
+  params.m_oclAcceleration = false;
   IVHACD* vhacd_interface = VHACD::CreateVHACD();
-  std::cout << mesh.vertices.size() << std::endl;
-  bool res = vhacd_interface->Compute(points.data(), 3, mesh.vertices.size(),
+  bool res = vhacd_interface->Compute(points.data(), 2, mesh.vertices.size(),
                                       triangle_indices.data(), 3,
                                       mesh.faces.size(), params);
   std::vector<Polygon> polygons;
@@ -384,11 +412,11 @@ std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
     IVHACD::ConvexHull hull;
     for (size_t p = 0; p < num_hulls; ++p) {
       vhacd_interface->GetConvexHull(p, hull);
-      for (size_t v = 0, idx = 0; v < hull.m_nPoints; ++v, idx+=3) {
+      for (size_t v = 0; v < hull.m_nPoints; ++v) {
         std::cout << p << " ";
-        std::cout << hull.m_points[idx + 0] << " ";
-        std::cout << hull.m_points[idx + 1] << " ";
-        std::cout << hull.m_points[idx + 2] << "\n";
+        std::cout << hull.m_points[3 * v + 0] << " ";
+        std::cout << hull.m_points[3 * v + 1] << " ";
+        std::cout << hull.m_points[3 * v + 2] << "\n";
       }
     }
   } else {
@@ -399,6 +427,53 @@ std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
   vhacd_interface->Clean();
   vhacd_interface->Release();
   exit(0);
+  return polygons;
+}
+
+std::vector<Polygon> ResolveIntersections(const Polygon& polygon) {
+  // the polygon boundary maybe splitted during this process
+  // auto paths = ResolveIntersectionsClosedPath(polygon.path);
+  // auto holes = ResolveIntersectionsClosedPaths(polygon.holes);
+
+  ClipperLib::Clipper clipper;
+  ClipperLib::Path scaled_path = UScalePathDiaToClipper(polygon.path);
+  clipper.AddPath(scaled_path, ClipperLib::ptSubject, true);
+  
+  /*
+  for (auto& path : paths) {
+    ClipperLib::Path scaled_path = UScalePathDiaToClipper(path);
+    clipper.AddPath(scaled_path, ClipperLib::ptSubject, true);
+  }*/
+
+  for (auto& hole : polygon.holes) {
+    ClipperLib::Path scaled_hole = UScalePathDiaToClipper(hole);
+    clipper.AddPath(scaled_hole, ClipperLib::ptClip, true);
+  }
+
+  ClipperLib::PolyTree path_tree;
+  clipper.StrictlySimple(true);
+  clipper.Execute(ClipperLib::ctDifference, path_tree, ClipperLib::pftNonZero,
+                  ClipperLib::pftNonZero);
+
+  // iterating into the tree
+  std::vector<Polygon> polygons;
+  // only store the pointer to outer polygons
+  std::unordered_map<ClipperLib::PolyNode*, size_t> polynode_map;
+  for (ClipperLib::PolyNode* node_ptr = path_tree.GetFirst(); node_ptr;
+       node_ptr = node_ptr->GetNext()) {
+    ClipperLib::PolyNode* poly_ptr = node_ptr;
+    while (poly_ptr && poly_ptr->IsHole()) {
+      poly_ptr = poly_ptr->Parent;
+    }
+    if (polynode_map.find(poly_ptr) == polynode_map.end()) {
+      polygons.emplace_back(Polygon());
+      polygons.back().path = DScalePathClipperToDia(poly_ptr->Contour);
+      polynode_map[poly_ptr] = polygons.size() - 1;
+    } else {
+      polygons[polynode_map[poly_ptr]].holes.emplace_back(
+          DScalePathClipperToDia(node_ptr->Contour));
+    }
+  }
   return polygons;
 }
 

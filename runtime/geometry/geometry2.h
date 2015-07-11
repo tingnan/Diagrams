@@ -51,18 +51,14 @@ TriangleMesh TriangulatePolyline(const Path& path, float offset);
 // Use V-HACD to decompose a complex polygon to convexhulls
 std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon);
 
-// The method takes a boundary path and a set of holes as input, then:
-// - detect the self intersection in the path
-// - union all the holes
-// - execute a difference operation on the polygon using the holes
-// - the input path and holes are then modified in place.
-// The return value indicates if the operations succeeded.
-// The method will fail when:
-// - the boundary path is self intersecting
-// - the holes split or erase the polygon
-
-// TODO implementation
-bool ResolveIntersections(Path& path, std::vector<Path>& holes);
+// The method takes an input polygon, then:
+// - detect the self intersections in its boundary path and resolve them.
+// - detect the self intersections in all the holes and resolve them.
+// - union all the holes.
+// - clip the polygon with holes (using diff operation)
+// - the output maybe a single polygon (with holes) or a vector of polygons
+//   if the holes cut the polygon into separate pieces.
+std::vector<Polygon> ResolveIntersections(const Polygon& polygon);
 
 }  // namespace diagrammar
 

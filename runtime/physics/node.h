@@ -3,7 +3,7 @@
 #ifndef RUNTIME_PHYSICS_NODE_H_
 #define RUNTIME_PHYSICS_NODE_H_
 
-#include <list>
+#include <vector>
 
 #include <json/json.h>
 #include "geometry/geometry2.h"
@@ -16,8 +16,8 @@ typedef int id_t;
 
 struct Node {
 
-  std::list<Polygon> polygons;
-  std::list<Path> paths;
+  std::vector<Polygon> polygons;
+  std::vector<Path> paths;
   
   CoordinateFrame2D frame;
   Vector2f velocity;
