@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <vector>
+#include <string>
 #include <unordered_map>
 
 #include "physics/node.h"
@@ -13,8 +14,6 @@
 namespace diagrammar {
 
 struct GLProgram {
-  // texture
-  GLuint tex_loc;
   // scaling
   GLuint scale_loc;
   // transformation matrix
@@ -23,8 +22,20 @@ struct GLProgram {
   GLuint color_loc;
   // vertex location
   GLuint vertex_loc;
+  // texture
+  GLuint texture_loc;
   // program
   GLuint program_id;
+};
+
+
+class TextDrawer {
+ public:
+  void Draw(std::string, GLProgram program, GLfloat scale);
+ private:
+  void GenBuffer();
+  GLuint text_buffer_;
+  GLuint texture_buffer_;
 };
 
 class NodeDrawer {

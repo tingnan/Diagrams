@@ -19,7 +19,6 @@ class SDLInterfaceOpenGL {
   void Render();
   
  private:
-  
   void HandleEvents();
   bool LoadFont();
   bool app_running_ = true;

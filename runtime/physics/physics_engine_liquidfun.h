@@ -13,10 +13,9 @@ class b2Body;
 
 namespace diagrammar {
 class Node;
-// this is a base class that is supposed to be overload
 class PhysicsEngineLiquidFun : public PhysicsEngine {
  public:
-  // this engine is special in that it will directly modify
+  // This engine is special in that it will directly modify
   // the objects in the world
   // other physics engines only obtain immutable copies
   explicit PhysicsEngineLiquidFun(float time_step);
@@ -25,11 +24,10 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   void SendDataToWorld();
   void Step();
   void AddNode(Node* node);
-  void AddJoint(Joint* joint) {}
+  // The joint CANNOT be initialized, if the nodes it connect are not there yet
+  void AddJoint(Joint* joint);
   void RemoveNodeByID(id_t id);
  private:
-  // method to transfer node between physics engine and the world class
-  // allow runtime adding things
   void AddTrianglesToBody(const TriangleMesh& mesh, class b2Body*);
 
   b2World* b2world_;

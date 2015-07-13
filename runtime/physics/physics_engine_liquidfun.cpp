@@ -53,6 +53,9 @@ void PhysicsEngineLiquidFun::AddTrianglesToBody(const TriangleMesh& mesh,
 }
 
 void PhysicsEngineLiquidFun::AddNode(Node* node) {
+
+  assert (body_table_.find(node->id) == body_table_.end() && "node was added before!");
+
   b2BodyDef body_def;
   Vector2f pos = node->frame.GetTranslation();
   body_def.position.Set(pos(0) * kScaleDown, pos(1) * kScaleDown);
@@ -65,9 +68,11 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
                                 velocity(1) * kScaleDown);
   }
   b2Body* body = b2world_->CreateBody(&body_def);
-
+  // Add to look up table
+  body_table_[node->id] = body;
   // the body will keep a pointer to the node
   body->SetUserData(node);
+
 
   // create a set of triangles, for each geometry the node has
   for (auto& polygon : node->polygons) {
@@ -100,6 +105,14 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
   }
 }
 
-void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {}
+void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
+  if (body_table_.find(id) != body_table_.end()) {
+    b2world_->DestroyBody(body_table_[id]);
+  }
+}
+
+void PhysicsEngineLiquidFun::AddJoint(Joint* joint) {
+
+};
 
 }  // namespace diagrammar

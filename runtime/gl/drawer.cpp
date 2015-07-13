@@ -3,7 +3,6 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-
 #include <iostream>
 #include <vector>
 #include <string>
@@ -77,7 +76,7 @@ GLuint CompileShaderFromFile(const char* fname, GLenum type) {
   return CompileShaderFromSource(shader_text_cstr, type);
 }
 
-void RenderString2D(FT_Face fc, std::string s, float x, float y, float sx,
+void RenderString(FT_Face fc, std::string s, float x, float y, float sx,
                     float sy) {
   for (auto ch : s) {
     if (FT_Load_Char(fc, ch, FT_LOAD_RENDER)) continue;
@@ -364,7 +363,7 @@ void Canvas<DrawerType>::LoadProgram() {
   glDeleteShader(vert_shader_id);
   glDeleteShader(frag_shader_id);
 
-  program_.tex_loc = glGetUniformLocation(program_id, "texture_sampler");
+  program_.texture_loc = glGetUniformLocation(program_id, "texture_sampler");
   program_.u_mvp_loc = glGetUniformLocation(program_id, "u_mvp");
   program_.scale_loc = glGetUniformLocation(program_id, "scale");
   program_.color_loc = glGetAttribLocation(program_id, "color");
@@ -372,38 +371,11 @@ void Canvas<DrawerType>::LoadProgram() {
   program_.program_id = program_id;  
 }
 
+// to prevent linking error
 template class Canvas<NodePathDrawer>;
 template class Canvas<NodePolyDrawer>;
 
-
 /*
-void NaClDrawer::LoadShaders() {
-  // compile vert shader
-  GLuint vert_shader_id =
-      CompileShaderFromSource(kVertShaderSource, GL_VERTEX_SHADER);
-  GLuint frag_shader_id =
-      CompileShaderFromSource(kFragShaderSource, GL_FRAGMENT_SHADER);
-  // now we can link the program
-
-  GLuint program_id = glCreateProgram();
-  glAttachShader(program_id, vert_shader_id);
-  glAttachShader(program_id, frag_shader_id);
-  glLinkProgram(program_id);
-  GLint result;
-  glGetProgramiv(program_id, GL_LINK_STATUS, &result);
-  if (result != GL_TRUE) {
-    ProgarmErrorHanlder(program_id);
-  }
-  glDeleteShader(vert_shader_id);
-  glDeleteShader(frag_shader_id);
-
-  program_.tex_loc = glGetUniformLocation(program_id, "texture_sampler");
-  program_.u_mvp_loc = glGetUniformLocation(program_id, "u_mvp");
-  program_.scale_loc = glGetUniformLocation(program_id, "scale");
-  program_.color_loc = glGetAttribLocation(program_id, "color");
-  program_.vertex_loc = glGetAttribLocation(program_id, "position");
-  program_.program_id = program_id;
-}
 
 void NaClDrawer::GenTextBuffers() {
   FT_Library ft;

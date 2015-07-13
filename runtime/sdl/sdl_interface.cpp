@@ -9,6 +9,7 @@
 #include "utility/world_parser.h"
 #include "utility/stl_memory.h"
 
+
 namespace diagrammar {
 
 SDLInterfaceOpenGL::SDLInterfaceOpenGL() {}
@@ -54,8 +55,12 @@ bool SDLInterfaceOpenGL::Init(int w, int h) {
 void SDLInterfaceOpenGL::HandleEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event) != 0) {
-    if (event.type == SDL_QUIT) {
-      app_running_ = false;
+    switch (event.type) {
+      case SDL_QUIT:
+        app_running_ = false;
+        break;
+      default:
+        break;
     }
   }
 }
