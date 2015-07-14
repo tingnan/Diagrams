@@ -1,8 +1,5 @@
-#include "sdl/sdl_interface.h"
+// Copyright 2015 Native Client Authors
 
 int main() {
-  diagrammar::SDLInterfaceOpenGL interface;
-  interface.Init(800, 800);
-  interface.Render();
   return 0;
 }

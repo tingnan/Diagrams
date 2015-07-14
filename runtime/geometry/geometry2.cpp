@@ -7,8 +7,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <v-hacd/VHACD.h>
-
 #include "geometry/geometry2.h"
 #include "poly2tri/poly2tri.h"
 #include "polyclipping/clipper.hpp"
@@ -221,7 +219,7 @@ diagrammar::TriangleMesh DelaunaySweepline(
     for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
       p2t::Point* vertex = triangles[i]->GetPoint(vt_idx);
       if (pt2index.find(vertex) != pt2index.end()) {
-        mesh.faces[i][vt_idx] = pt2index[vertex];
+        mesh.faces[i][vt_idx]= pt2index[vertex];
       } else {
         mesh.vertices.emplace_back(vertex->x, vertex->y);
         pt2index[vertex] = mesh.vertices.size() - 1;
@@ -378,7 +376,7 @@ TriangleMesh TriangulatePolyline(const Path& path, float offset) {
   std::vector<Vector2f> pts = DScalePathClipperToDia(inflated[0]);
   return DelaunaySweepline(pts, std::vector<Path>());
 }
-
+/*
 std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
   using VHACD::IVHACD;
 
@@ -429,7 +427,7 @@ std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
   exit(0);
   return polygons;
 }
-
+*/
 std::vector<Polygon> ResolveIntersections(const Polygon& polygon) {
   // the polygon boundary maybe splitted during this process
   // auto paths = ResolveIntersectionsClosedPath(polygon.path);

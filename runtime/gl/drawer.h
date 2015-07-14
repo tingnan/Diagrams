@@ -1,6 +1,6 @@
 // Copyright 2015 Native Client Authors.
-#ifndef RUNTIME_SDL_DRAWER_H_
-#define RUNTIME_SDL_DRAWER_H_
+#ifndef RUNTIME_DRAWER_H_
+#define RUNTIME_DRAWER_H_
 
 #include <GLES2/gl2.h>
 
@@ -26,16 +26,6 @@ struct GLProgram {
   GLuint texture_loc;
   // program
   GLuint program_id;
-};
-
-
-class TextDrawer {
- public:
-  void Draw(std::string, GLProgram program, GLfloat scale);
- private:
-  void GenBuffer();
-  GLuint text_buffer_;
-  GLuint texture_buffer_;
 };
 
 class NodeDrawer {

@@ -3,6 +3,7 @@
 #ifndef RUNTIME_GEOMETRY_GEOMETRY2_H_
 #define RUNTIME_GEOMETRY_GEOMETRY2_H_
 
+#include <array>
 #include <string>
 #include <vector>
 

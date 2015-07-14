@@ -1,6 +1,5 @@
 // Copyright 2015 Native Client Authors.
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_opengles2.h>
+#include <SDL2/SDL_main.h>
 
 #include <iostream>
 
@@ -9,20 +8,19 @@
 #include "utility/world_parser.h"
 #include "utility/stl_memory.h"
 
-
 namespace diagrammar {
 
-SDLInterfaceOpenGL::SDLInterfaceOpenGL() {}
-SDLInterfaceOpenGL::~SDLInterfaceOpenGL() {
+Application::Application() {}
+Application::~Application() {
   SDL_StopTextInput();
   SDL_DestroyWindow(window_);
   SDL_Quit();
 }
 
 
-bool SDLInterfaceOpenGL::LoadFont() { return true; }
+bool Application::LoadFont() { return true; }
 
-bool SDLInterfaceOpenGL::Init(int w, int h) {
+bool Application::Init(int w, int h) {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
     std::cerr << "error initialize\n";
     return false;
@@ -34,7 +32,8 @@ bool SDLInterfaceOpenGL::Init(int w, int h) {
 
   window_ = SDL_CreateWindow(nullptr, SDL_WINDOWPOS_UNDEFINED,
                              SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_OPENGL);
-  if (SDL_GL_CreateContext(window_) == nullptr) {
+  gl_context_ = SDL_GL_CreateContext(window_);
+  if (gl_context_ == nullptr) {
     std::cerr << "error creating GL context\n";
     return false;
   }
@@ -48,11 +47,10 @@ bool SDLInterfaceOpenGL::Init(int w, int h) {
   }
 
   SDL_StartTextInput();
-
   return true;
 }
 
-void SDLInterfaceOpenGL::HandleEvents() {
+void Application::HandleEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event) != 0) {
     switch (event.type) {
@@ -65,7 +63,7 @@ void SDLInterfaceOpenGL::HandleEvents() {
   }
 }
 
-void SDLInterfaceOpenGL::Render() {
+void Application::Render() {
   while (app_running_) {
     HandleEvents();
     world_.Step();
@@ -74,5 +72,12 @@ void SDLInterfaceOpenGL::Render() {
   }
 }
 
-
 }  // namespace diagrammar
+
+
+int main (int argc, char *argv[]) {
+  diagrammar::Application app;
+  app.Init(800, 800);
+  app.Render();
+  return 0;
+}
