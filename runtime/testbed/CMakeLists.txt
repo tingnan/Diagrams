@@ -1,8 +1,0 @@
-FILE(GLOB sources "*.cpp")
-FILE(GLOB headers "*.h")
-ADD_EXECUTABLE(main ${sources} ${headers})
-IF(NOT SDL)
-  TARGET_LINK_LIBRARIES(main diaginterface diagutility diagphysics diagrender diaggeometry poly2tri polyclipping ${JSON_LIBRARIES} ${VHACD_LIBRARIES} ${GLFW_LIBRARIES} ${GLEW_LIBRARIES} ${OPENGL_LIBRARIES} ${ADDITIONAL_LIBRARIES})  
-ELSE()
-  TARGET_LINK_LIBRARIES(main diaginterface diagutility diagphysics diagrender diaggeometry poly2tri polyclipping ${JSON_LIBRARIES} ${VHACD_LIBRARIES} ${SDL_LIBRARIES} ${OPENGL_LIBRARIES}) 
-ENDIF()

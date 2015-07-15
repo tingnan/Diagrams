@@ -12,7 +12,7 @@ class b2World;
 class b2Body;
 
 namespace diagrammar {
-class Node;
+struct Node;
 class PhysicsEngineLiquidFun : public PhysicsEngine {
  public:
   // This engine is special in that it will directly modify

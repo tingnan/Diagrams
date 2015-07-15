@@ -57,6 +57,9 @@ void Application::HandleEvents() {
       case SDL_QUIT:
         app_running_ = false;
         break;
+      case SDL_MOUSEBUTTONDOWN:
+        std::cout << "mouse button down" << std::endl;
+        break;
       default:
         break;
     }
