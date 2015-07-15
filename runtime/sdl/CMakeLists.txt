@@ -1,4 +1,5 @@
 file(GLOB sources "*.cpp") 
 file(GLOB headers "*.h")
 add_executable(main ${sources} ${headers})
-target_link_libraries(main diagrender diagphysics diaggeometry diagutility ${JSONCPP_LIBRARIES} ${POLY2TRI_LIBRARIES} ${LIQUIDFUN_LIBRARIES} ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${NACL_LIBRARIES})
+set(SDL_FLAG "-Wl,--undefined=PSUserMainGet")
+target_link_libraries(main ${SDL_FLAG} diagrender diagphysics diaggeometry diagutility ${JSONCPP_LIBRARIES} ${POLY2TRI_LIBRARIES} ${LIQUIDFUN_LIBRARIES} ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${NACL_LIBRARIES})

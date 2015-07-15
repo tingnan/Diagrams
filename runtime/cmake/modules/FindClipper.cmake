@@ -1,0 +1,2 @@
+find_path(CLIPPER_INCLUDE_DIRS NAMES polyclipping/clipper.hpp)
+find_library(CLIPPER_LIBRARIES NAMES polyclipping)

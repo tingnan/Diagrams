@@ -74,8 +74,7 @@ void Application::Render() {
 
 }  // namespace diagrammar
 
-
-int main (int argc, char *argv[]) {
+int SDL_main (int argc, char *argv[]) {
   diagrammar::Application app;
   app.Init(800, 800);
   app.Render();
