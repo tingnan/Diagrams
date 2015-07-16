@@ -1,15 +1,17 @@
 // Copyright 2015 Native Client Authors
 
+#include <json/json.h>
+
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <string>
 
-#include <json/json.h>
 #include "utility/world_parser.h"
 #include "geometry/aabb.h"
 
 namespace diagrammar {
+
 std::string Stringify(const char* path) {
   std::ifstream file_handle(path, std::ios::binary | std::ios::in);
   std::string text;
@@ -76,7 +78,6 @@ Node ParseNode(const Json::Value& nodeobj) {
   Node node;
   Json::Value::const_iterator itr = nodeobj.begin();
   for (; itr != nodeobj.end(); ++itr) {
-    
     if (itr.key().asString() == "id") {
       node.id = (*itr).asInt();
     }
@@ -114,7 +115,7 @@ Node ParseNode(const Json::Value& nodeobj) {
       node.polygons = ResolveIntersections(geo);
     }
   }
-
   return node;
 }
+
 }  // namespace diagrammar

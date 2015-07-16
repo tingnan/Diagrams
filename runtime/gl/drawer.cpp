@@ -114,7 +114,7 @@ void NodePathDrawer::GenPathBuffer(const Path& polyline, bool is_closed) {
   vertex_buffer_.emplace_back(vert_vbo);
   glBindBuffer(GL_ARRAY_BUFFER, vert_vbo);
   size_t num_vertices = polyline.size();
-  
+
   std::vector<GLfloat> vertices(num_vertices * kVertDim);
   for (size_t j = 0; j < polyline.size(); ++j) {
     vertices[kVertDim * j + 0] = polyline[j](0);
@@ -131,7 +131,7 @@ void NodePathDrawer::GenPathBuffer(const Path& polyline, bool is_closed) {
   }
   glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat),
                vertices.data(), GL_STATIC_DRAW);
-  
+
   // count for closed loops
   vertex_size_.emplace_back(num_vertices);
 
@@ -147,8 +147,8 @@ void NodePathDrawer::GenPathBuffer(const Path& polyline, bool is_closed) {
     colors[kVertDim * j + 2] = 1;
     colors[kVertDim * j + 3] = 1;
   }
-  glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat),
-               colors.data(), GL_STATIC_DRAW);  
+  glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat), colors.data(),
+               GL_STATIC_DRAW);
 }
 
 void NodePathDrawer::GenBuffers() {
@@ -168,7 +168,6 @@ void NodePathDrawer::GenBuffers() {
   for (auto& path : node_->paths) {
     GenPathBuffer(path, false);
   }
-
 }
 
 void NodePathDrawer::Draw(GLProgram program, float scale) {
@@ -185,8 +184,7 @@ void NodePathDrawer::Draw(GLProgram program, float scale) {
     glEnableVertexAttribArray(program.color_loc);
 
     Isometry3f u_mvp(Isometry3f::Identity());
-    u_mvp.linear().topLeftCorner<2, 2>() =
-        node_->frame.GetRotationMatrix();
+    u_mvp.linear().topLeftCorner<2, 2>() = node_->frame.GetRotationMatrix();
     u_mvp.translation().head<2>() = node_->frame.GetTranslation();
     glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
@@ -195,12 +193,10 @@ void NodePathDrawer::Draw(GLProgram program, float scale) {
   }
 }
 
-
 NodePolyDrawer::NodePolyDrawer(Node* node) {
   node_ = node;
   GenBuffers();
 }
-
 
 void NodePolyDrawer::GenBuffers() {
   assert(node_ != nullptr);
@@ -216,12 +212,10 @@ void NodePolyDrawer::GenBuffers() {
     auto mesh = TriangulatePolyline(path, 1.5);
     GenTriangleBuffer(mesh);
   }
-
 }
 
-// TODO (tingnan), fix rendering
+// TODO(tingnan) fix rendering
 void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh& mesh) {
-  
   size_t num_vertices = mesh.vertices.size();
   vertex_size_.emplace_back(num_vertices);
 
@@ -229,7 +223,7 @@ void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh& mesh) {
   glGenBuffers(1, &v_buffer);
   vertex_buffer_.emplace_back(v_buffer);
   glBindBuffer(GL_ARRAY_BUFFER, v_buffer);
-  
+
   // the vertes array
   std::vector<GLfloat> vert_array;
   vert_array.reserve(num_vertices * kVertDim);
@@ -254,7 +248,8 @@ void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh& mesh) {
     }
   }
   index_size_.emplace_back(indices.size());
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
+               indices.data(), GL_STATIC_DRAW);
 
   GLuint c_buffer;
   glGenBuffers(1, &c_buffer);
@@ -282,15 +277,13 @@ void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh& mesh) {
       colors[kVertDim * cid + 3] = 1;
     }
   }
-  glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat),
-               colors.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat), colors.data(),
+               GL_STATIC_DRAW);
 }
-
 
 void NodePolyDrawer::Draw(GLProgram program, float scale) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
-
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
     glVertexAttribPointer(program.vertex_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
                           0);
@@ -302,8 +295,7 @@ void NodePolyDrawer::Draw(GLProgram program, float scale) {
     glEnableVertexAttribArray(program.color_loc);
 
     Isometry3f u_mvp(Isometry3f::Identity());
-    u_mvp.linear().topLeftCorner<2, 2>() =
-        node_->frame.GetRotationMatrix();
+    u_mvp.linear().topLeftCorner<2, 2>() = node_->frame.GetRotationMatrix();
     u_mvp.translation().head<2>() = node_->frame.GetTranslation();
     glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
@@ -311,38 +303,36 @@ void NodePolyDrawer::Draw(GLProgram program, float scale) {
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_[i]);
     glDrawElements(GL_TRIANGLES, index_size_[i], GL_UNSIGNED_INT, 0);
-  }  
+  }
 }
 
-template<class DrawerType>
-Canvas<DrawerType>::Canvas(float scale) : scale_(scale) {
+template <class DrawerType>
+Canvas<DrawerType>::Canvas(float scale)
+    : scale_(scale) {
   LoadProgram();
 }
 
-
-template<class DrawerType>
+template <class DrawerType>
 void Canvas<DrawerType>::AddNode(Node* node) {
   drawers_[node->id] = make_unique<DrawerType>(node);
 }
 
-template<class DrawerType>
+template <class DrawerType>
 void Canvas<DrawerType>::RemoveNodeByID(int id) {
   if (drawers_.find(id) != drawers_.end()) {
     drawers_.erase(id);
   }
 }
 
-template<class DrawerType>
+template <class DrawerType>
 void Canvas<DrawerType>::Draw() {
-  glClearColor(0.3, 0.3, 0.3, 1);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glUseProgram(program_.program_id);
   for (auto itr = drawers_.begin(); itr != drawers_.end(); ++itr) {
     itr->second->Draw(program_, scale_);
   }
 }
 
-template<class DrawerType>
+template <class DrawerType>
 void Canvas<DrawerType>::LoadProgram() {
   GLuint vert_shader_id =
       CompileShaderFromSource(kVertShaderSource, GL_VERTEX_SHADER);
@@ -367,7 +357,7 @@ void Canvas<DrawerType>::LoadProgram() {
   program_.scale_loc = glGetUniformLocation(program_id, "scale");
   program_.color_loc = glGetAttribLocation(program_id, "color");
   program_.vertex_loc = glGetAttribLocation(program_id, "position");
-  program_.program_id = program_id;  
+  program_.program_id = program_id;
 }
 
 // to prevent linking error

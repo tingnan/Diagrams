@@ -15,15 +15,13 @@ namespace diagrammar {
 struct TriangleMesh {
   std::vector<Vector2f> vertices;
   // Each face stores 3 indices to the actual vertex in the "vertices" vector
+  // Warning: clang-newlib cannot handle std::array correctly right now
   std::vector<std::array<size_t, 3> > faces;
 };
 
 typedef std::vector<Vector2f> Path;
 
-enum class ShapeType {
-  kNone,
-  kDisk
-};
+enum class ShapeType { kNone, kDisk };
 
 // typedef std::underlying_type<ShapeType>::type ShapeTypeInteral;
 

@@ -1,10 +1,11 @@
 // Copyright 2015 Native Client Authors.
 
+#include <Box2D/Box2D.h>
+
 #include <random>
 #include <iostream>
 #include <vector>
 
-#include "Box2D/Box2D.h"
 #include "physics/physics_engine_liquidfun.h"
 #include "physics/world.h"
 #include "geometry/geometry2.h"
@@ -92,7 +93,8 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
     if (polygon.shape_info.isMember("type")) {
       auto shape_type = polygon.shape_info["type"].asInt();
       if (static_cast<ShapeType>(shape_type) == ShapeType::kDisk) {
-        AddDiskToBody(polygon.shape_info["radius"].asFloat() * kScaleDown, node->material_info, body);
+        AddDiskToBody(polygon.shape_info["radius"].asFloat() * kScaleDown,
+                      node->material_info, body);
         continue;
       }
     }
@@ -140,8 +142,6 @@ void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
   }
 }
 
-void PhysicsEngineLiquidFun::AddJoint(Joint* joint){
-
-};
+void PhysicsEngineLiquidFun::AddJoint(Joint* joint) {}
 
 }  // namespace diagrammar

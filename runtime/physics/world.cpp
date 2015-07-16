@@ -1,10 +1,11 @@
 // Copyright 2015 Native Client Authors.
 
+#include <json/json.h>
+
 #include <random>
 #include <iostream>
 #include <algorithm>
 
-#include <json/json.h>
 #include "physics/world.h"
 #include "utility/world_parser.h"
 #include "physics/physics_engine_liquidfun.h"
@@ -45,9 +46,8 @@ void World::Start(EngineType engine_type) {
     Path circle;
     const size_t num_vertices = 30;
     for (int i = 0; i < num_vertices; ++i) {
-      circle.emplace_back(5 *
-                          Vector2f(cos((2.0 * i) * M_PI / num_vertices),
-                                   sin((2.0 * i) * M_PI / num_vertices)));
+      circle.emplace_back(5 * Vector2f(cos((2.0 * i) * M_PI / num_vertices),
+                                       sin((2.0 * i) * M_PI / num_vertices)));
     }
     for (int i = 0; i < 100; ++i) {
       Polygon poly = Polygon(circle);
@@ -62,7 +62,7 @@ void World::Start(EngineType engine_type) {
     }
   }
 
-  // TODO (add more physics engines)
+  // TODO(tingnan) add more physics engines
   switch (engine_type) {
     case kLiquidFun:
       physics_engine_.reset(new PhysicsEngineLiquidFun(time_step()));

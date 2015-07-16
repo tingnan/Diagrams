@@ -1,10 +1,10 @@
 // Copyright 2015 Native Client Authors.
-#ifndef RUNTIME_DRAWER_H_
-#define RUNTIME_DRAWER_H_
+#ifndef RUNTIME_GL_DRAWER_H_
+#define RUNTIME_GL_DRAWER_H_
 
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
-#elif
+#else
 #include <GLES2/gl2.h>
 #endif
 
@@ -36,6 +36,7 @@ class NodeDrawer {
  public:
   virtual void Draw(GLProgram program, GLfloat scale) = 0;
   virtual ~NodeDrawer() = default;
+
  protected:
   std::vector<GLuint> vertex_size_;
   // Buffer id for vertex and color array
@@ -48,46 +49,40 @@ class NodeDrawer {
 class NodePathDrawer : public NodeDrawer {
  public:
   // Set a node before calling Draw()
-  explicit NodePathDrawer(Node*);
+  explicit NodePathDrawer(Node* node);
   // Use a precompiled program and a scale to draw
   void Draw(GLProgram program, GLfloat scale);
 
  private:
   void GenPathBuffer(const Path&, bool);
   void GenBuffers();
-
 };
-
 
 // Draw all the polygons related to a node
 class NodePolyDrawer : public NodeDrawer {
  public:
   // Set a node before calling Draw()
-  explicit NodePolyDrawer(Node*);
+  explicit NodePolyDrawer(Node* node);
   void Draw(GLProgram program, GLfloat scale);
 
  private:
-  
   void GenTriangleBuffer(const TriangleMesh&);
   void GenBuffers();
 
   std::vector<GLuint> index_buffer_;
   std::vector<GLuint> index_size_;
-
 };
 
-template<class DrawerType>
+template <class DrawerType>
 class Canvas {
  public:
-  Canvas(float scale);
+  explicit Canvas(float scale);
   void AddNode(Node* node);
   void RemoveNodeByID(int id);
   void Draw();
- 
- private:
 
+ private:
   void LoadProgram();
-  
   GLProgram program_;
   float scale_;
   std::unordered_map<int, std::unique_ptr<DrawerType> > drawers_;
@@ -95,4 +90,4 @@ class Canvas {
 
 }  // namespace diagrammar
 
-#endif  // RUNTIME_SDL_NACL_DRAWER_H_
+#endif  // RUNTIME_GL_DRAWER_H_

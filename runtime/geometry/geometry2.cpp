@@ -219,7 +219,7 @@ diagrammar::TriangleMesh DelaunaySweepline(
     for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
       p2t::Point* vertex = triangles[i]->GetPoint(vt_idx);
       if (pt2index.find(vertex) != pt2index.end()) {
-        mesh.faces[i][vt_idx]= pt2index[vertex];
+        mesh.faces[i][vt_idx] = pt2index[vertex];
       } else {
         mesh.vertices.emplace_back(vertex->x, vertex->y);
         pt2index[vertex] = mesh.vertices.size() - 1;
@@ -435,7 +435,7 @@ std::vector<Polygon> ResolveIntersections(const Polygon& polygon) {
   ClipperLib::Clipper clipper;
   ClipperLib::Path scaled_path = UScalePathDiaToClipper(polygon.path);
   clipper.AddPath(scaled_path, ClipperLib::ptSubject, true);
-  
+
   /*
   for (auto& path : paths) {
     ClipperLib::Path scaled_path = UScalePathDiaToClipper(path);

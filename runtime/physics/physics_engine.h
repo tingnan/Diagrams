@@ -5,7 +5,7 @@
 
 #include <vector>
 
-#include <physics/node.h>
+#include "physics/node.h"
 
 namespace Json {
 class Value;
@@ -17,27 +17,25 @@ namespace diagrammar {
 // allow for different physics engines
 class PhysicsEngine {
  public:
-  
   explicit PhysicsEngine(float time_step) : time_step_(time_step) {}
   PhysicsEngine(const PhysicsEngine&) = delete;
   PhysicsEngine(PhysicsEngine&&) = default;
   virtual ~PhysicsEngine() = default;
-  
+
   // step the internal world
   virtual void Step() = 0;
   // update the world
   virtual void SendDataToWorld() = 0;
 
-  virtual void AddNode(Node*) = 0;
+  virtual void AddNode(Node* node) = 0;
 
   // Remove a node using id
   virtual void RemoveNodeByID(id_t) = 0;
 
   // Add a constraint
-  virtual void AddJoint(Joint*) = 0;
+  virtual void AddJoint(Joint* joint) = 0;
 
  protected:
-
   float time_step_;
 };
 

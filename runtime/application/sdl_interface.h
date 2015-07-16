@@ -7,7 +7,7 @@
 #include <SDL2/SDL.h>
 #ifdef __APPLE__
 #include <SDL2/SDL_opengl.h>
-#elif
+#else
 #include <SDL2/SDL_opengles2.h>
 #endif
 
@@ -34,7 +34,10 @@ class Application {
   SDL_Window* window_;
   SDL_GLContext gl_context_;
   World world_;
-  std::unique_ptr<Canvas<NodePolyDrawer> > drawer_;
+  bool draw_poly_ = true;
+  bool draw_path_ = true;
+  std::unique_ptr<Canvas<NodePolyDrawer> > poly_drawers_;
+  std::unique_ptr<Canvas<NodePathDrawer> > path_drawers_;
 };
 
 }  // namespace diagrammar

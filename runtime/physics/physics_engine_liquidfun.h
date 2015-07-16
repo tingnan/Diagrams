@@ -27,13 +27,13 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   // The joint CANNOT be initialized, if the nodes it connect are not there yet
   void AddJoint(Joint* joint);
   void RemoveNodeByID(id_t id);
- private:
 
+ private:
   b2World* b2world_;
   std::unordered_map<id_t, b2Body*> body_table_;
 
   // Used internally for the LCP solver
-  // DONOT modify unless you know what it is 
+  // DONOT modify unless you know what it is
   int velocity_iterations_ = 5;
   int position_iterations_ = 5;
 

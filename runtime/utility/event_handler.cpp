@@ -5,9 +5,7 @@
 #include <json/json.h>
 #include "utility/event_handler.h"
 
-namespace {
-
-}  // namespace
+namespace {}  // namespace
 
 const uint32_t kCustomEvent = SDL_RegisterEvents(1);
 

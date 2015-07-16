@@ -28,7 +28,7 @@ bool Application::Init(int w, int h) {
   }
 #ifdef __APPLE__
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-#elif
+#else
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
 #endif
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
@@ -45,13 +45,20 @@ bool Application::Init(int w, int h) {
 
   world_.Read(CreateJsonObject("path_simple.json"));
   world_.Start();
-  drawer_ = make_unique<Canvas<NodePolyDrawer> >(0.0015);
-
+  
+  // 0.0015 is a scale, better to read from the input
+  // e.g. 0.5 / max(world_.xspan(), world_.yspan());
+  poly_drawers_ = make_unique<Canvas<NodePolyDrawer> >(0.0015);
   for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
-    drawer_->AddNode(world_.GetNodeByIndex(i));
+    poly_drawers_->AddNode(world_.GetNodeByIndex(i));
   }
 
-  SDL_StartTextInput();
+  path_drawers_ = make_unique<Canvas<NodePathDrawer> >(0.0015);
+  for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
+    path_drawers_->AddNode(world_.GetNodeByIndex(i));
+  }
+
+  // SDL_StartTextInput();
   return true;
 }
 
@@ -68,8 +75,9 @@ void Application::HandleEvents() {
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEBUTTONUP:
         {
+          // Please check SDL website for button enums
           event_message["type"] = "mouse_button";
-          event_message["button_id"] = event.button.button;
+          event_message["button"] = event.button.button;
           event_message["button_pressed"] = event.button.state == SDL_PRESSED;
           event_message["x"] = event.button.x;
           event_message["y"] = event.button.y;
@@ -77,6 +85,7 @@ void Application::HandleEvents() {
         break;
       case SDL_MOUSEMOTION:
         {
+          // Please check SDL website for button mask enums
           event_message["type"] = "mouse_motion";
           event_message["button_mask"] = event.motion.state;
           event_message["x"] = event.motion.x;
@@ -106,7 +115,20 @@ void Application::HandleEvents() {
 
 }
 
-bool Application::HandleMessage(const Json::Value&) {
+bool Application::HandleMessage(const Json::Value& message) {
+  // we define only a few basic key mappings here
+  if (message["type"] == "key") {
+    if (message["key_code"] == "1" && message["key_pressed"] == true) {
+      draw_path_ = !draw_path_;
+      return true;
+    }
+
+    if (message["key_code"] == "2" && message["key_pressed"] == true) {
+      draw_poly_ = !draw_poly_;
+      return true;
+    }
+  }
+
   return false;
 }
 
@@ -114,7 +136,14 @@ void Application::Render() {
   while (app_running_) {
     HandleEvents();
     world_.Step();
-    drawer_->Draw();
+    
+    glClearColor(0.3, 0.3, 0.3, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    if (draw_poly_)
+      poly_drawers_->Draw();
+    if (draw_path_)
+      path_drawers_->Draw();
+    
     SDL_GL_SwapWindow(window_);
   }
 }

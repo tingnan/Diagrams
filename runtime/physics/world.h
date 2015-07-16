@@ -17,7 +17,8 @@ class Value;
 
 namespace diagrammar {
 
-// This is a simulation world. A the wrapper class that communicates with a physics
+// This is a simulation world. A the wrapper class that communicates with a
+// physics
 // engine.
 class World {
  public:
@@ -28,9 +29,8 @@ class World {
   // not copyable
   World(const World& other) = delete;
 
-  // initialize the world, the physics engine MUST be initialized after 
+  // initialize the world, the physics engine MUST be initialized after
   // the world description is loaded
-  // TODO Change to Read and Start
   void Read(const Json::Value&);
   void Start(EngineType t = EngineType::kLiquidFun);
 
@@ -38,12 +38,12 @@ class World {
   void Step();
 
   // Handle input event message
-  void HandleMessage(const Json::Value&) {};
+  void HandleMessage(const Json::Value&) {}
 
   float time_step() const;
   float now() const;
   float simulation_time() const;
-  
+
   // Copy a node to the world and assign an id
   Node* AddNode(Node);
   Node* GetNodeByID(id_t) const;
@@ -52,23 +52,21 @@ class World {
   void RemoveNodeByID(id_t);
 
  private:
-
   // Clear everything in the world.
   void Reset();
 
   // called by InitializeWorldDescription
   void ParseWorld(const Json::Value&);
 
-  // TODO world_frame_
   CoordinateFrame2D frame;
 
   std::vector<std::unique_ptr<Node> > nodes_;
   // Quick access to node by unique id
   std::unordered_map<id_t, size_t> node_table_;
-  
+
   // Timer that sync the simulation with real time
   Timer timer_;
-  
+
   // Circular buffer to calculate performance benchmark
   std::list<double> step_time_;
 
@@ -78,7 +76,6 @@ class World {
 
   // node id counter
   int id_counter_ = 0;
-  
 };
 }  // namespace diagrammar
 

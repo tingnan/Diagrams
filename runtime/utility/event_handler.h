@@ -9,8 +9,8 @@
 #include <queue>
 
 namespace Json {
-  class Value;
-} // namespace Json
+class Value;
+}  // namespace Json
 
 namespace diagrammar {
 
@@ -28,7 +28,6 @@ class ThreadSafeQueue {
   // potential of racing
   EventType try_pop();
 };
-
 
 extern const uint32_t kCustomEvent;
 void PushEventToGlobalQueue(const Json::Value& evdata);
