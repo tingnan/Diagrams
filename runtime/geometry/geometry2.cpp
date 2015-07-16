@@ -329,7 +329,7 @@ std::vector<diagrammar::Path> ResolveIntersectionsClosedPaths(
 
 namespace diagrammar {
 
-std::vector<Vector2f> SimplifyPolyline(const Path& path) {
+std::vector<Vector2f> SimplifyPolyline(const Path& path, float rel_tol) {
   if (path.size() <= 2) {
     return path;
   }
@@ -342,7 +342,6 @@ std::vector<Vector2f> SimplifyPolyline(const Path& path) {
     // set a tolerance to remove points that are too close to
     // each other. the relative tolerance is 0.5% of max size
     // so the simplified curve is still pretty smooth
-    float rel_tol = 5e-3;
     float tol = std::max(span(0), span(1)) * rel_tol;
     out = PolylineDouglasPeuckerIterative(path, tol);
   } else {

@@ -38,9 +38,10 @@ void AddTrianglesToBody(const diagrammar::TriangleMesh& mesh,
   for (size_t i = 0; i < mesh.faces.size(); ++i) {
     b2Vec2 vertices[3];
     for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
-      auto vertex = mesh.vertices[mesh.faces[i][vt_idx]];
+      auto& vertex = mesh.vertices[mesh.faces[i][vt_idx]];
       vertices[vt_idx].Set(vertex(0), vertex(1));
     }
+
     b2PolygonShape polygon;
     polygon.Set(vertices, 3);
     AddShapeToBody(polygon, m_property, b);
