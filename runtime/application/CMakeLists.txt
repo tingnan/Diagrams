@@ -1,5 +1,7 @@
 file(GLOB sources "*.cpp") 
 file(GLOB headers "*.h")
 add_executable(main ${sources} ${headers})
-set(SDL_FLAG "-Wl,--undefined=PSUserMainGet")
+if(NACL)
+  set(SDL_FLAG "-Wl,--undefined=PSUserMainGet")
+endif()
 target_link_libraries(main ${SDL_FLAG} diagrender diagphysics diaggeometry diagutility ${JSONCPP_LIBRARIES} ${POLY2TRI_LIBRARIES} ${LIQUIDFUN_LIBRARIES} ${SDL2_LIBRARIES} ${OPENGL_LIBRARIES} ${NACL_LIBRARIES})

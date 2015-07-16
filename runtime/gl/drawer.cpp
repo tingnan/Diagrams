@@ -1,10 +1,5 @@
 // Copyright 2015 Native Client Authors.
 
-#ifndef __native_client__
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#endif
-
 #include <iostream>
 #include <vector>
 #include <string>
@@ -78,8 +73,7 @@ GLuint CompileShaderFromFile(const char* fname, GLenum type) {
   return CompileShaderFromSource(shader_text_cstr, type);
 }
 
-#ifndef __native_client__
-
+/*
 void RenderString(FT_Face fc, std::string s, float x, float y, float sx,
                     float sy) {
   for (auto ch : s) {
@@ -103,7 +97,7 @@ void RenderString(FT_Face fc, std::string s, float x, float y, float sx,
     y += (glyph->advance.y >> 6) * sy;
   }
 }
-#endif
+*/
 
 }  // namespace
 

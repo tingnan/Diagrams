@@ -26,8 +26,11 @@ bool Application::Init(int w, int h) {
     std::cerr << "error initialize\n";
     return false;
   }
-
+#ifdef __APPLE__
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+#elif
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+#endif
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
@@ -36,6 +39,7 @@ bool Application::Init(int w, int h) {
   gl_context_ = SDL_GL_CreateContext(window_);
   if (gl_context_ == nullptr) {
     std::cerr << "error creating GL context\n";
+    std::cerr << SDL_GetError() << "\n";
     return false;
   }
 
@@ -117,7 +121,7 @@ void Application::Render() {
 
 }  // namespace diagrammar
 
-int SDL_main (int argc, char *argv[]) {
+int main (int argc, char *argv[]) {
   diagrammar::Application app;
   if (!app.Init(800, 800)) {
     return 0;

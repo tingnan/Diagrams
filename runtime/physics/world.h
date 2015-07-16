@@ -38,7 +38,7 @@ class World {
   void Step();
 
   // Handle input event message
-  void HandleMessage(const Json::Value&);
+  void HandleMessage(const Json::Value&) {};
 
   float time_step() const;
   float now() const;

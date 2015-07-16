@@ -2,7 +2,11 @@
 #ifndef RUNTIME_DRAWER_H_
 #define RUNTIME_DRAWER_H_
 
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#elif
 #include <GLES2/gl2.h>
+#endif
 
 #include <memory>
 #include <vector>

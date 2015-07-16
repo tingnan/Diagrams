@@ -5,7 +5,11 @@
 
 
 #include <SDL2/SDL.h>
+#ifdef __APPLE__
+#include <SDL2/SDL_opengl.h>
+#elif
 #include <SDL2/SDL_opengles2.h>
+#endif
 
 #include <memory>
 
