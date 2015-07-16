@@ -1,7 +1,7 @@
 // Copyright 2015 Native Client Authors.
 
-#ifndef RUNTIME_SDL_SDL_INTERFACE_H_
-#define RUNTIME_SDL_SDL_INTERFACE_H_
+#ifndef RUNTIME_APPLICATION_SDL_INTERFACE_H_
+#define RUNTIME_APPLICATION_SDL_INTERFACE_H_
 
 
 #include <SDL2/SDL.h>
@@ -24,6 +24,7 @@ class Application {
   
  private:
   void HandleEvents();
+  bool HandleMessage(const Json::Value&);
   bool LoadFont();
   bool app_running_ = true;
   SDL_Window* window_;
@@ -34,4 +35,4 @@ class Application {
 
 }  // namespace diagrammar
 
-#endif  // RUNTIME_SDL_SDL_INTERFACE_H_
+#endif  // RUNTIME_APPLICATION_SDL_INTERFACE_H_

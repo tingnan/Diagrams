@@ -11,11 +11,9 @@
 
 namespace diagrammar {
 
-World::World() {
-}
+World::World() {}
 
-World::~World() {
-}
+World::~World() {}
 
 void World::Reset() {
   node_table_.clear();
@@ -23,8 +21,7 @@ void World::Reset() {
   step_time_.clear();
   id_counter_ = 0;
   auto engine_ptr = physics_engine_.release();
-  if (engine_ptr)
-    delete engine_ptr;
+  if (engine_ptr) delete engine_ptr;
 }
 
 void World::Read(const Json::Value& world) {
@@ -34,9 +31,8 @@ void World::Read(const Json::Value& world) {
 
 void World::Start(EngineType engine_type) {
   auto engine_ptr = physics_engine_.release();
-  if (engine_ptr)
-    delete engine_ptr;
-  
+  if (engine_ptr) delete engine_ptr;
+
   // Now generate some sample particles
   if (true) {
     std::random_device rd;
@@ -45,18 +41,18 @@ void World::Start(EngineType engine_type) {
     std::uniform_real_distribution<float> vel_dist(-50.f, 50.f);
     std::default_random_engine generator(rd());
 
-    // create a circle
-
+    // create a disk
     Path circle;
     const size_t num_vertices = 30;
     for (int i = 0; i < num_vertices; ++i) {
       circle.emplace_back(5 *
-                          Vector2f(cos(float(2 * i) * M_PI / num_vertices),
-                                   sin(float(2 * i) * M_PI / num_vertices)));
+                          Vector2f(cos((2.0 * i) * M_PI / num_vertices),
+                                   sin((2.0 * i) * M_PI / num_vertices)));
     }
-    for (int i = 0; i < 1; ++i) {
+    for (int i = 0; i < 100; ++i) {
       Polygon poly = Polygon(circle);
-      poly.shape_type = OptimizedShapeType::kSphere2D;
+      poly.shape_info["type"] = static_cast<int>(ShapeType::kDisk);
+      poly.shape_info["radius"] = static_cast<float>(5.0);
       Node* node_ptr = AddNode(Node());
       node_ptr->polygons.emplace_back(poly);
       node_ptr->is_dynamic = true;
@@ -67,7 +63,7 @@ void World::Start(EngineType engine_type) {
   }
 
   // TODO (add more physics engines)
-  switch(engine_type) {
+  switch (engine_type) {
     case kLiquidFun:
       physics_engine_.reset(new PhysicsEngineLiquidFun(time_step()));
       break;
@@ -96,7 +92,7 @@ void World::Step() {
     physics_engine_->Step();
   }
   double after_step = timer_.now();
-  
+
   if (num_ticks > 0) {
     step_time_.push_back((after_step - before_step) / num_ticks);
     if (step_time_.size() > 200) {
@@ -105,11 +101,11 @@ void World::Step() {
   }
 
   if (timer_.accumulated_ticks() % 200 == 0 && timer_.accumulated_ticks() > 0) {
-    std::cerr << "200 counts: ";
+    std::cout << "200 counts: ";
     auto result = std::minmax_element(step_time_.begin(), step_time_.end());
-    std::cerr << "min: " << *result.first << " ms ";
-    std::cerr << "max: " << *result.second << " ms ";
-    std::cerr << "mean: "
+    std::cout << "min: " << *result.first << " ms ";
+    std::cout << "max: " << *result.second << " ms ";
+    std::cout << "mean: "
               << std::accumulate(step_time_.begin(), step_time_.end(), 0.0) /
                      step_time_.size()
               << " ms\n";
@@ -128,7 +124,7 @@ Node* World::AddNode(Node obj) {
   // outside
   id_counter_++;
   node_ptr->id = id_counter_;
-  node_table_.insert(std::make_pair(id_counter_, nodes_.size() - 1));
+  node_table_.insert(std::make_pair(node_ptr->id, nodes_.size() - 1));
 
   // now we also would like to add/remove the same node from the underlying
   // engine

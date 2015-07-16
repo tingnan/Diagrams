@@ -20,18 +20,18 @@ struct TriangleMesh {
 
 typedef std::vector<Vector2f> Path;
 
-enum class OptimizedShapeType {
-  // We may add more later (depending on if the physics engine used has a special shape primitive)
+enum class ShapeType {
   kNone,
-  kSphere2D
+  kDisk
 };
+
+// typedef std::underlying_type<ShapeType>::type ShapeTypeInteral;
 
 // We can have different choices for this metadata: boost::any or Json::Value
 typedef Json::Value Metadata;
 
 struct Polygon {
-  OptimizedShapeType shape_type = OptimizedShapeType::kNone;
-  Metadata meta_data;
+  Metadata shape_info;
   Path path;
   std::vector<Path> holes;
   Polygon() = default;

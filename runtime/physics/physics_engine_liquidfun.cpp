@@ -22,6 +22,38 @@ void AddRevoluteJointToWorld(b2World* world, b2Body* body1, b2Body* body2) {
   world->CreateJoint(&pin_def);
 }
 
+void AddShapeToBody(const b2Shape& shape,
+                    const diagrammar::MaterialProperty& m_property, b2Body* b) {
+  b2FixtureDef shape_fixture;
+  shape_fixture.shape = &shape;
+  shape_fixture.density = m_property.density;
+  shape_fixture.friction = m_property.friction;
+  shape_fixture.restitution = m_property.restitution;
+  b->CreateFixture(&shape_fixture);
+}
+
+void AddTrianglesToBody(const diagrammar::TriangleMesh& mesh,
+                        const diagrammar::MaterialProperty& m_property,
+                        b2Body* b) {
+  for (size_t i = 0; i < mesh.faces.size(); ++i) {
+    b2Vec2 vertices[3];
+    for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
+      auto vertex = mesh.vertices[mesh.faces[i][vt_idx]];
+      vertices[vt_idx].Set(vertex(0), vertex(1));
+    }
+    b2PolygonShape polygon;
+    polygon.Set(vertices, 3);
+    AddShapeToBody(polygon, m_property, b);
+  }
+}
+
+void AddDiskToBody(float radius, const diagrammar::MaterialProperty& m_property,
+                   b2Body* b) {
+  b2CircleShape disk;
+  disk.m_radius = radius;
+  AddShapeToBody(disk, m_property, b);
+}
+
 }  // namespace
 
 namespace diagrammar {
@@ -33,28 +65,9 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(float time_step)
   b2world_ = new b2World(gravity);
 }
 
-void PhysicsEngineLiquidFun::AddTrianglesToBody(const TriangleMesh& mesh,
-                                                b2Body* b) {
-  for (size_t i = 0; i < mesh.faces.size(); ++i) {
-    b2Vec2 vertices[3];
-    for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
-      auto vertex = mesh.vertices[mesh.faces[i][vt_idx]];
-      vertices[vt_idx].Set(vertex(0) * kScaleDown, vertex(1) * kScaleDown);
-    }
-    b2PolygonShape polygon;
-    polygon.Set(vertices, 3);
-    b2FixtureDef polyfixture;
-    polyfixture.shape = &polygon;
-    polyfixture.density = kDefaultDensity;
-    polyfixture.friction = kDefaultFriction;
-    polyfixture.restitution = kDefaultRestitution;
-    b->CreateFixture(&polyfixture);
-  }
-}
-
 void PhysicsEngineLiquidFun::AddNode(Node* node) {
-
-  assert (body_table_.find(node->id) == body_table_.end() && "node was added before!");
+  assert(body_table_.find(node->id) == body_table_.end() &&
+         "node was added before!");
 
   b2BodyDef body_def;
   Vector2f pos = node->frame.GetTranslation();
@@ -73,15 +86,30 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
   // the body will keep a pointer to the node
   body->SetUserData(node);
 
-
   // create a set of triangles, for each geometry the node has
   for (auto& polygon : node->polygons) {
-    AddTrianglesToBody(TriangulatePolygon(polygon), body);
+    if (polygon.shape_info.isMember("type")) {
+      auto shape_type = polygon.shape_info["type"].asInt();
+      if (static_cast<ShapeType>(shape_type) == ShapeType::kDisk) {
+        AddDiskToBody(polygon.shape_info["radius"].asFloat() * kScaleDown, node->material_info, body);
+        continue;
+      }
+    }
+
+    TriangleMesh mesh = TriangulatePolygon(polygon);
+    for (auto& v : mesh.vertices) {
+      v = kScaleDown * v;
+    }
+    AddTrianglesToBody(mesh, node->material_info, body);
   }
 
   for (auto& path : node->paths) {
     // Expand by 1.5 unit
-    AddTrianglesToBody(TriangulatePolyline(path, 1.5), body);
+    TriangleMesh mesh = TriangulatePolyline(path, 1.5);
+    for (auto& v : mesh.vertices) {
+      v = kScaleDown * v;
+    }
+    AddTrianglesToBody(mesh, node->material_info, body);
   }
 }
 
@@ -99,7 +127,7 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
                            b->GetPosition().y * kScaleUp);
       node->frame.SetTranslation(translation);
       node->frame.SetRotation(b->GetAngle());
-      node->velocity = Vector2f(b->GetLinearVelocity().x * kScaleUp, 
+      node->velocity = Vector2f(b->GetLinearVelocity().x * kScaleUp,
                                 b->GetLinearVelocity().y * kScaleUp);
     }
   }
@@ -111,7 +139,7 @@ void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
   }
 }
 
-void PhysicsEngineLiquidFun::AddJoint(Joint* joint) {
+void PhysicsEngineLiquidFun::AddJoint(Joint* joint){
 
 };
 

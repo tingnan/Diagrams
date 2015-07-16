@@ -37,8 +37,8 @@ class World {
   // put in the main loop
   void Step();
 
-  // event handler, to be implemented with state charts
-  void HandleEvent();
+  // Handle input event message
+  void HandleMessage(const Json::Value&);
 
   float time_step() const;
   float now() const;
@@ -63,16 +63,16 @@ class World {
   CoordinateFrame2D frame;
 
   std::vector<std::unique_ptr<Node> > nodes_;
-  // quick access to node by unique id
+  // Quick access to node by unique id
   std::unordered_map<id_t, size_t> node_table_;
   
   // Timer that sync the simulation with real time
   Timer timer_;
   
-  // Circular buffer
+  // Circular buffer to calculate performance benchmark
   std::list<double> step_time_;
 
-  // the pointer to the actual physics engine used;
+  // Pointer to the actual physics engine used;
   // we will allow user to switch engine;
   std::unique_ptr<class PhysicsEngine> physics_engine_;
 

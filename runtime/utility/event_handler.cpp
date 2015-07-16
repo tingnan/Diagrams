@@ -1,5 +1,15 @@
 // Copyright 2015 Native Client Authors.
+
+#include <SDL2/SDL.h>
+
+#include <json/json.h>
 #include "utility/event_handler.h"
+
+namespace {
+
+}  // namespace
+
+const uint32_t kCustomEvent = SDL_RegisterEvents(1);
 
 namespace diagrammar {
 
@@ -32,6 +42,12 @@ EventType ThreadSafeQueue<EventType, QueueType>::try_pop() {
   tmp = queue_.front();
   queue_.pop();
   return tmp;
+}
+
+void PushEventToGlobalQueue(const Json::Value& evdata) {
+  SDL_Event event;
+  event.type = kCustomEvent;
+  event.user.data1 = new Json::Value(evdata);
 }
 
 }  // namespace diagrammar

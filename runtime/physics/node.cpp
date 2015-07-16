@@ -3,7 +3,4 @@
 #include "physics/node.h"
 #include "utility/stl_memory.h"
 
-namespace diagrammar {
-
-
-}  // namespace diagrammar
+namespace diagrammar {}  // namespace diagrammar

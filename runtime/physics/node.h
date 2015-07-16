@@ -14,6 +14,14 @@ namespace diagrammar {
 typedef int id_t;
 
 
+struct MaterialProperty {
+  float restitution = 1;
+  float friction = 0;
+  float density = 1;
+  // In its fixed frame;
+  Matrix3f inertia_matrix = Matrix3f::Identity();
+};
+
 struct Node {
 
   std::vector<Polygon> polygons;
@@ -23,12 +31,8 @@ struct Node {
   Vector2f velocity;
   float angular_velocity;
 
-  float restitution = 1;
-  float friction = 0;
-  float density = 1;
-  // In its fixed frame;
-  Matrix3f inertia_matrix = Matrix3f::Identity();
-  // The unique ID (managed by World)
+  MaterialProperty material_info;
+    // The unique ID (managed by World)
   id_t id = 0xffffffff;
   // The collision filtering ID, used for broad phase collision filtering only
   id_t collision_group_id;

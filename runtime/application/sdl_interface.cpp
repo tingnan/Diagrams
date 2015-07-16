@@ -3,10 +3,11 @@
 
 #include <iostream>
 
-#include "sdl/sdl_interface.h"
+#include "application/sdl_interface.h"
 #include "physics/world.h"
 #include "utility/world_parser.h"
 #include "utility/stl_memory.h"
+#include "utility/event_handler.h"
 
 namespace diagrammar {
 
@@ -53,17 +54,56 @@ bool Application::Init(int w, int h) {
 void Application::HandleEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event) != 0) {
+    Json::Value event_message;
+    // our custom event, which is not a constexpr
+    // the built in event types
     switch (event.type) {
       case SDL_QUIT:
         app_running_ = false;
         break;
       case SDL_MOUSEBUTTONDOWN:
-        std::cout << "mouse button down" << std::endl;
+      case SDL_MOUSEBUTTONUP:
+        {
+          event_message["type"] = "mouse_button";
+          event_message["button_id"] = event.button.button;
+          event_message["button_pressed"] = event.button.state == SDL_PRESSED;
+          event_message["x"] = event.button.x;
+          event_message["y"] = event.button.y;
+        }
+        break;
+      case SDL_MOUSEMOTION:
+        {
+          event_message["type"] = "mouse_motion";
+          event_message["button_mask"] = event.motion.state;
+          event_message["x"] = event.motion.x;
+          event_message["y"] = event.motion.y;
+          event_message["xrel"] = event.motion.xrel;
+          event_message["yrel"] = event.motion.yrel;
+        }
+        break;
+      case SDL_KEYDOWN:
+      case SDL_KEYUP:
+        {
+          event_message["type"] = "key";
+          event_message["key_pressed"] = event.key.state == SDL_PRESSED;
+          event_message["key_code"] = SDL_GetKeyName(event.key.keysym.sym);
+        }
         break;
       default:
         break;
     }
+
+    std::cout << event_message << std::endl;
+    if (HandleMessage(event_message)) {
+      continue;
+    }
+    world_.HandleMessage(event_message);
   }
+
+}
+
+bool Application::HandleMessage(const Json::Value&) {
+  return false;
 }
 
 void Application::Render() {
@@ -79,7 +119,9 @@ void Application::Render() {
 
 int SDL_main (int argc, char *argv[]) {
   diagrammar::Application app;
-  app.Init(800, 800);
+  if (!app.Init(800, 800)) {
+    return 0;
+  }
   app.Render();
   return 0;
 }

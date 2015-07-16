@@ -1,12 +1,19 @@
 // Copyright 2015 Native Client Authors.
+
 #ifndef RUNTIME_UTILITY_EVENTHANDLER_H_
 #define RUNTIME_UTILITY_EVENTHANDLER_H_
+
 #include <thread>
 #include <mutex>
 #include <condition_variable>
 #include <queue>
 
+namespace Json {
+  class Value;
+} // namespace Json
+
 namespace diagrammar {
+
 // the event queue template type
 template <typename EventType, template <typename> class QueueType = std::queue>
 class ThreadSafeQueue {
@@ -21,6 +28,11 @@ class ThreadSafeQueue {
   // potential of racing
   EventType try_pop();
 };
+
+
+extern const uint32_t kCustomEvent;
+void PushEventToGlobalQueue(const Json::Value& evdata);
+
 }  // namespace diagrammar
 
 #endif  // RUNTIME_UTILITY_EVENTHANDLER_H_
