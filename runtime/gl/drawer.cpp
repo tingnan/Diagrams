@@ -19,7 +19,8 @@ const char kFragShaderSource[] =
     "varying vec2 tex_coord;\n"
     "uniform sampler2D tex_data;\n"
     "void main() {\n"
-    "  gl_FragColor = v_color + texture2D(tex_data, tex_coord);\n"
+    "  vec4 alpha = vec4(1.0, 1.0, 1.0, texture2D(tex_data, tex_coord).a);\n"
+    "  gl_FragColor = v_color * alpha;\n"
     "}\n";
 
 const char kVertShaderSource[] =
@@ -33,7 +34,7 @@ const char kVertShaderSource[] =
     "  gl_Position = u_mvp * vec4(position.xy, 0.0, 1.0);\n"
     "  gl_Position.xy = gl_Position.xy * scale;\n"
     "  tex_coord = position.zw;\n"
-    "  v_color = color;\n"
+    "  v_color = vec4(color.xyz, 1.0);\n"
     "}\n";
 
 void ShaderErrorHandler(GLuint shader_id) {
@@ -220,6 +221,9 @@ void NodePathDrawer::Draw(GLProgram program, float scale) {
     glUniform1f(program.scale_loc, scale);
     glDrawArrays(GL_LINE_STRIP, 0, vertex_size_[i]);
   }
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glDisableVertexAttribArray(program.vertex_loc);
+  glDisableVertexAttribArray(program.color_loc);
 }
 
 NodePolyDrawer::NodePolyDrawer(Node* node) {
@@ -333,6 +337,8 @@ void NodePolyDrawer::Draw(GLProgram program, float scale) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_[i]);
     glDrawElements(GL_TRIANGLES, index_size_[i], GL_UNSIGNED_INT, 0);
   }
+  glDisableVertexAttribArray(program.vertex_loc);
+  glDisableVertexAttribArray(program.color_loc);
 }
 
 template <class DrawerType>

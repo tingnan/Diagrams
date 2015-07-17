@@ -55,12 +55,12 @@ bool Application::Init(int w, int h) {
     return EmitSDLError("error initialize font system");
   }
 
-  font_ = TTF_OpenFont("DejaVuSans.ttf", 12);
+  font_ = TTF_OpenFont("DejaVuSans.ttf", 14);
   if (font_ == nullptr) {
     std::string message;
     message += "error read font ";
     message += "DejaVuSans.ttf ";
-    message += "at size" + std::to_string(12);
+    message += "at size" + std::to_string(14);
     return EmitSDLError(message.c_str());
   }
 
@@ -71,12 +71,12 @@ bool Application::Init(int w, int h) {
   // e.g. 0.5 / max(world_.xspan(), world_.yspan());
   gl_program_ = LoadDefaultGLProgram();
 
-  poly_drawers_ = make_unique<Canvas<NodePolyDrawer> >(gl_program_, 0.0015);
+  poly_drawers_ = make_unique<Canvas<NodePolyDrawer> >(gl_program_, 0.0018);
   for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
     poly_drawers_->AddNode(world_.GetNodeByIndex(i));
   }
 
-  path_drawers_ = make_unique<Canvas<NodePathDrawer> >(gl_program_, 0.0015);
+  path_drawers_ = make_unique<Canvas<NodePathDrawer> >(gl_program_, 0.0018);
   for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
     path_drawers_->AddNode(world_.GetNodeByIndex(i));
   }
@@ -133,7 +133,8 @@ void Application::HandleEvents() {
     if (event_message.empty()) {
       continue;
     }
-    // std::cout << event_message << std::endl;
+
+    std::cout << event_message << std::endl;
     if (HandleMessage(event_message)) {
       continue;
     }
@@ -154,9 +155,27 @@ bool Application::HandleMessage(const Json::Value& message) {
       draw_poly_ = !draw_poly_;
       return true;
     }
+
+    if (message["key_code"] == "3" && message["key_pressed"] == true) {
+      draw_text_ = !draw_text_;
+      return true;
+    }
+
   }
 
   return false;
+}
+
+void Application::RenderID() {
+  for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
+    Node* node = world_.GetNodeByIndex(i);
+    if (true) {
+      Vector2f pos = node->frame.GetTranslation();
+      std::string label = std::to_string(node->id);
+      label += ":(" + std::to_string(pos(0)) + "," + std::to_string(pos(1)) + ")";
+      text_drawer_->Draw(label, gl_program_, pos, Vector2f(800, 800), 0.0018);
+    }
+  }
 }
 
 void Application::Render() {
@@ -170,7 +189,8 @@ void Application::Render() {
       poly_drawers_->Draw();
     if (draw_path_)
       path_drawers_->Draw();
-    text_drawer_->Draw("Hello World", gl_program_, Vector2f(800, 800), 0.003);
+    if (draw_text_)
+      RenderID();
     SDL_GL_SwapWindow(window_);
   }
 }

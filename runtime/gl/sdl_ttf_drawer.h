@@ -21,7 +21,7 @@ class TextDrawer {
  public:
   explicit TextDrawer(TTF_Font* font);
   // w and h are window sizes
-  void Draw(const std::string& text, GLProgram program, Vector2f window_size,
+  void Draw(const std::string& text, GLProgram program, Vector2f pos, Vector2f window_size,
             float scale);
 
  private:
@@ -29,6 +29,7 @@ class TextDrawer {
   GLuint text_buffer_;
   GLuint vert_buffer_;
   GLuint vert_indice_;
+  GLuint vert_color_;
   TTF_Font* font_;
 };
 

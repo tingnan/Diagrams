@@ -31,14 +31,17 @@ class Application {
   void HandleEvents();
   bool HandleMessage(const Json::Value&);
   bool LoadFont();
+  // For debugging purpose only
+  void RenderID();
   bool app_running_ = true;
   SDL_Window* window_;
   SDL_GLContext gl_context_;
   GLProgram gl_program_;
   TTF_Font* font_;
   World world_;
-  bool draw_poly_ = false;
-  bool draw_path_ = false;
+  bool draw_poly_ = true;
+  bool draw_path_ = true;
+  bool draw_text_ = true;
   std::unique_ptr<Canvas<NodePolyDrawer> > poly_drawers_;
   std::unique_ptr<Canvas<NodePathDrawer> > path_drawers_;
   std::unique_ptr<TextDrawer> text_drawer_;
