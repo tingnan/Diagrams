@@ -32,6 +32,8 @@ struct GLProgram {
   GLuint program_id;
 };
 
+GLProgram LoadDefaultGLProgram();
+
 class NodeDrawer {
  public:
   virtual void Draw(GLProgram program, GLfloat scale) = 0;
@@ -76,13 +78,13 @@ class NodePolyDrawer : public NodeDrawer {
 template <class DrawerType>
 class Canvas {
  public:
-  explicit Canvas(float scale);
+  Canvas(GLProgram program, float scale);
   void AddNode(Node* node);
   void RemoveNodeByID(int id);
   void Draw();
 
  private:
-  void LoadProgram();
+  
   GLProgram program_;
   float scale_;
   std::unordered_map<int, std::unique_ptr<DrawerType> > drawers_;

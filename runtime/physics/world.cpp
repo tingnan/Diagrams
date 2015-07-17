@@ -39,7 +39,7 @@ void World::Start(EngineType engine_type) {
     std::random_device rd;
     std::uniform_real_distribution<float> pos_distx(-250, 50.f);
     std::uniform_real_distribution<float> pos_disty(50.f, 100.f);
-    std::uniform_real_distribution<float> vel_dist(-50.f, 50.f);
+    std::uniform_real_distribution<float> vel_dist(-250.f, 250.f);
     std::default_random_engine generator(rd());
 
     // create a disk
@@ -56,6 +56,7 @@ void World::Start(EngineType engine_type) {
       Node* node_ptr = AddNode(Node());
       node_ptr->polygons.emplace_back(poly);
       node_ptr->is_dynamic = true;
+      node_ptr->material_info.restitution = 0.98;
       node_ptr->frame.SetTranslation(
           Vector2f(pos_distx(generator), pos_disty(generator)));
       node_ptr->velocity = Vector2f(vel_dist(generator), vel_dist(generator));

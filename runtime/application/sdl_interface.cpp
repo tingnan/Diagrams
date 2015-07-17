@@ -9,6 +9,16 @@
 #include "utility/stl_memory.h"
 #include "utility/event_handler.h"
 
+
+namespace {
+bool EmitSDLError(const char* message) {
+  std::cerr << message << ": ";
+  std::cerr << SDL_GetError() << std::endl;
+  return false;
+}
+
+}  // namespace
+
 namespace diagrammar {
 
 Application::Application() {}
@@ -23,7 +33,7 @@ bool Application::LoadFont() { return true; }
 
 bool Application::Init(int w, int h) {
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    std::cerr << "error initialize\n";
+    return EmitSDLError("error initialize SDL");
     return false;
   }
 #ifdef __APPLE__
@@ -38,9 +48,20 @@ bool Application::Init(int w, int h) {
                              SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_OPENGL);
   gl_context_ = SDL_GL_CreateContext(window_);
   if (gl_context_ == nullptr) {
-    std::cerr << "error creating GL context\n";
-    std::cerr << SDL_GetError() << "\n";
-    return false;
+    return EmitSDLError("error creating GL context");
+  }
+  
+  if (TTF_Init() != 0) {
+    return EmitSDLError("error initialize font system");
+  }
+
+  font_ = TTF_OpenFont("DejaVuSans.ttf", 12);
+  if (font_ == nullptr) {
+    std::string message;
+    message += "error read font ";
+    message += "DejaVuSans.ttf ";
+    message += "at size" + std::to_string(12);
+    return EmitSDLError(message.c_str());
   }
 
   world_.Read(CreateJsonObject("path_simple.json"));
@@ -48,15 +69,19 @@ bool Application::Init(int w, int h) {
   
   // 0.0015 is a scale, better to read from the input
   // e.g. 0.5 / max(world_.xspan(), world_.yspan());
-  poly_drawers_ = make_unique<Canvas<NodePolyDrawer> >(0.0015);
+  gl_program_ = LoadDefaultGLProgram();
+
+  poly_drawers_ = make_unique<Canvas<NodePolyDrawer> >(gl_program_, 0.0015);
   for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
     poly_drawers_->AddNode(world_.GetNodeByIndex(i));
   }
 
-  path_drawers_ = make_unique<Canvas<NodePathDrawer> >(0.0015);
+  path_drawers_ = make_unique<Canvas<NodePathDrawer> >(gl_program_, 0.0015);
   for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
     path_drawers_->AddNode(world_.GetNodeByIndex(i));
   }
+
+  text_drawer_ = make_unique<TextDrawer>(font_);
 
   // SDL_StartTextInput();
   return true;
@@ -105,8 +130,10 @@ void Application::HandleEvents() {
       default:
         break;
     }
-
-    std::cout << event_message << std::endl;
+    if (event_message.empty()) {
+      continue;
+    }
+    // std::cout << event_message << std::endl;
     if (HandleMessage(event_message)) {
       continue;
     }
@@ -143,7 +170,7 @@ void Application::Render() {
       poly_drawers_->Draw();
     if (draw_path_)
       path_drawers_->Draw();
-    
+    text_drawer_->Draw("Hello World", gl_program_, Vector2f(800, 800), 0.003);
     SDL_GL_SwapWindow(window_);
   }
 }
