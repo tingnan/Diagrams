@@ -139,6 +139,7 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
 void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
   if (body_table_.find(id) != body_table_.end()) {
     b2world_->DestroyBody(body_table_[id]);
+    body_table_.erase(id);
   }
 }
 

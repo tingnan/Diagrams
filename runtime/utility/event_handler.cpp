@@ -46,6 +46,7 @@ void PushEventToGlobalQueue(const Json::Value& evdata) {
   SDL_Event event;
   event.type = kCustomEvent;
   event.user.data1 = new Json::Value(evdata);
+  SDL_PushEvent(&event);
 }
 
 }  // namespace diagrammar

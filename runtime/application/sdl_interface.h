@@ -39,9 +39,9 @@ class Application {
   GLProgram gl_program_;
   TTF_Font* font_;
   World world_;
-  bool draw_poly_ = true;
+  bool draw_poly_ = false;
   bool draw_path_ = true;
-  bool draw_text_ = true;
+  bool draw_text_ = false;
   std::unique_ptr<Canvas<NodePolyDrawer> > poly_drawers_;
   std::unique_ptr<Canvas<NodePathDrawer> > path_drawers_;
   std::unique_ptr<TextDrawer> text_drawer_;

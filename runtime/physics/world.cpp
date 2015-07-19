@@ -49,7 +49,7 @@ void World::Start(EngineType engine_type) {
       circle.emplace_back(5 * Vector2f(cos((2.0 * i) * M_PI / num_vertices),
                                        sin((2.0 * i) * M_PI / num_vertices)));
     }
-    for (int i = 0; i < 10; ++i) {
+    for (int i = 0; i < 20; ++i) {
       Polygon poly = Polygon(circle);
       poly.shape_info["type"] = static_cast<int>(ShapeType::kDisk);
       poly.shape_info["radius"] = static_cast<float>(5.0);

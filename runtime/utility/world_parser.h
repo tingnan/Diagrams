@@ -3,6 +3,7 @@
 #ifndef RUNTIME_UTILITY_WORLD_PARSER_H_
 #define RUNTIME_UTILITY_WORLD_PARSER_H_
 
+#include <memory>
 #include <string>
 
 #include <geometry/geometry2.h>
@@ -13,16 +14,19 @@ class Value;
 }  // namespace Json
 
 namespace diagrammar {
-// open a file and make a string out of its content
+// Open a file and make a string out of its content
 std::string Stringify(const char* path);
-// read a json file and create a json object;
+// Read a json file and create a json object;
 Json::Value CreateJsonObject(const char* file);
-// parse the coordinate transformation
+// Parse the coordinate transformation
 Isometry2f ParseTransformation2D(const Json::Value& transformobj);
-// parse a path;
+// Parse a path;
 Path ParsePath2D(const Json::Value& pathobj);
-// parse a node;
+// Parse a node;
 Node ParseNode(const Json::Value& nodeobj);
+// Parse a joint, joint is a polymorphic struct
+std::unique_ptr<Joint> ParseJoint(const Json::Value& jointobj);
+
 }  // namespace diagrammar
 
 #endif  // RUNTIME_UTILITY_WORLD_PARSER_H_

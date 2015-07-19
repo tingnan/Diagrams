@@ -15,8 +15,8 @@ namespace diagrammar {
 typedef int id_t;
 
 struct MaterialProperty {
-  float restitution = 0.9;
-  float friction = 0;
+  float restitution = 0.7;
+  float friction = 0.3;
   float density = 1;
   // In its fixed frame;
   Matrix3f inertia_matrix = Matrix3f::Identity();
@@ -43,23 +43,23 @@ struct Node {
 // Joint
 
 struct Joint {
-  id_t id;
-  Node* node_ptr_0 = nullptr;
-  Node* node_ptr_1 = nullptr;
+  id_t id = 0xffffffff;
+  // Only maintain an id to the node
+  id_t node_1 = 0xffffffff;
+  id_t node_2 = 0xffffffff;
   // The local anchor set the position of the joint in the node's local frame.
   // With both anchors we can define the relative spatial configuration of the
-  // two
-  // connected nodes.
-  Vector2f local_anchor_0;
+  // two connected nodes.
   Vector2f local_anchor_1;
+  Vector2f local_anchor_2;
   bool enable_limit = false;
   bool enable_motor = false;
 };
 
 struct RevoluteJoint : Joint {
-  // Ahe limit to the rotation angle
-  float lower_angle;
-  float upper_angle;
+  // The limit to the rotation angle
+  float angle_min;
+  float angle_max;
   float motor_speed;
   float max_motor_torque;
 };
@@ -67,9 +67,9 @@ struct RevoluteJoint : Joint {
 struct PrismaticJoint : Joint {
   // Along which direction the two nodes can move relative to each other
   Vector2f local_axis_0;
-  // the displacement limit along the local_axis_0
-  float lower_translation;
-  float upper_translation;
+  // The displacement limit along the local_axis_0
+  float translation_min;
+  float translation_max;
   float motor_speed;
   float max_motor_force;
 };

@@ -63,7 +63,7 @@ class World {
   std::vector<std::unique_ptr<Node> > nodes_;
   // Quick access to node by unique id
   std::unordered_map<id_t, size_t> node_table_;
-
+  
   // Timer that sync the simulation with real time
   Timer timer_;
 
