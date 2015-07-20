@@ -134,6 +134,7 @@ std::unique_ptr<Joint> ParseJoint(const Json::Value& joint_obj) {
   if (joint_type == "revolute") {
     joint_ptr.reset(new RevoluteJoint);
   } else if (joint_type == "prismatic") {
+    joint_ptr.reset(new PrismaticJoint);
   }
 
   // fill the base joint type

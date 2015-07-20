@@ -17,7 +17,7 @@ World::World() {}
 World::~World() {}
 
 void World::Reset() {
-  node_table_.clear();
+  // node_table_.clear();
   frame = CoordinateFrame2D(Isometry2f::Identity());
   step_time_.clear();
   id_counter_ = 0;
@@ -49,7 +49,7 @@ void World::Start(EngineType engine_type) {
       circle.emplace_back(5 * Vector2f(cos((2.0 * i) * M_PI / num_vertices),
                                        sin((2.0 * i) * M_PI / num_vertices)));
     }
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 100; ++i) {
       Polygon poly = Polygon(circle);
       poly.shape_info["type"] = static_cast<int>(ShapeType::kDisk);
       poly.shape_info["radius"] = static_cast<float>(5.0);
@@ -73,8 +73,8 @@ void World::Start(EngineType engine_type) {
       break;
   }
 
-  for (auto itr = nodes_.begin(); itr != nodes_.end(); ++itr) {
-    physics_engine_->AddNode(itr->get());
+  for (size_t index = 0; index < node_map_.size(); ++index) {
+    physics_engine_->AddNode(&node_map_.get(index));
   }
 
   timer_.Initialize();
@@ -115,19 +115,23 @@ void World::Step() {
   physics_engine_->SendDataToWorld();
 }
 
-Node* World::AddNode(Node obj) {
-  // The vector actually stores the pointer to the nodes
-  // while the lookup table maps the unique id to the location in the vector
-  nodes_.emplace_back(make_unique<Node>(std::move(obj)));
-  auto node_ptr = nodes_.back().get();
-  // Currently id_t is just an integer (increased counter)
-  // We may decide later to recycle the ids, or purely assign the id from
-  // outside
-  id_counter_++;
-  node_ptr->id = id_counter_;
-  node_table_.insert(std::make_pair(node_ptr->id, nodes_.size() - 1));
+Node* World::AddNode(Node tmp_node) {
+  
+  // nodes_.emplace_back(make_unique<Node>(std::move(tmp_node)));
+  // auto node_ptr = nodes_.back().get();
 
-  // now we also would like to add/remove the same node from the underlying
+  id_t ext_id = tmp_node.id;
+  id_counter_++;
+  // Move the content to the map
+  node_map_[id_counter_] = std::move(tmp_node);
+  Node* node_ptr = &node_map_[id_counter_];
+  node_ptr->id = id_counter_;
+
+  // Create the id mapping
+  idmap_ext_int_[ext_id] = node_ptr->id;
+  idmap_int_ext_[node_ptr->id] = ext_id;
+
+  // Now we also would like to add the same node from the underlying
   // engine
   if (physics_engine_) {
     physics_engine_->AddNode(node_ptr);
@@ -136,37 +140,34 @@ Node* World::AddNode(Node obj) {
   return node_ptr;
 }
 
-void World::RemoveNodeByID(id_t id) {
-  if (node_table_.find(id) != node_table_.end()) {
-    size_t index = node_table_.find(id)->second;
-    if (index != nodes_.size() - 1) {
-      // Swap the back of nodes_ with current one
-      nodes_[index].swap(nodes_.back());
-      node_table_[nodes_[index]->id] = index;
-    }
-    node_table_.erase(id);
-    nodes_.pop_back();
+void World::RemoveNodeByIntID(id_t id) {
+  node_map_.erase(id);
+  idmap_ext_int_.erase(idmap_int_ext_[id]);
+  idmap_int_ext_.erase(id);
 
-    // Now remove from the physics engine
-    if (physics_engine_) {
+  if (physics_engine_) {
       physics_engine_->RemoveNodeByID(id);
-    }
   }
 }
 
-Node* World::GetNodeByID(id_t id) const {
-  if (node_table_.find(id) != node_table_.end()) {
-    return nodes_[node_table_.find(id)->second].get();
+
+void World::RemoveNodeByExtID(id_t id) {
+  RemoveNodeByIntID(idmap_ext_int_[id]);
+}
+
+Node* World::GetNodeByID(id_t id) {
+  if (node_map_.contains(id)) {
+    return &node_map_[id];
   }
   return nullptr;
 }
 
-Node* World::GetNodeByIndex(size_t index) const {
-  assert(index < nodes_.size());
-  return nodes_[index].get();
+Node* World::GetNodeByIndex(size_t index) {
+  assert(index < node_map_.size());
+  return &node_map_.get(index);
 }
 
-size_t World::GetNumNodes() { return nodes_.size(); }
+size_t World::GetNumNodes() { return node_map_.size(); }
 
 float World::time_step() const { return timer_.tick_time(); }
 
@@ -177,21 +178,22 @@ float World::simulation_time() const {
 }
 
 void World::ParseWorld(const Json::Value& world) {
-  // using the WorldDescptor to construct the initial world
-  // here we will work on the json object
-  Json::Value::const_iterator itr = world.begin();
-  for (; itr != world.end(); ++itr) {
-    if (itr.key().asString() == "transform") {
-      frame = CoordinateFrame2D(ParseTransformation2D(*itr));
-      // std::cout << mWorldTransformation.GetTransform().matrix() << std::endl;
-    }
-    if (itr.key().asString() == "children") {
-      Json::Value::const_iterator child_itr = (*itr).begin();
-      for (; child_itr != (*itr).end(); ++child_itr) {
-        AddNode(ParseNode(*child_itr));
-      }
-    }
+  // Construct the initial world
+  
+  if (world.isMember("transform")) {
+    frame = CoordinateFrame2D(ParseTransformation2D(world["transform"]));
   }
+
+  // 
+  const Json::Value& child_obj = world["children"];
+  Json::Value::const_iterator child_itr = child_obj.begin();
+  for (; child_itr != child_obj.end(); ++child_itr) {
+    AddNode(ParseNode(*child_itr));
+  }
+
+  // can only parse the joint, after we know the children
+  const Json::Value& joint_obj = world["joints"];
+  Json::Value::const_iterator joint_itr = joint_obj.begin();
 }
 
 }  // namespace diagrammar
