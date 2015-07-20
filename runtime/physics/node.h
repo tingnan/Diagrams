@@ -43,6 +43,7 @@ struct Node {
 // Joint
 
 struct Joint {
+  virtual ~Joint() = default;
   id_t id = 0xffffffff;
   // Only maintain an id to the node
   id_t node_1 = 0xffffffff;
@@ -52,12 +53,14 @@ struct Joint {
   // two connected nodes.
   Vector2f local_anchor_1;
   Vector2f local_anchor_2;
-  bool enable_limit = false;
+  bool enable_limit_min = false;
+  bool enable_limit_max = false;
   bool enable_motor = false;
 };
 
 struct RevoluteJoint : Joint {
   // The limit to the rotation angle
+  ~RevoluteJoint() = default;
   float angle_min;
   float angle_max;
   float motor_speed;
@@ -65,6 +68,7 @@ struct RevoluteJoint : Joint {
 };
 
 struct PrismaticJoint : Joint {
+  ~PrismaticJoint() = default;
   // Along which direction the two nodes can move relative to each other
   Vector2f local_axis_0;
   // The displacement limit along the local_axis_0

@@ -19,7 +19,6 @@ Vector2f ParsePoint(const Json::Value& pt) {
   return vec;
 }
 
-
 }  // namespace
 
 namespace diagrammar {
@@ -63,96 +62,113 @@ Isometry2f ParseTransformation2D(const Json::Value& array) {
   return t;
 }
 
-Path ParsePath2D(const Json::Value& pathobj) {
+Path ParsePath2D(const Json::Value& path_obj) {
   Path mypath;
-  Json::Value::const_iterator itr = pathobj.begin();
-  for (; itr != pathobj.end(); ++itr) {
+  Json::Value::const_iterator itr = path_obj.begin();
+  for (; itr != path_obj.end(); ++itr) {
     const Json::Value& pt = *itr;
     mypath.emplace_back(ParsePoint(pt));
   }
   return mypath;
 }
 
-// load a "children" node from the json descriptor
-Node ParseNode(const Json::Value& nodeobj) {
-
-  std::string ntype = nodeobj.get("type", "").asString();
+// load a "child" node from the json descriptor
+Node ParseNode(const Json::Value& node_obj) {
+  std::string ntype = node_obj.get("type", "").asString();
   if (ntype != "node" && ntype != "open_path") {
     std::cout << ntype << std::endl;
     assert(0);
   }
 
   Node node;
-  Json::Value::const_iterator itr = nodeobj.begin();
-  for (; itr != nodeobj.end(); ++itr) {
+  if (node_obj.isMember("id")) {
+    node.id = node_obj["id"].asInt();
+  }
 
-    if (strcmp(itr.memberName(), "id") == 0) {
-      node.id = (*itr).asInt();
+  if (node_obj.isMember("transform")) {
+    const Isometry2f tr = ParseTransformation2D(node_obj["transform"]);
+    node.frame.SetRotation(tr.linear());
+    node.frame.SetTranslation(tr.translation());
+  }
+
+  if (node_obj.isMember("path")) {
+    auto& path_obj = node_obj["path"];
+    if (ntype == "node") {
+      auto polys = ResolveIntersections(Polygon(ParsePath2D(path_obj)));
+      node.polygons.insert(node.polygons.begin(),
+                           std::make_move_iterator(polys.begin()),
+                           std::make_move_iterator(polys.end()));
     }
-
-    if (strcmp(itr.memberName(), "transform") == 0) {
-      const Isometry2f tr = ParseTransformation2D(*itr);
-      node.frame.SetRotation(tr.linear());
-      node.frame.SetTranslation(tr.translation());
-    }
-
-    if (strcmp(itr.memberName(), "path") == 0) {
-      if (ntype == "node") {
-        Polygon parsed_polygon = Polygon(ParsePath2D(*itr));
-        node.polygons = ResolveIntersections(parsed_polygon);
-      }
-      if (ntype == "open_path") {
-        node.paths.emplace_back(ParsePath2D(*itr));
-      }
-    }
-
-    if (strcmp(itr.memberName(), "inner_path") == 0) {
-      const std::vector<Vector2f>& path = ParsePath2D(*itr);
-      AABB bounding_box = GetAABBWithPadding(path, 2e-2);
-      std::vector<Vector2f> box;
-      Vector2f pt0 = bounding_box.lower_bound;
-      Vector2f pt2 = bounding_box.upper_bound;
-      Vector2f pt1(pt2(0), pt0(1));
-      Vector2f pt3(pt0(0), pt2(1));
-      box.emplace_back(pt0);
-      box.emplace_back(pt1);
-      box.emplace_back(pt2);
-      box.emplace_back(pt3);
-      Polygon geo(box);
-      geo.holes.emplace_back(path);
-      node.polygons = ResolveIntersections(geo);
+    if (ntype == "open_path") {
+      node.paths.emplace_back(ParsePath2D(path_obj));
     }
   }
+
+  if (node_obj.isMember("inner_path")) {
+    const std::vector<Vector2f>& path = ParsePath2D(node_obj["inner_path"]);
+    AABB bounding_box = GetAABBWithPadding(path, 2e-2);
+    std::vector<Vector2f> box;
+    Vector2f pt0 = bounding_box.lower_bound;
+    Vector2f pt2 = bounding_box.upper_bound;
+    Vector2f pt1(pt2(0), pt0(1));
+    Vector2f pt3(pt0(0), pt2(1));
+    box.emplace_back(pt0);
+    box.emplace_back(pt1);
+    box.emplace_back(pt2);
+    box.emplace_back(pt3);
+    Polygon poly(box);
+    poly.holes.emplace_back(path);
+    auto polys = ResolveIntersections(poly);
+    node.polygons.insert(node.polygons.begin(),
+                         std::make_move_iterator(polys.begin()),
+                         std::make_move_iterator(polys.end()));
+  }
+
   return node;
 }
 
-std::unique_ptr<Joint> ParseJoint(const Json::Value& jointobj) {
+std::unique_ptr<Joint> ParseJoint(const Json::Value& joint_obj) {
   std::unique_ptr<Joint> joint_ptr;
-  std::string join_type = jointobj.get("type", "").asString();
-  if (join_type == "revolute") {
+  std::string joint_type = joint_obj.get("type", "").asString();
+
+  if (joint_type == "revolute") {
     joint_ptr.reset(new RevoluteJoint);
-    Json::Value::const_iterator itr = jointobj.begin();
-    for (; itr != jointobj.end(); ++itr) {
-      if (strcmp(itr.memberName(), "local_anchor_1") == 0) {
-        joint_ptr->local_anchor_1 = ParsePoint(*itr);
-        continue;
-      }
-      if (strcmp(itr.memberName(), "local_anchor_2") == 0) {
-        joint_ptr->local_anchor_2 = ParsePoint(*itr);
-      }
+  } else if (joint_type == "prismatic") {
+  }
 
-      if (strcmp(itr.memberName(), "node_1") == 0) {
-        joint_ptr->node_1 = itr.key().asUInt();
-      }
+  // fill the base joint type
 
-      if (strcmp(itr.memberName(), "node_2") == 0) {
-        joint_ptr->node_2 = itr.key().asUInt();
-      }
+  if (joint_obj.isMember("local_anchor_1")) {
+    joint_ptr->local_anchor_1 = ParsePoint(joint_obj["local_anchor_1"]);
+  }
+
+  if (joint_obj.isMember("local_anchor_2")) {
+    joint_ptr->local_anchor_2 = ParsePoint(joint_obj["local_anchor_2"]);
+  }
+
+  if (joint_obj.isMember("node_1")) {
+    joint_ptr->node_1 = joint_obj["node_1"].asUInt();
+  }
+
+  if (joint_obj.isMember("node_2")) {
+    joint_ptr->node_2 = joint_obj["node_2"].asUInt();
+  }
+
+  if (joint_type == "revolute") {
+    RevoluteJoint* derived_ptr = dynamic_cast<RevoluteJoint*>(joint_ptr.get());
+    const Json::Value& limit_obj = joint_obj["limit"];
+    if (limit_obj.isMember("angle_min")) {
+      derived_ptr->enable_limit_min = true;
+      derived_ptr->angle_min = limit_obj["angle_min"].asFloat();
+    }
+
+    if (limit_obj.isMember("angle_max")) {
+      derived_ptr->enable_limit_max = true;
+      derived_ptr->angle_min = limit_obj["angle_max"].asFloat();
     }
   }
 
   return joint_ptr;
 }
-
 
 }  // namespace diagrammar
