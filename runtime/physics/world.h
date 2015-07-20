@@ -21,64 +21,64 @@ namespace diagrammar {
 // and the address of every contained value is stable.
 // TODO(tingnan), allow custom hash function
 template<class Key, class Value>
-class StableAddressRandomAccessMap {
+class IndexedHashMap {
  public:
+  typedef std::pair<Key, Value> ValuePair;
   class iterator {
-
   };
 
   class const_ierator {
 
   };
 
-  StableAddressRandomAccessMap() = default;
-  StableAddressRandomAccessMap(const StableAddressRandomAccessMap&) = delete;
+  IndexedHashMap() = default;
+  IndexedHashMap(const IndexedHashMap&) = delete;
   size_t size() const;
   // TODO(tingnan) maybe implement iterator and find
   bool contains(const Key& key) const;
   // Value type must have a default constructor
   Value& operator[](const Key& key);
   // Access by index (random access)
-  Value& get(size_t index) const;
+  const Value& get(size_t index) const;
   size_t erase(const Key& key);
  private:
-  typedef std::pair<Key, std::unique_ptr<Value> > ValuePair;
+  
   std::vector<ValuePair> container_;
   std::unordered_map<Key, size_t> lookup_table_;
 };
 
 template<class Key, class Value>
-size_t StableAddressRandomAccessMap<Key, Value>::size() const {
+size_t IndexedHashMap<Key, Value>::size() const {
   return container_.size();
 }
 
 template<class Key, class Value>
-bool StableAddressRandomAccessMap<Key, Value>::contains(const Key& key) const {
+bool IndexedHashMap<Key, Value>::contains(const Key& key) const {
   return lookup_table_.find(key) != lookup_table_.end();
 }
 
 template<class Key, class Value>
-Value& StableAddressRandomAccessMap<Key, Value>::get(size_t index) const {
-  return *container_[index].second.get();
+const Value& IndexedHashMap<Key, Value>::get(size_t index) const {
+  return container_[index].second;
 }
 
 template<class Key, class Value>
-Value& StableAddressRandomAccessMap<Key, Value>::operator[](const Key& key) {
+Value& IndexedHashMap<Key, Value>::operator[](const Key& key) {
   if (contains(key))
-    return *container_[lookup_table_[key]].second.get();
+    return container_[lookup_table_[key]].second;
   // Create a new element with the key;
-  container_.emplace_back(std::make_pair(key, make_unique<Value>()));
+  container_.emplace_back(std::make_pair(key, Value()));
   lookup_table_[key] = container_.size() - 1;
-  return *container_.back().second.get();
+  return container_.back().second;
 }
 
 template<class Key, class Value>
-size_t StableAddressRandomAccessMap<Key, Value>::erase(const Key& key) {
+size_t IndexedHashMap<Key, Value>::erase(const Key& key) {
   if (contains(key)) {
     size_t idx = lookup_table_[key];
     if (idx != container_.size() - 1) {
       // Swap with last element
-      container_[idx].swap(container_.back());
+      swap(container_[idx], container_.back());
       lookup_table_[container_[idx].first] = idx;
     }
     // Erase the last element
@@ -166,7 +166,7 @@ class World {
   // std::vector<std::unique_ptr<Node> > nodes_;
   // Quick access to node by unique id
   // std::unordered_map<id_t, size_t> node_table_;
-  StableAddressRandomAccessMap<id_t, Node> node_map_;
+  IndexedHashMap<id_t, std::unique_ptr<Node>> node_map_;
 
   // Map external id to internal and vice versa
   std::unordered_map<id_t, id_t> idmap_ext_int_;

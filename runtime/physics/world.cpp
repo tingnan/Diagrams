@@ -74,7 +74,7 @@ void World::Start(EngineType engine_type) {
   }
 
   for (size_t index = 0; index < node_map_.size(); ++index) {
-    physics_engine_->AddNode(&node_map_.get(index));
+    physics_engine_->AddNode(node_map_.get(index).get());
   }
 
   timer_.Initialize();
@@ -123,8 +123,8 @@ Node* World::AddNode(Node tmp_node) {
   id_t ext_id = tmp_node.id;
   id_counter_++;
   // Move the content to the map
-  node_map_[id_counter_] = std::move(tmp_node);
-  Node* node_ptr = &node_map_[id_counter_];
+  node_map_[id_counter_] = make_unique<Node>(std::move(tmp_node));
+  Node* node_ptr = node_map_[id_counter_].get();
   node_ptr->id = id_counter_;
 
   // Create the id mapping
@@ -157,14 +157,14 @@ void World::RemoveNodeByExtID(id_t id) {
 
 Node* World::GetNodeByID(id_t id) {
   if (node_map_.contains(id)) {
-    return &node_map_[id];
+    return node_map_[id].get();
   }
   return nullptr;
 }
 
 Node* World::GetNodeByIndex(size_t index) {
   assert(index < node_map_.size());
-  return &node_map_.get(index);
+  return node_map_.get(index).get();
 }
 
 size_t World::GetNumNodes() { return node_map_.size(); }
