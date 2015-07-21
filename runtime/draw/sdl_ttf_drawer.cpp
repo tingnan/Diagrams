@@ -5,6 +5,7 @@
 #include <iomanip>
 
 #include "draw/sdl_ttf_drawer.h"
+#include "draw/camera.h"
 
 namespace {
 SDL_Surface* StringToSDLSurface(const char* message, TTF_Font* font) {
@@ -71,8 +72,7 @@ void TextDrawer::GenBuffers() {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void TextDrawer::Draw(const std::string& text, GLProgram program, Vector2f pos,
-                      Vector2f window_size, float scale) {
+void TextDrawer::Draw(const std::string& text, const Vector2f& pos, GLProgram program,  Camera* camera) {
 
   SDL_Surface* surface = StringToSDLSurface(text.c_str(), font_);
   if (surface == nullptr) {
@@ -110,12 +110,11 @@ void TextDrawer::Draw(const std::string& text, GLProgram program, Vector2f pos,
   glEnableVertexAttribArray(program.color_loc);
 
   // text location
-  Isometry3f u_mvp(Isometry3f::Identity());
+  Matrix4f u_mvp(Matrix4f::Identity());
+  u_mvp = camera->GetViewProjection() * u_mvp;
   glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
   // scale
-  glUniform1f(program.scale_loc, scale);
-
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vert_indice_);
   glDrawElements(GL_TRIANGLES, kQuadIndices.size(), GL_UNSIGNED_INT, 0);
   // glDrawArrays(GL_LINE_LOOP, 0, 4);

@@ -4357,6 +4357,7 @@
   "joints": [
     {
       "type": "revolute",
+      "id" : 0,
       "local_anchor_1" : {
         "x": 0,
         "y": 0

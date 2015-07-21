@@ -1,7 +1,7 @@
 // Copyright 2015 Native Client Authors
 
-#ifndef RUNTIME_GL_SDL_TTF_DRAWER_H_
-#define RUNTIME_GL_SDL_TTF_DRAWER_H_
+#ifndef RUNTIME_DRAW_SDL_TTF_DRAWER_H_
+#define RUNTIME_DRAW_SDL_TTF_DRAWER_H_
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
@@ -21,8 +21,7 @@ class TextDrawer {
  public:
   explicit TextDrawer(TTF_Font* font);
   // w and h are window sizes
-  void Draw(const std::string& text, GLProgram program, Vector2f pos, Vector2f window_size,
-            float scale);
+  void Draw(const std::string& text, const Vector2f& pos, GLProgram program,  class Camera* camera);
 
  private:
   void GenBuffers();
@@ -35,4 +34,4 @@ class TextDrawer {
 
 }  // namespace diagrammar
 
-#endif  // RUNTIME_GL_SDL_TTF_DRAWER_H_
+#endif  // RUNTIME_DRAW_SDL_TTF_DRAWER_H_

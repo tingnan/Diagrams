@@ -6,8 +6,9 @@
 #include <utility>
 #include <cstddef>
 #include <vector>
-#include <queue>
+#include <map>
 #include <unordered_map>
+#include <cassert>
 
 namespace diagrammar {
 
@@ -31,7 +32,7 @@ class IndexedMap {
   const Value& get(size_t index) const;
   // Return count (0 or 1)
   size_t erase(const Key& key);
-
+  void clear();
  private:
   std::vector<ValuePair> container_;
   MapType<Key, size_t> lookup_table_;
@@ -84,6 +85,14 @@ size_t IndexedMap<Key, Value, MapType>::erase(const Key& key) {
   return 0;
 }
 
+
+template <class Key, class Value, template <class _Key, class _Value,
+                                            class... _OtherArgs> class MapType>
+void IndexedMap<Key, Value, MapType>::clear() {
+  container_.clear();
+  lookup_table_.clear();
+}
+
 // This is a bijection map (one to one only)
 // No special allocators provided yet
 template <class Key, class Value,
@@ -99,8 +108,8 @@ class BiMap {
   }
   // If key/value is not contained, the returned reference will be invalid
   // and may cause segfault
-  Value& get_value(const Key& key) { key_value_map_.find(key)->second; }
-  Key& get_key(const Value& val) { value_key_map_.find(val)->second; }
+  Value& get_value(const Key& key) { return key_value_map_.find(key)->second; }
+  Key& get_key(const Value& val) { return value_key_map_.find(val)->second; }
   size_t erase_by_key(const Key& key) {
     auto itr = key_value_map_.find(key);
     if (itr != key_value_map_.end()) {
@@ -119,8 +128,33 @@ class BiMap {
     }
     return 0;
   }
-  void insert(std::pair<Key, Value> pair) {
+  // over write
+  void insert(const std::pair<Key, Value>& key_val_pair) {
+    const auto& key = key_val_pair.first;
+    const auto& val = key_val_pair.second;
+    auto kv_itr = key_value_map_.find(key);
+    auto vk_itr = value_key_map_.find(val);
+    
+    if (kv_itr == key_value_map_.end()) {
+      key_value_map_[key] = val;
+      if (vk_itr != value_key_map_.end())
+        key_value_map_.erase(vk_itr->second);
+      value_key_map_[val] = key;
+      return;
+    }
 
+    if (kv_itr != key_value_map_.end()) {
+      value_key_map_.erase(kv_itr->second);
+      key_value_map_[key] = val;
+      if (vk_itr != value_key_map_.end())
+        key_value_map_.erase(vk_itr->second);
+      value_key_map_[val] = key;
+    }
+  }
+
+  void clear() {
+    key_value_map_.clear();
+    value_key_map_.clear();
   }
  private:
   MapType<Key, Value> key_value_map_;

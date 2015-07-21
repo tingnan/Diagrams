@@ -1,6 +1,6 @@
 // Copyright 2015 Native Client Authors.
-#ifndef RUNTIME_GL_DRAWER_H_
-#define RUNTIME_GL_DRAWER_H_
+#ifndef RUNTIME_DRAW_DRAWER_H_
+#define RUNTIME_DRAW_DRAWER_H_
 
 #ifdef __APPLE__
 #include <OpenGL/gl.h>
@@ -17,10 +17,10 @@
 
 namespace diagrammar {
 
+class Camera;
+
 struct GLProgram {
-  // camera scaling, maybe replace later usinga camera class
-  GLuint scale_loc;
-  // user view space projection/transformation matrix
+  // the user provided model_view_projection matrix
   GLuint u_mvp_loc;
   GLuint color_loc;
   GLuint vertex_loc;
@@ -32,7 +32,7 @@ GLProgram LoadDefaultGLProgram();
 
 class NodeDrawer {
  public:
-  virtual void Draw(GLProgram program, GLfloat scale) = 0;
+  virtual void Draw(GLProgram program, Camera* camera) = 0;
   virtual ~NodeDrawer() = default;
 
  protected:
@@ -49,7 +49,7 @@ class NodePathDrawer : public NodeDrawer {
   // Set a node before calling Draw()
   explicit NodePathDrawer(Node* node);
   // Use a precompiled program and a scale to draw
-  void Draw(GLProgram program, GLfloat scale);
+  void Draw(GLProgram program, Camera* camera);
 
  private:
   void GenPathBuffer(const Path&, bool);
@@ -61,7 +61,7 @@ class NodePolyDrawer : public NodeDrawer {
  public:
   // Set a node before calling Draw()
   explicit NodePolyDrawer(Node* node);
-  void Draw(GLProgram program, GLfloat scale);
+  void Draw(GLProgram program, Camera* camera);
 
  private:
   void GenTriangleBuffer(const TriangleMesh&);
@@ -74,18 +74,17 @@ class NodePolyDrawer : public NodeDrawer {
 template <class DrawerType>
 class Canvas {
  public:
-  Canvas(GLProgram program, float scale);
+  Canvas(GLProgram program, Camera* camera);
   void AddNode(Node* node);
   void RemoveNodeByID(id_t id);
   void Draw();
 
- private:
-  
+ private:  
   GLProgram program_;
-  float scale_;
+  Camera* camera_;
   std::unordered_map<id_t, std::unique_ptr<DrawerType> > drawers_;
 };
 
 }  // namespace diagrammar
 
-#endif  // RUNTIME_GL_DRAWER_H_
+#endif  // RUNTIME_DRAW_DRAWER_H_

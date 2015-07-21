@@ -16,7 +16,7 @@
 #include "physics/world.h"
 #include "draw/drawer.h"
 #include "draw/sdl_ttf_drawer.h"
-
+#include "draw/camera.h"
 
 namespace diagrammar {
 
@@ -42,6 +42,7 @@ class Application {
   bool draw_poly_ = false;
   bool draw_path_ = true;
   bool draw_text_ = false;
+  Camera camera_;
   std::unique_ptr<Canvas<NodePolyDrawer> > poly_drawers_;
   std::unique_ptr<Canvas<NodePathDrawer> > path_drawers_;
   std::unique_ptr<TextDrawer> text_drawer_;

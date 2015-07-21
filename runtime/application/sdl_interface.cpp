@@ -69,14 +69,17 @@ bool Application::Init(int w, int h) {
   
   // 0.0015 is a scale, better to read from the input
   // e.g. 0.5 / max(world_.xspan(), world_.yspan());
+  glViewport(0, 0, 800, 800);
   gl_program_ = LoadDefaultGLProgram();
+  camera_.SetView(Vector3f(0, 0, 800), Vector3f(0, 0, 0), Vector3f(0, 1, 0));
+  camera_.SetPerspective(M_PI / 2.0, 1, 10, 10000);
 
-  poly_drawers_ = make_unique<Canvas<NodePolyDrawer> >(gl_program_, 0.0018);
+  poly_drawers_ = make_unique<Canvas<NodePolyDrawer> >(gl_program_, &camera_);
   for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
     poly_drawers_->AddNode(world_.GetNodeByIndex(i));
   }
 
-  path_drawers_ = make_unique<Canvas<NodePathDrawer> >(gl_program_, 0.0018);
+  path_drawers_ = make_unique<Canvas<NodePathDrawer> >(gl_program_, &camera_);
   for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
     path_drawers_->AddNode(world_.GetNodeByIndex(i));
   }
@@ -119,6 +122,15 @@ void Application::HandleEvents() {
           event_message["yrel"] = event.motion.yrel;
         }
         break;
+      case SDL_MOUSEWHEEL:
+        {
+          // Please check SDL website for event detail
+          event_message["type"] = "mouse_wheel";
+          event_message["x"] = event.wheel.x;
+          event_message["y"] = event.wheel.y;
+        }
+        break;
+
       case SDL_KEYDOWN:
       case SDL_KEYUP:
         {
@@ -144,7 +156,7 @@ void Application::HandleEvents() {
 }
 
 bool Application::HandleMessage(const Json::Value& message) {
-  // we define only a few basic key mappings here
+  // We define only a few basic key mappings here
   if (message["type"] == "key") {
     if (message["key_code"] == "1" && message["key_pressed"] == true) {
       draw_path_ = !draw_path_;
@@ -160,7 +172,20 @@ bool Application::HandleMessage(const Json::Value& message) {
       draw_text_ = !draw_text_;
       return true;
     }
+  }
 
+  if (message["type"] == "mouse_wheel") {
+    float delta = message["y"].asFloat();
+    camera_.Translate(Vector3f(0, 0, delta));
+    return true;
+  }
+
+  if (message["type"] == "mouse_motion") {
+    if (message["button_mask"] == SDL_BUTTON_LMASK) {
+      float x_delta = message["xrel"].asFloat();
+      float y_delta = message["yrel"].asFloat();
+      camera_.Translate(Vector3f(x_delta, y_delta, 0));
+    }
   }
 
   return false;
@@ -173,7 +198,7 @@ void Application::RenderID() {
       Vector2f pos = node->frame.GetTranslation();
       std::string label = std::to_string(node->id);
       label += ":(" + std::to_string(pos(0)) + "," + std::to_string(pos(1)) + ")";
-      text_drawer_->Draw(label, gl_program_, pos, Vector2f(800, 800), 0.0018);
+      text_drawer_->Draw(label, pos, gl_program_, &camera_);
     }
   }
 }

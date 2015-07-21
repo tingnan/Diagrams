@@ -5,6 +5,7 @@
 #include <string>
 
 #include "draw/drawer.h"
+#include "draw/camera.h"
 #include "geometry/geometry2.h"
 #include "utility/world_parser.h"
 #include "utility/stl_memory.h"
@@ -24,7 +25,6 @@ const char kFragShaderSource[] =
     "}\n";
 
 const char kVertShaderSource[] =
-    "uniform float scale;\n"
     "uniform mat4 u_mvp;\n"
     "attribute vec4 position;\n"
     "attribute vec4 color;\n"
@@ -32,7 +32,6 @@ const char kVertShaderSource[] =
     "varying vec2 tex_coord;\n"
     "void main() {\n"
     "  gl_Position = u_mvp * vec4(position.xy, 0.0, 1.0);\n"
-    "  gl_Position.xy = gl_Position.xy * scale;\n"
     "  tex_coord = position.zw;\n"
     "  v_color = vec4(color.xyz, 1.0);\n"
     "}\n";
@@ -126,7 +125,6 @@ GLProgram LoadDefaultGLProgram() {
   GLProgram program;
   program.texture_loc = glGetUniformLocation(program_id, "tex_data");
   program.u_mvp_loc = glGetUniformLocation(program_id, "u_mvp");
-  program.scale_loc = glGetUniformLocation(program_id, "scale");
   program.color_loc = glGetAttribLocation(program_id, "color");
   program.vertex_loc = glGetAttribLocation(program_id, "position");
   program.program_id = program_id;
@@ -200,7 +198,7 @@ void NodePathDrawer::GenBuffers() {
   }
 }
 
-void NodePathDrawer::Draw(GLProgram program, float scale) {
+void NodePathDrawer::Draw(GLProgram program, Camera* camera) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
@@ -213,12 +211,12 @@ void NodePathDrawer::Draw(GLProgram program, float scale) {
                           0);
     glEnableVertexAttribArray(program.color_loc);
 
-    Isometry3f u_mvp(Isometry3f::Identity());
-    u_mvp.linear().topLeftCorner<2, 2>() = node_->frame.GetRotationMatrix();
-    u_mvp.translation().head<2>() = node_->frame.GetTranslation();
+    Matrix4f u_mvp(Matrix4f::Identity());
+    u_mvp.topLeftCorner<2, 2>() = node_->frame.GetRotationMatrix();
+    u_mvp.col(3).head<2>() = node_->frame.GetTranslation();
+    u_mvp = camera->GetViewProjection() * u_mvp;
     glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
-    glUniform1f(program.scale_loc, scale);
     glDrawArrays(GL_LINE_STRIP, 0, vertex_size_[i]);
   }
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -314,7 +312,7 @@ void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh& mesh) {
                GL_STATIC_DRAW);
 }
 
-void NodePolyDrawer::Draw(GLProgram program, float scale) {
+void NodePolyDrawer::Draw(GLProgram program, Camera* camera) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
@@ -327,12 +325,11 @@ void NodePolyDrawer::Draw(GLProgram program, float scale) {
                           0);
     glEnableVertexAttribArray(program.color_loc);
 
-    Isometry3f u_mvp(Isometry3f::Identity());
-    u_mvp.linear().topLeftCorner<2, 2>() = node_->frame.GetRotationMatrix();
-    u_mvp.translation().head<2>() = node_->frame.GetTranslation();
+    Matrix4f u_mvp(Matrix4f::Identity());
+    u_mvp.topLeftCorner<2, 2>() = node_->frame.GetRotationMatrix();
+    u_mvp.col(3).head<2>() = node_->frame.GetTranslation();
+    u_mvp = camera->GetViewProjection() * u_mvp;
     glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
-
-    glUniform1f(program.scale_loc, scale);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_[i]);
     glDrawElements(GL_TRIANGLES, index_size_[i], GL_UNSIGNED_INT, 0);
@@ -341,10 +338,10 @@ void NodePolyDrawer::Draw(GLProgram program, float scale) {
   glDisableVertexAttribArray(program.color_loc);
 }
 
+// move back to header
 template <class DrawerType>
-Canvas<DrawerType>::Canvas(GLProgram program, float scale)
-    :program_(program), 
-     scale_(scale) {
+Canvas<DrawerType>::Canvas(GLProgram program, Camera* camera)
+    :program_(program), camera_(camera) {
 }
 
 template <class DrawerType>
@@ -363,7 +360,7 @@ template <class DrawerType>
 void Canvas<DrawerType>::Draw() {
   glUseProgram(program_.program_id);
   for (auto itr = drawers_.begin(); itr != drawers_.end(); ++itr) {
-    itr->second->Draw(program_, scale_);
+    itr->second->Draw(program_, camera_);
   }
 }
 
@@ -371,57 +368,4 @@ void Canvas<DrawerType>::Draw() {
 template class Canvas<NodePathDrawer>;
 template class Canvas<NodePolyDrawer>;
 
-/*
-
-void NaClDrawer::GenTextBuffers() {
-  FT_Library ft;
-  if (FT_Init_FreeType(&ft)) {
-    std::cerr << "Could not init freetype library\n";
-    return;
-  }
-  if (FT_New_Face(ft, "DejaVuSans.ttf", 0, &freetype_face_)) {
-    std::cerr << "Could not open font\n";
-    return;
-  }
-  FT_Set_Pixel_Sizes(freetype_face_, 0, 32);
-
-  glGenBuffers(1, &text_vbo_);
-  glGenTextures(1, &text_tex_);
-  glBindTexture(GL_TEXTURE_2D, text_tex_);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void NaClDrawer::DrawTexts() {
-  GLProgram program = program_;
-  glBindBuffer(GL_ARRAY_BUFFER, text_vbo_);
-  glVertexAttribPointer(program.vertex_loc, 4, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(program.vertex_loc);
-
-  Isometry3f u_mvp(Isometry3f::Identity());
-  glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
-
-  // set texture
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, text_tex_);
-  glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glUniform1i(program.tex_loc, 0);
-
-  std::string s("hello world!");
-  RenderString2D(freetype_face_, s, 0, 0, 1, 1);
-}
-
-void NaClDrawer::Draw() {
-  glClearColor(0.3, 0.3, 0.3, 1);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glUseProgram(program_.program_id);
-  DrawPolygons();
-  DrawPaths();
-  // DrawTexts();
-}
-*/
 }  // namespace diagrammar

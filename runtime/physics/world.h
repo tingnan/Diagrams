@@ -68,8 +68,7 @@ class World {
   IndexedMap<id_t, std::unique_ptr<Node>> node_map_;
 
   // Map external id to internal and vice versa
-  std::unordered_map<id_t, id_t> idmap_ext_int_;
-  std::unordered_map<id_t, id_t> idmap_int_ext_;
+  BiMap<id_t, id_t> node_id_map_;
 
   // Timer that sync the simulation with real time
   Timer timer_;

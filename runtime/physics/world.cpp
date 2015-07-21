@@ -17,7 +17,8 @@ World::World() {}
 World::~World() {}
 
 void World::Reset() {
-  // node_table_.clear();
+  node_map_.clear();
+  node_id_map_.clear();
   frame = CoordinateFrame2D(Isometry2f::Identity());
   step_time_.clear();
   id_counter_ = 0;
@@ -46,17 +47,17 @@ void World::Start(EngineType engine_type) {
     Path circle;
     const size_t num_vertices = 30;
     for (int i = 0; i < num_vertices; ++i) {
-      circle.emplace_back(5 * Vector2f(cos((2.0 * i) * M_PI / num_vertices),
+      circle.emplace_back(10 * Vector2f(cos((2.0 * i) * M_PI / num_vertices),
                                        sin((2.0 * i) * M_PI / num_vertices)));
     }
     for (int i = 0; i < 10; ++i) {
       Polygon poly = Polygon(circle);
       poly.shape_info["type"] = static_cast<int>(ShapeType::kDisk);
-      poly.shape_info["radius"] = static_cast<float>(5.0);
+      poly.shape_info["radius"] = static_cast<float>(10.0);
       Node* node_ptr = AddNode(Node());
       node_ptr->polygons.emplace_back(poly);
       node_ptr->is_dynamic = true;
-      node_ptr->material_info.restitution = 0.98;
+      node_ptr->material_info.restitution = 0.6;
       node_ptr->frame.SetTranslation(
           Vector2f(pos_distx(generator), pos_disty(generator)));
       node_ptr->velocity = Vector2f(vel_dist(generator), vel_dist(generator));
@@ -117,19 +118,16 @@ void World::Step() {
 
 Node* World::AddNode(Node tmp_node) {
   
-  // nodes_.emplace_back(make_unique<Node>(std::move(tmp_node)));
-  // auto node_ptr = nodes_.back().get();
-
   id_t ext_id = tmp_node.id;
   id_counter_++;
+
   // Move the content to the map
   node_map_[id_counter_] = make_unique<Node>(std::move(tmp_node));
   Node* node_ptr = node_map_[id_counter_].get();
   node_ptr->id = id_counter_;
 
   // Create the id mapping
-  idmap_ext_int_[ext_id] = node_ptr->id;
-  idmap_int_ext_[node_ptr->id] = ext_id;
+  node_id_map_.insert(std::make_pair(ext_id, node_ptr->id));
 
   // Now we also would like to add the same node from the underlying
   // engine
@@ -142,9 +140,8 @@ Node* World::AddNode(Node tmp_node) {
 
 void World::RemoveNodeByIntID(id_t id) {
   node_map_.erase(id);
-  idmap_ext_int_.erase(idmap_int_ext_[id]);
-  idmap_int_ext_.erase(id);
-
+  if (node_id_map_.contains_value(id))
+   node_id_map_.erase_by_value(id);
   if (physics_engine_) {
       physics_engine_->RemoveNodeByID(id);
   }
@@ -152,7 +149,8 @@ void World::RemoveNodeByIntID(id_t id) {
 
 
 void World::RemoveNodeByExtID(id_t id) {
-  RemoveNodeByIntID(idmap_ext_int_[id]);
+  if (node_id_map_.contains_key(id))
+    RemoveNodeByIntID(node_id_map_.get_value(id));
 }
 
 Node* World::GetNodeByIntID(id_t id) {
