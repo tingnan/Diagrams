@@ -14,8 +14,8 @@
 #include <memory>
 
 #include "physics/world.h"
-#include "gl/drawer.h"
-#include "gl/sdl_ttf_drawer.h"
+#include "draw/drawer.h"
+#include "draw/sdl_ttf_drawer.h"
 
 
 namespace diagrammar {

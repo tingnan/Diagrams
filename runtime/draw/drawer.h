@@ -18,17 +18,13 @@
 namespace diagrammar {
 
 struct GLProgram {
-  // scaling
+  // camera scaling, maybe replace later usinga camera class
   GLuint scale_loc;
-  // transformation matrix
+  // user view space projection/transformation matrix
   GLuint u_mvp_loc;
-  // color location
   GLuint color_loc;
-  // vertex location
   GLuint vertex_loc;
-  // texture
   GLuint texture_loc;
-  // program
   GLuint program_id;
 };
 
@@ -80,14 +76,14 @@ class Canvas {
  public:
   Canvas(GLProgram program, float scale);
   void AddNode(Node* node);
-  void RemoveNodeByID(int id);
+  void RemoveNodeByID(id_t id);
   void Draw();
 
  private:
   
   GLProgram program_;
   float scale_;
-  std::unordered_map<int, std::unique_ptr<DrawerType> > drawers_;
+  std::unordered_map<id_t, std::unique_ptr<DrawerType> > drawers_;
 };
 
 }  // namespace diagrammar

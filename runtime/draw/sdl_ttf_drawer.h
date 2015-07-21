@@ -13,7 +13,7 @@
 
 #include <string>
 
-#include "gl/drawer.h"
+#include "draw/drawer.h"
 
 namespace diagrammar {
 

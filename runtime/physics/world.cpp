@@ -49,7 +49,7 @@ void World::Start(EngineType engine_type) {
       circle.emplace_back(5 * Vector2f(cos((2.0 * i) * M_PI / num_vertices),
                                        sin((2.0 * i) * M_PI / num_vertices)));
     }
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 10; ++i) {
       Polygon poly = Polygon(circle);
       poly.shape_info["type"] = static_cast<int>(ShapeType::kDisk);
       poly.shape_info["radius"] = static_cast<float>(5.0);
@@ -155,7 +155,7 @@ void World::RemoveNodeByExtID(id_t id) {
   RemoveNodeByIntID(idmap_ext_int_[id]);
 }
 
-Node* World::GetNodeByID(id_t id) {
+Node* World::GetNodeByIntID(id_t id) {
   if (node_map_.contains(id)) {
     return node_map_[id].get();
   }
@@ -189,6 +189,10 @@ void World::ParseWorld(const Json::Value& world) {
   Json::Value::const_iterator child_itr = child_obj.begin();
   for (; child_itr != child_obj.end(); ++child_itr) {
     AddNode(ParseNode(*child_itr));
+  }
+
+  for (size_t i = 0; i < node_map_.size(); ++i) {
+    std::cout << node_map_[node_map_.get(i)->id]->id << std::endl;
   }
 
   // can only parse the joint, after we know the children

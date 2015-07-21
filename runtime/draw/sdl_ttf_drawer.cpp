@@ -4,7 +4,7 @@
 #include <iostream>
 #include <iomanip>
 
-#include "gl/sdl_ttf_drawer.h"
+#include "draw/sdl_ttf_drawer.h"
 
 namespace {
 SDL_Surface* StringToSDLSurface(const char* message, TTF_Font* font) {

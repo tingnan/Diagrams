@@ -7,6 +7,7 @@
 #include <vector>
 #include <unordered_map>
 
+#include "utility/map.h"
 #include "utility/timer.h"
 #include "utility/stl_memory.h"
 #include "physics/node.h"
@@ -16,107 +17,6 @@ class Value;
 }
 
 namespace diagrammar {
-
-// The class allows random access by index,
-// and the address of every contained value is stable.
-// TODO(tingnan), allow custom hash function
-template<class Key, class Value>
-class IndexedHashMap {
- public:
-  typedef std::pair<Key, Value> ValuePair;
-  class iterator {
-  };
-
-  class const_ierator {
-
-  };
-
-  IndexedHashMap() = default;
-  IndexedHashMap(const IndexedHashMap&) = delete;
-  size_t size() const;
-  // TODO(tingnan) maybe implement iterator and find
-  bool contains(const Key& key) const;
-  // Value type must have a default constructor
-  Value& operator[](const Key& key);
-  // Access by index (random access)
-  const Value& get(size_t index) const;
-  size_t erase(const Key& key);
- private:
-  
-  std::vector<ValuePair> container_;
-  std::unordered_map<Key, size_t> lookup_table_;
-};
-
-template<class Key, class Value>
-size_t IndexedHashMap<Key, Value>::size() const {
-  return container_.size();
-}
-
-template<class Key, class Value>
-bool IndexedHashMap<Key, Value>::contains(const Key& key) const {
-  return lookup_table_.find(key) != lookup_table_.end();
-}
-
-template<class Key, class Value>
-const Value& IndexedHashMap<Key, Value>::get(size_t index) const {
-  return container_[index].second;
-}
-
-template<class Key, class Value>
-Value& IndexedHashMap<Key, Value>::operator[](const Key& key) {
-  if (contains(key))
-    return container_[lookup_table_[key]].second;
-  // Create a new element with the key;
-  container_.emplace_back(std::make_pair(key, Value()));
-  lookup_table_[key] = container_.size() - 1;
-  return container_.back().second;
-}
-
-template<class Key, class Value>
-size_t IndexedHashMap<Key, Value>::erase(const Key& key) {
-  if (contains(key)) {
-    size_t idx = lookup_table_[key];
-    if (idx != container_.size() - 1) {
-      // Swap with last element
-      swap(container_[idx], container_.back());
-      lookup_table_[container_[idx].first] = idx;
-    }
-    // Erase the last element
-    container_.pop_back();
-    lookup_table_.erase(key);
-    return 1;
-  }
-  return 0;
-}
-
-// TODO(tingnan) allow custom hash function
-// This is a bijection map (one to one only)
-template<class Key, class Value> 
-class UnorderedBijectionMap{
- public:
-  bool contains_key(const Key& key);
-  bool contains_value(const Value& val);
-  // If key/value is not contained, the returned reference will be invalid 
-  // and may cause segfault
-  Value& get_value(const Key& key);
-  Key& get_key(const Value& val);
-  void erase_by_key(const Key& key);
-  void erase_by_value(const Value& val);
- private:
-  std::unordered_map<Key, Value> key_value_map_;
-  std::unordered_map<Key, Value> value_key_map_;
-};
-
-template<class Key, class Value> 
-Value& UnorderedBijectionMap<Key, Value>::get_value(const Key& key) {
-  return key_value_map_.find(key)->second;
-}
-
-template<class Key, class Value> 
-Key& UnorderedBijectionMap<Key, Value>::get_key(const Value& val) {
-  return value_key_map_.find(val)->second;
-}
-
 
 // This is a simulation world. A the wrapper class that communicates with a
 // physics
@@ -147,7 +47,8 @@ class World {
 
   // Copy a node to the world and assign an id
   Node* AddNode(Node);
-  Node* GetNodeByID(id_t);
+  Node* GetNodeByExtID(id_t);
+  Node* GetNodeByIntID(id_t);
   Node* GetNodeByIndex(size_t);
   size_t GetNumNodes();
   void RemoveNodeByExtID(id_t);
@@ -163,10 +64,8 @@ class World {
   CoordinateFrame2D frame;
 
   // do the same for the joints
-  // std::vector<std::unique_ptr<Node> > nodes_;
   // Quick access to node by unique id
-  // std::unordered_map<id_t, size_t> node_table_;
-  IndexedHashMap<id_t, std::unique_ptr<Node>> node_map_;
+  IndexedMap<id_t, std::unique_ptr<Node>> node_map_;
 
   // Map external id to internal and vice versa
   std::unordered_map<id_t, id_t> idmap_ext_int_;
