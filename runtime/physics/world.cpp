@@ -48,7 +48,7 @@ void World::Start(EngineType engine_type) {
     const size_t num_vertices = 30;
     for (int i = 0; i < num_vertices; ++i) {
       circle.emplace_back(10 * Vector2f(cos((2.0 * i) * M_PI / num_vertices),
-                                       sin((2.0 * i) * M_PI / num_vertices)));
+                                        sin((2.0 * i) * M_PI / num_vertices)));
     }
     for (int i = 0; i < 10; ++i) {
       Polygon poly = Polygon(circle);
@@ -117,7 +117,6 @@ void World::Step() {
 }
 
 Node* World::AddNode(Node tmp_node) {
-  
   id_t ext_id = tmp_node.id;
   id_counter_++;
 
@@ -137,20 +136,28 @@ Node* World::AddNode(Node tmp_node) {
 
   return node_ptr;
 }
-
-void World::RemoveNodeByIntID(id_t id) {
-  node_map_.erase(id);
-  if (node_id_map_.contains_value(id))
-   node_id_map_.erase_by_value(id);
-  if (physics_engine_) {
-      physics_engine_->RemoveNodeByID(id);
+// TODO(tingan) when remoe a node, we also needs to remove all the joints
+// connected to it
+Node* World::RemoveNodeByIntID(id_t id) {
+  Node* node_ptr = nullptr;
+  if (node_map_.contains(id)) {
+    node_ptr = node_map_[id].release();
   }
+  node_map_.erase(id);
+  node_id_map_.erase_by_value(id);
+  if (physics_engine_) {
+    physics_engine_->RemoveNodeByID(id);
+  }
+  std::cout << "popped a node with int id: " << id << std::endl;
+  return node_ptr;
 }
 
-
-void World::RemoveNodeByExtID(id_t id) {
-  if (node_id_map_.contains_key(id))
-    RemoveNodeByIntID(node_id_map_.get_value(id));
+Node* World::RemoveNodeByExtID(id_t id) {
+  if (node_id_map_.contains_key(id)) {
+    std::cout << "popped a node with ext id: " << id << std::endl;
+    return RemoveNodeByIntID(node_id_map_.get_value(id));
+  }
+  return nullptr;
 }
 
 Node* World::GetNodeByIntID(id_t id) {
@@ -167,6 +174,25 @@ Node* World::GetNodeByIndex(size_t index) {
 
 size_t World::GetNumNodes() { return node_map_.size(); }
 
+Joint* World::AddJoint(Joint tmp_joint) {
+  id_t ext_id = tmp_joint.id;
+  joint_id_counter_++;
+  // Move the content to the map
+  joint_map_[joint_id_counter_] = make_unique<Joint>(std::move(tmp_joint));
+  Joint* joint_ptr = joint_map_[joint_id_counter_].get();
+  joint_ptr->id = joint_id_counter_;
+
+  // Create the id mapping
+  node_id_map_.insert(std::make_pair(ext_id, joint_ptr->id));
+
+  // Now we also would like to add the same node from the underlying
+  // engine
+  if (physics_engine_) {
+    physics_engine_->AddJoint(joint_ptr);
+  }
+  return joint_ptr;
+}
+
 float World::time_step() const { return timer_.tick_time(); }
 
 float World::now() const { return timer_.now(); }
@@ -177,25 +203,23 @@ float World::simulation_time() const {
 
 void World::ParseWorld(const Json::Value& world) {
   // Construct the initial world
-  
+
   if (world.isMember("transform")) {
     frame = CoordinateFrame2D(ParseTransformation2D(world["transform"]));
   }
 
-  // 
+  //
   const Json::Value& child_obj = world["children"];
   Json::Value::const_iterator child_itr = child_obj.begin();
   for (; child_itr != child_obj.end(); ++child_itr) {
     AddNode(ParseNode(*child_itr));
   }
 
-  for (size_t i = 0; i < node_map_.size(); ++i) {
-    std::cout << node_map_[node_map_.get(i)->id]->id << std::endl;
-  }
-
   // can only parse the joint, after we know the children
   const Json::Value& joint_obj = world["joints"];
   Json::Value::const_iterator joint_itr = joint_obj.begin();
+  for (; joint_itr != joint_obj.end(); ++joint_itr) {
+  }
 }
 
 }  // namespace diagrammar

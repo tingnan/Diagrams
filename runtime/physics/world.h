@@ -51,8 +51,17 @@ class World {
   Node* GetNodeByIntID(id_t);
   Node* GetNodeByIndex(size_t);
   size_t GetNumNodes();
-  void RemoveNodeByExtID(id_t);
-  void RemoveNodeByIntID(id_t);
+  Node* RemoveNodeByExtID(id_t);
+  Node* RemoveNodeByIntID(id_t);
+
+  // For joints
+  Joint* AddJoint(Joint);
+  Joint* GetJointByExtID(id_t);
+  Joint* GetJointByIntID(id_t);
+  Joint* GetJointByIndex(size_t);
+  size_t GetNumJoints();
+  void RemoveJointByExtID(id_t);
+  void RemoveJointByIntID(id_t);
 
  private:
   // Clear everything in the world.
@@ -63,12 +72,13 @@ class World {
 
   CoordinateFrame2D frame;
 
-  // do the same for the joints
   // Quick access to node by unique id
   IndexedMap<id_t, std::unique_ptr<Node>> node_map_;
-
   // Map external id to internal and vice versa
   BiMap<id_t, id_t> node_id_map_;
+  // Do the same for joints
+  IndexedMap<id_t, std::unique_ptr<Joint>> joint_map_;
+  BiMap<id_t, id_t> joint_id_map_;
 
   // Timer that sync the simulation with real time
   Timer timer_;
@@ -81,7 +91,8 @@ class World {
   std::unique_ptr<class PhysicsEngine> physics_engine_;
 
   // node id counter
-  int id_counter_ = 0;
+  id_t id_counter_ = 0;
+  id_t joint_id_counter_ = 0;
 };
 
 }  // namespace diagrammar

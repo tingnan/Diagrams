@@ -9,7 +9,6 @@
 #include "utility/stl_memory.h"
 #include "utility/event_handler.h"
 
-
 namespace {
 bool EmitSDLError(const char* message) {
   std::cerr << message << ": ";
@@ -27,7 +26,6 @@ Application::~Application() {
   SDL_DestroyWindow(window_);
   SDL_Quit();
 }
-
 
 bool Application::LoadFont() { return true; }
 
@@ -50,7 +48,7 @@ bool Application::Init(int w, int h) {
   if (gl_context_ == nullptr) {
     return EmitSDLError("error creating GL context");
   }
-  
+
   if (TTF_Init() != 0) {
     return EmitSDLError("error initialize font system");
   }
@@ -66,7 +64,7 @@ bool Application::Init(int w, int h) {
 
   world_.Read(CreateJsonObject("path_simple.json"));
   world_.Start();
-  
+
   // 0.0015 is a scale, better to read from the input
   // e.g. 0.5 / max(world_.xspan(), world_.yspan());
   glViewport(0, 0, 800, 800);
@@ -99,45 +97,37 @@ void Application::HandleEvents() {
         app_running_ = false;
         break;
       case SDL_MOUSEBUTTONDOWN:
-      case SDL_MOUSEBUTTONUP:
-        {
-          // Please check SDL website for button enums.
-          event_message["type"] = "mouse_button";
-          event_message["button"] = event.button.button;
-          event_message["button_pressed"] = event.button.state == SDL_PRESSED;
-          event_message["x"] = event.button.x;
-          event_message["y"] = event.button.y;
-        }
-        break;
-      case SDL_MOUSEMOTION:
-        {
-          // Please check SDL website for button mask enums.
-          event_message["type"] = "mouse_motion";
-          event_message["button_mask"] = event.motion.state;
-          event_message["x"] = event.motion.x;
-          event_message["y"] = event.motion.y;
-          event_message["xrel"] = event.motion.xrel;
-          event_message["yrel"] = event.motion.yrel;
-        }
-        break;
-      case SDL_MOUSEWHEEL:
-        {
-          // Please check SDL website for event detail.
-          event_message["type"] = "mouse_wheel";
-          event_message["x"] = event.wheel.x;
-          event_message["y"] = event.wheel.y;
-        }
-        break;
+      case SDL_MOUSEBUTTONUP: {
+        // Please check SDL website for button enums.
+        event_message["type"] = "mouse_button";
+        event_message["button"] = event.button.button;
+        event_message["button_pressed"] = event.button.state == SDL_PRESSED;
+        event_message["x"] = event.button.x;
+        event_message["y"] = event.button.y;
+      } break;
+      case SDL_MOUSEMOTION: {
+        // Please check SDL website for button mask enums.
+        event_message["type"] = "mouse_motion";
+        event_message["button_mask"] = event.motion.state;
+        event_message["x"] = event.motion.x;
+        event_message["y"] = event.motion.y;
+        event_message["xrel"] = event.motion.xrel;
+        event_message["yrel"] = event.motion.yrel;
+      } break;
+      case SDL_MOUSEWHEEL: {
+        // Please check SDL website for event detail.
+        event_message["type"] = "mouse_wheel";
+        event_message["x"] = event.wheel.x;
+        event_message["y"] = event.wheel.y;
+      } break;
 
       case SDL_KEYDOWN:
-      case SDL_KEYUP:
-        {
-          event_message["type"] = "key";
-          event_message["key_pressed"] = event.key.state == SDL_PRESSED;
-          // Warning, there 
-          event_message["key_code"] = SDL_GetKeyName(event.key.keysym.sym);
-        }
-        break;
+      case SDL_KEYUP: {
+        event_message["type"] = "key";
+        event_message["key_pressed"] = event.key.state == SDL_PRESSED;
+        // Warning, there
+        event_message["key_code"] = SDL_GetKeyName(event.key.keysym.sym);
+      } break;
       default:
         break;
     }
@@ -151,9 +141,9 @@ void Application::HandleEvents() {
     }
     world_.HandleMessage(event_message);
   }
-
 }
 
+Node* test_ptr = nullptr;
 bool Application::HandleMessage(const Json::Value& message) {
   // We define only a few basic key mappings here.
   if (message["type"] == "key") {
@@ -170,6 +160,28 @@ bool Application::HandleMessage(const Json::Value& message) {
     if (message["key_code"] == "3" && message["key_pressed"] == true) {
       draw_text_ = !draw_text_;
       return true;
+    }
+
+    if (message["key_code"] == "4" && message["key_pressed"] == true) {
+      // Test remove an node by ext id;
+      Node* tmp_ptr = world_.RemoveNodeByExtID(1);
+      if (tmp_ptr) {
+        path_drawers_->RemoveNodeByID(tmp_ptr->id);
+        poly_drawers_->RemoveNodeByID(tmp_ptr->id);
+        test_ptr = tmp_ptr;
+        test_ptr->id = 1;
+      }
+    }
+
+    if (message["key_code"] == "5" && message["key_pressed"] == true) {
+      // Test add the moved node back
+      if (test_ptr) {
+        Node* tmp_ptr = world_.AddNode(*test_ptr);
+        path_drawers_->AddNode(tmp_ptr);
+        poly_drawers_->AddNode(tmp_ptr);
+        delete test_ptr;
+        test_ptr = nullptr;
+      }
     }
   }
 
@@ -196,7 +208,8 @@ void Application::RenderID() {
     if (true) {
       Vector2f pos = node->frame.GetTranslation();
       std::string label = std::to_string(node->id);
-      label += ":(" + std::to_string(pos(0)) + "," + std::to_string(pos(1)) + ")";
+      label +=
+          ":(" + std::to_string(pos(0)) + "," + std::to_string(pos(1)) + ")";
       text_drawer_->Draw(label, pos, gl_program_, &camera_);
     }
   }
@@ -206,22 +219,19 @@ void Application::Render() {
   while (app_running_) {
     HandleEvents();
     world_.Step();
-    
+
     glClearColor(0.3, 0.3, 0.3, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    if (draw_poly_)
-      poly_drawers_->Draw();
-    if (draw_path_)
-      path_drawers_->Draw();
-    if (draw_text_)
-      RenderID();
+    if (draw_poly_) poly_drawers_->Draw();
+    if (draw_path_) path_drawers_->Draw();
+    if (draw_text_) RenderID();
     SDL_GL_SwapWindow(window_);
   }
 }
 
 }  // namespace diagrammar
 
-int main (int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   diagrammar::Application app;
   if (!app.Init(800, 800)) {
     return 0;
