@@ -21,7 +21,7 @@ void World::Reset() {
   node_id_map_.clear();
   frame = CoordinateFrame2D(Isometry2f::Identity());
   step_time_.clear();
-  id_counter_ = 0;
+  id_pool_.Reset();
   auto engine_ptr = physics_engine_.release();
   if (engine_ptr) delete engine_ptr;
 }
@@ -118,12 +118,12 @@ void World::Step() {
 
 Node* World::AddNode(Node tmp_node) {
   id_t ext_id = tmp_node.id;
-  id_counter_++;
+  id_t int_id = id_pool_.GetID();
 
   // Move the content to the map
-  node_map_[id_counter_] = make_unique<Node>(std::move(tmp_node));
-  Node* node_ptr = node_map_[id_counter_].get();
-  node_ptr->id = id_counter_;
+  node_map_[int_id] = make_unique<Node>(std::move(tmp_node));
+  Node* node_ptr = node_map_[int_id].get();
+  node_ptr->id = int_id;
 
   // Create the id mapping
   node_id_map_.insert(std::make_pair(ext_id, node_ptr->id));
@@ -140,29 +140,39 @@ Node* World::AddNode(Node tmp_node) {
 // connected to it
 Node* World::RemoveNodeByIntID(id_t id) {
   Node* node_ptr = nullptr;
-  if (node_map_.contains(id)) {
-    node_ptr = node_map_[id].release();
+  auto itr = node_map_.find(id);
+  if (itr != node_map_.end()) {
+    node_ptr = itr->second.release();
   }
   node_map_.erase(id);
   node_id_map_.erase_by_value(id);
+  id_pool_.RecycleID(id);
   if (physics_engine_) {
     physics_engine_->RemoveNodeByID(id);
   }
-  std::cout << "popped a node with int id: " << id << std::endl;
+  /*
+  std::cout << " and int id: " << id << std::endl;
+  std::cout << "int id table looks like: ";
+  for (auto itr = node_map_.begin(); itr != node_map_.end(); ++itr) {
+    std::cout << itr->first << " " << itr->second.get() << std::endl;
+  }*/
   return node_ptr;
 }
 
 Node* World::RemoveNodeByExtID(id_t id) {
   if (node_id_map_.contains_key(id)) {
-    std::cout << "popped a node with ext id: " << id << std::endl;
+    /*
+    std::cout << "popped a node with ext id: " << id;
+    */
     return RemoveNodeByIntID(node_id_map_.get_value(id));
   }
   return nullptr;
 }
 
 Node* World::GetNodeByIntID(id_t id) {
-  if (node_map_.contains(id)) {
-    return node_map_[id].get();
+  auto itr = node_map_.find(id);
+  if (itr != node_map_.end()) {
+    return itr->second.get();
   }
   return nullptr;
 }
@@ -176,11 +186,11 @@ size_t World::GetNumNodes() { return node_map_.size(); }
 
 Joint* World::AddJoint(Joint tmp_joint) {
   id_t ext_id = tmp_joint.id;
-  joint_id_counter_++;
+  id_t int_id = id_pool_.GetID();
   // Move the content to the map
-  joint_map_[joint_id_counter_] = make_unique<Joint>(std::move(tmp_joint));
-  Joint* joint_ptr = joint_map_[joint_id_counter_].get();
-  joint_ptr->id = joint_id_counter_;
+  joint_map_[int_id] = make_unique<Joint>(std::move(tmp_joint));
+  Joint* joint_ptr = joint_map_[int_id].get();
+  joint_ptr->id = int_id;
 
   // Create the id mapping
   node_id_map_.insert(std::make_pair(ext_id, joint_ptr->id));

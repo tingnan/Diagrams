@@ -41,7 +41,7 @@ class IndexedMap {
     self_type& operator=(const self_type&) = default;
     iterator(self_type&&) = default;
     self_type& operator=(self_type&&) = default;
-    iterator(typename MapType<Key, IndexedMap::size_type>::self_type map_itr,
+    iterator(typename MapType<Key, IndexedMap::size_type>::iterator map_itr,
              std::vector<value_type>* container_ptr)
         : itr_(map_itr), container_ptr_(container_ptr) {}
     // Overloaded operators.
@@ -50,7 +50,7 @@ class IndexedMap {
       return *this;
     }
     reference operator*() const { return (*container_ptr_)[itr_->second]; }
-    pointer operator->() const { return container_ptr_ + itr_->second; }
+    pointer operator->() const { return container_ptr_->data() + itr_->second; }
     bool operator==(const self_type& rhs) const {
       return itr_ == rhs.itr_ && container_ptr_ == rhs.container_ptr_;
     }
@@ -59,7 +59,7 @@ class IndexedMap {
     }
 
    private:
-    typename MapType<Key, size_t>::self_type itr_;
+    typename MapType<Key, size_t>::iterator itr_;
     std::vector<value_type>* container_ptr_ = nullptr;
   };
 
@@ -76,7 +76,7 @@ class IndexedMap {
     const_iterator(self_type&&) = default;
     self_type& operator=(self_type&&) = default;
     const_iterator(
-        typename MapType<Key, IndexedMap::size_type>::self_type map_itr,
+        typename MapType<Key, IndexedMap::size_type>::const_iterator map_itr,
         const std::vector<value_type>* container_ptr)
         : itr_(map_itr), container_ptr_(container_ptr) {}
     // Overloaded operators.
@@ -85,7 +85,7 @@ class IndexedMap {
       return *this;
     }
     reference operator*() const { return (*container_ptr_)[itr_->second]; }
-    pointer operator->() const { return container_ptr_ + itr_->second; }
+    pointer operator->() const { return container_ptr_->data() + itr_->second; }
     bool operator==(const self_type& rhs) const {
       return itr_ == rhs.itr_ && container_ptr_ == rhs.container_ptr_;
     }
@@ -94,17 +94,23 @@ class IndexedMap {
     }
 
    private:
-    typename MapType<Key, size_t>::self_type itr_;
+    typename MapType<Key, size_t>::const_iterator itr_;
     const std::vector<value_type>* container_ptr_ = nullptr;
   };
 
   iterator begin() { return iterator(lookup_table_.begin(), &container_); }
   iterator end() { return iterator(lookup_table_.end(), &container_); }
+  const_iterator begin() const {
+    return const_iterator(lookup_table_.begin(), &container_);
+  }
+  const_iterator end() const {
+    return const_iterator(lookup_table_.end(), &container_);
+  }
 
+  // iterface
   size_type size() const;
-  // TODO(tingnan) maybe implement iterator and find
-  bool contains(const key_type& key) const;
   iterator find(const key_type& key);
+  const_iterator find(const key_type& key) const;
   // T type must have a default constructor
   mapped_type& operator[](const key_type& key);
   // Access by index (random access)
@@ -126,8 +132,16 @@ size_t IndexedMap<Key, T, MapType>::size() const {
 
 template <class Key, class T, template <class _Key, class _Value,
                                         class... _OtherArgs> class MapType>
-bool IndexedMap<Key, T, MapType>::contains(const key_type& key) const {
-  return lookup_table_.find(key) != lookup_table_.end();
+typename IndexedMap<Key, T, MapType>::iterator
+IndexedMap<Key, T, MapType>::find(const key_type& key) {
+  return iterator(lookup_table_.find(key), &container_);
+}
+
+template <class Key, class T, template <class _Key, class _Value,
+                                        class... _OtherArgs> class MapType>
+typename IndexedMap<Key, T, MapType>::const_iterator
+IndexedMap<Key, T, MapType>::find(const key_type& key) const {
+  return const_iterator(lookup_table_.find(key), &container_);
 }
 
 template <class Key, class T, template <class _Key, class _Value,
@@ -141,7 +155,8 @@ template <class Key, class T, template <class _Key, class _Value,
                                         class... _OtherArgs> class MapType>
 typename IndexedMap<Key, T, MapType>::mapped_type& IndexedMap<Key, T, MapType>::
 operator[](const key_type& key) {
-  if (contains(key)) return container_[lookup_table_[key]].second;
+  auto itr = lookup_table_.find(key);
+  if (itr != lookup_table_.end()) return container_[itr->second].second;
   // Create a new element with the key;
   container_.emplace_back(std::make_pair(key, T()));
   lookup_table_[key] = container_.size() - 1;
@@ -152,17 +167,18 @@ template <class Key, class T, template <class _Key, class _Value,
                                         class... _OtherArgs> class MapType>
 typename IndexedMap<Key, T, MapType>::size_type
 IndexedMap<Key, T, MapType>::erase(const key_type& key) {
-  if (contains(key)) {
-    size_t idx = lookup_table_[key];
+  auto itr = lookup_table_.find(key);
+  if (itr != lookup_table_.end()) {
+    size_t idx = itr->second;
     size_t last_idx = container_.size() - 1;
     if (idx != last_idx) {
       // Swap with last element
       std::swap(container_[idx], container_[last_idx]);
-      lookup_table_[key] = idx;
+      lookup_table_[container_[idx].first] = idx;
     }
     // Erase the last element
     container_.pop_back();
-    lookup_table_.erase(key);
+    lookup_table_.erase(itr);
     return 1;
   }
   return 0;

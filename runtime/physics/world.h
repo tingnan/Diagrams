@@ -64,6 +64,18 @@ class World {
   void RemoveJointByIntID(id_t);
 
  private:
+  class IDPool {
+   public:
+    // Get a new, unused id;
+    id_t GetID() { return id_counter_++; }
+    // Do nothing for now, ideally will recycle unused id;
+    void RecycleID(id_t freed_id){};
+    void Reset() { id_counter_ = 0; }
+
+   private:
+    id_t id_counter_ = 0;
+  };
+
   // Clear everything in the world.
   void Reset();
 
@@ -91,8 +103,7 @@ class World {
   std::unique_ptr<class PhysicsEngine> physics_engine_;
 
   // node id counter
-  id_t id_counter_ = 0;
-  id_t joint_id_counter_ = 0;
+  IDPool id_pool_;
 };
 
 }  // namespace diagrammar
