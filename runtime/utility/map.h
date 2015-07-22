@@ -15,60 +15,143 @@ namespace diagrammar {
 // Utility container
 // The class allows random access by index,
 // and the address of every contained value is stable.
-// Specialize std::allocator<std::pair<Key, Value>> and
+// Specialize std::allocator<std::pair<Key, T>> and
 // std::allocator<std::pair<Key, size_t>> for custom use
-template <class Key, class Value,
+template <class Key, class T,
           template <class _Key, class _Value, class... _OtherArgs>
           class MapType = std::unordered_map>
 class IndexedMap {
  public:
-  typedef std::pair<Key, Value> ValuePair;
-  size_t size() const;
+  // Using only default constructors.
+  typedef size_t size_type;
+  typedef Key key_type;
+  typedef T mapped_type;
+  typedef std::pair<Key, T> value_type;
+  // iterator is NOT invalidated when inserting new element, but the user has to
+  // call the * and -> operator again to get the correct value;
+  class iterator {
+   public:
+    typedef iterator self_type;
+    typedef IndexedMap::value_type value_type;
+    typedef IndexedMap::value_type& reference;
+    typedef IndexedMap::value_type* pointer;
+
+    iterator() = default;
+    iterator(const self_type&) = default;
+    self_type& operator=(const self_type&) = default;
+    iterator(self_type&&) = default;
+    self_type& operator=(self_type&&) = default;
+    iterator(typename MapType<Key, IndexedMap::size_type>::self_type map_itr,
+             std::vector<value_type>* container_ptr)
+        : itr_(map_itr), container_ptr_(container_ptr) {}
+    // Overloaded operators.
+    self_type& operator++() {
+      ++itr_;
+      return *this;
+    }
+    reference operator*() const { return (*container_ptr_)[itr_->second]; }
+    pointer operator->() const { return container_ptr_ + itr_->second; }
+    bool operator==(const self_type& rhs) const {
+      return itr_ == rhs.itr_ && container_ptr_ == rhs.container_ptr_;
+    }
+    bool operator!=(const self_type& rhs) const {
+      return itr_ != rhs.itr_ || container_ptr_ != rhs.container_ptr_;
+    }
+
+   private:
+    typename MapType<Key, size_t>::self_type itr_;
+    std::vector<value_type>* container_ptr_ = nullptr;
+  };
+
+  class const_iterator {
+   public:
+    typedef const_iterator self_type;
+    typedef IndexedMap::value_type value_type;
+    typedef const IndexedMap::value_type& reference;
+    typedef const IndexedMap::value_type* pointer;
+
+    const_iterator() = default;
+    const_iterator(const self_type&) = default;
+    self_type& operator=(const self_type&) = default;
+    const_iterator(self_type&&) = default;
+    self_type& operator=(self_type&&) = default;
+    const_iterator(
+        typename MapType<Key, IndexedMap::size_type>::self_type map_itr,
+        const std::vector<value_type>* container_ptr)
+        : itr_(map_itr), container_ptr_(container_ptr) {}
+    // Overloaded operators.
+    self_type& operator++() {
+      ++itr_;
+      return *this;
+    }
+    reference operator*() const { return (*container_ptr_)[itr_->second]; }
+    pointer operator->() const { return container_ptr_ + itr_->second; }
+    bool operator==(const self_type& rhs) const {
+      return itr_ == rhs.itr_ && container_ptr_ == rhs.container_ptr_;
+    }
+    bool operator!=(const self_type& rhs) const {
+      return itr_ != rhs.itr_ || container_ptr_ != rhs.container_ptr_;
+    }
+
+   private:
+    typename MapType<Key, size_t>::self_type itr_;
+    const std::vector<value_type>* container_ptr_ = nullptr;
+  };
+
+  iterator begin() { return iterator(lookup_table_.begin(), &container_); }
+  iterator end() { return iterator(lookup_table_.end(), &container_); }
+
+  size_type size() const;
   // TODO(tingnan) maybe implement iterator and find
-  bool contains(const Key& key) const;
-  // Value type must have a default constructor
-  Value& operator[](const Key& key);
+  bool contains(const key_type& key) const;
+  iterator find(const key_type& key);
+  // T type must have a default constructor
+  mapped_type& operator[](const key_type& key);
   // Access by index (random access)
-  const Value& get(size_t index) const;
+  const mapped_type& get(size_type index) const;
   // Return count (0 or 1)
-  size_t erase(const Key& key);
+  size_type erase(const key_type& key);
   void clear();
+
  private:
-  std::vector<ValuePair> container_;
-  MapType<Key, size_t> lookup_table_;
+  std::vector<value_type> container_;
+  MapType<key_type, size_t> lookup_table_;
 };
 
-template <class Key, class Value, template <class _Key, class _Value,
-                                            class... _OtherArgs> class MapType>
-size_t IndexedMap<Key, Value, MapType>::size() const {
+template <class Key, class T, template <class _Key, class _Value,
+                                        class... _OtherArgs> class MapType>
+size_t IndexedMap<Key, T, MapType>::size() const {
   return container_.size();
 }
 
-template <class Key, class Value, template <class _Key, class _Value,
-                                            class... _OtherArgs> class MapType>
-bool IndexedMap<Key, Value, MapType>::contains(const Key& key) const {
+template <class Key, class T, template <class _Key, class _Value,
+                                        class... _OtherArgs> class MapType>
+bool IndexedMap<Key, T, MapType>::contains(const key_type& key) const {
   return lookup_table_.find(key) != lookup_table_.end();
 }
 
-template <class Key, class Value, template <class _Key, class _Value,
-                                            class... _OtherArgs> class MapType>
-const Value& IndexedMap<Key, Value, MapType>::get(size_t index) const {
+template <class Key, class T, template <class _Key, class _Value,
+                                        class... _OtherArgs> class MapType>
+const typename IndexedMap<Key, T, MapType>::mapped_type&
+IndexedMap<Key, T, MapType>::get(size_type index) const {
   return container_[index].second;
 }
 
-template <class Key, class Value, template <class _Key, class _Value,
-                                            class... _OtherArgs> class MapType>
-Value& IndexedMap<Key, Value, MapType>::operator[](const Key& key) {
+template <class Key, class T, template <class _Key, class _Value,
+                                        class... _OtherArgs> class MapType>
+typename IndexedMap<Key, T, MapType>::mapped_type& IndexedMap<Key, T, MapType>::
+operator[](const key_type& key) {
   if (contains(key)) return container_[lookup_table_[key]].second;
   // Create a new element with the key;
-  container_.emplace_back(std::make_pair(key, Value()));
+  container_.emplace_back(std::make_pair(key, T()));
   lookup_table_[key] = container_.size() - 1;
   return container_.back().second;
 }
 
-template <class Key, class Value, template <class _Key, class _Value,
-                                            class... _OtherArgs> class MapType>
-size_t IndexedMap<Key, Value, MapType>::erase(const Key& key) {
+template <class Key, class T, template <class _Key, class _Value,
+                                        class... _OtherArgs> class MapType>
+typename IndexedMap<Key, T, MapType>::size_type
+IndexedMap<Key, T, MapType>::erase(const key_type& key) {
   if (contains(key)) {
     size_t idx = lookup_table_[key];
     size_t last_idx = container_.size() - 1;
@@ -85,17 +168,16 @@ size_t IndexedMap<Key, Value, MapType>::erase(const Key& key) {
   return 0;
 }
 
-
-template <class Key, class Value, template <class _Key, class _Value,
-                                            class... _OtherArgs> class MapType>
-void IndexedMap<Key, Value, MapType>::clear() {
+template <class Key, class T, template <class _Key, class _Value,
+                                        class... _OtherArgs> class MapType>
+void IndexedMap<Key, T, MapType>::clear() {
   container_.clear();
   lookup_table_.clear();
 }
 
 // This is a bijection map (one to one only)
 // No special allocators provided yet
-template <class Key, class Value,
+template <class Key, class T,
           template <class _Key, class _Value, class... _OtherArgs>
           class MapType = std::unordered_map>
 class BiMap {
@@ -103,13 +185,13 @@ class BiMap {
   bool contains_key(const Key& key) {
     return key_value_map_.find(key) != key_value_map_.end();
   }
-  bool contains_value(const Value& val) {
+  bool contains_value(const T& val) {
     return value_key_map_.find(val) != value_key_map_.end();
   }
   // If key/value is not contained, the returned reference will be invalid
   // and may cause segfault
-  Value& get_value(const Key& key) { return key_value_map_.find(key)->second; }
-  Key& get_key(const Value& val) { return value_key_map_.find(val)->second; }
+  T& get_value(const Key& key) { return key_value_map_.find(key)->second; }
+  Key& get_key(const T& val) { return value_key_map_.find(val)->second; }
   size_t erase_by_key(const Key& key) {
     auto itr = key_value_map_.find(key);
     if (itr != key_value_map_.end()) {
@@ -119,7 +201,7 @@ class BiMap {
     }
     return 0;
   }
-  size_t erase_by_value(const Value& val) {
+  size_t erase_by_value(const T& val) {
     auto itr = value_key_map_.find(val);
     if (itr != value_key_map_.end()) {
       size_t num_erased = key_value_map_.erase(itr->second);
@@ -129,16 +211,15 @@ class BiMap {
     return 0;
   }
   // over write
-  void insert(const std::pair<Key, Value>& key_val_pair) {
+  void insert(const std::pair<Key, T>& key_val_pair) {
     const auto& key = key_val_pair.first;
     const auto& val = key_val_pair.second;
     auto kv_itr = key_value_map_.find(key);
     auto vk_itr = value_key_map_.find(val);
-    
+
     if (kv_itr == key_value_map_.end()) {
       key_value_map_[key] = val;
-      if (vk_itr != value_key_map_.end())
-        key_value_map_.erase(vk_itr->second);
+      if (vk_itr != value_key_map_.end()) key_value_map_.erase(vk_itr->second);
       value_key_map_[val] = key;
       return;
     }
@@ -146,8 +227,7 @@ class BiMap {
     if (kv_itr != key_value_map_.end()) {
       value_key_map_.erase(kv_itr->second);
       key_value_map_[key] = val;
-      if (vk_itr != value_key_map_.end())
-        key_value_map_.erase(vk_itr->second);
+      if (vk_itr != value_key_map_.end()) key_value_map_.erase(vk_itr->second);
       value_key_map_[val] = key;
     }
   }
@@ -156,9 +236,10 @@ class BiMap {
     key_value_map_.clear();
     value_key_map_.clear();
   }
+
  private:
-  MapType<Key, Value> key_value_map_;
-  MapType<Value, Key> value_key_map_;
+  MapType<Key, T> key_value_map_;
+  MapType<T, Key> value_key_map_;
 };
 
 }  // namespace diagrammar
