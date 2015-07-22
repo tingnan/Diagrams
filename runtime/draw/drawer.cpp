@@ -136,6 +136,11 @@ NodePathDrawer::NodePathDrawer(Node* node) {
   GenBuffers();
 }
 
+NodePathDrawer::~NodePathDrawer() {
+  glDeleteBuffers(vertex_buffer_.size(), vertex_buffer_.data());
+  glDeleteBuffers(vertex_color_buffer_.size(), vertex_color_buffer_.data());
+}
+
 void NodePathDrawer::GenPathBuffer(const Path& polyline, bool is_closed) {
   GLuint vert_vbo;
   glGenBuffers(1, &vert_vbo);
@@ -227,6 +232,12 @@ void NodePathDrawer::Draw(GLProgram program, Camera* camera) {
 NodePolyDrawer::NodePolyDrawer(Node* node) {
   node_ = node;
   GenBuffers();
+}
+
+NodePolyDrawer::~NodePolyDrawer() {
+  glDeleteBuffers(vertex_buffer_.size(), vertex_buffer_.data());
+  glDeleteBuffers(vertex_color_buffer_.size(), vertex_color_buffer_.data());
+  glDeleteBuffers(index_buffer_.size(), index_buffer_.data());
 }
 
 void NodePolyDrawer::GenBuffers() {
@@ -341,8 +352,7 @@ void NodePolyDrawer::Draw(GLProgram program, Camera* camera) {
 // move back to header
 template <class DrawerType>
 Canvas<DrawerType>::Canvas(GLProgram program, Camera* camera)
-    :program_(program), camera_(camera) {
-}
+    : program_(program), camera_(camera) {}
 
 template <class DrawerType>
 void Canvas<DrawerType>::AddNode(Node* node) {

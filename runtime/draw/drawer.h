@@ -48,6 +48,7 @@ class NodePathDrawer : public NodeDrawer {
  public:
   // Set a node before calling Draw()
   explicit NodePathDrawer(Node* node);
+  ~NodePathDrawer();
   // Use a precompiled program and a scale to draw
   void Draw(GLProgram program, Camera* camera);
 
@@ -61,6 +62,7 @@ class NodePolyDrawer : public NodeDrawer {
  public:
   // Set a node before calling Draw()
   explicit NodePolyDrawer(Node* node);
+  ~NodePolyDrawer();
   void Draw(GLProgram program, Camera* camera);
 
  private:
@@ -79,9 +81,9 @@ class Canvas {
   void RemoveNodeByID(id_t id);
   void Draw();
 
- private:  
+ private:
   GLProgram program_;
-  Camera* camera_;
+  Camera* camera_ = nullptr;
   std::unordered_map<id_t, std::unique_ptr<DrawerType> > drawers_;
 };
 
