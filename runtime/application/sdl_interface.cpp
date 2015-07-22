@@ -94,8 +94,6 @@ void Application::HandleEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event) != 0) {
     Json::Value event_message;
-    // our custom event, which is not a constexpr
-    // the built in event types
     switch (event.type) {
       case SDL_QUIT:
         app_running_ = false;
@@ -103,7 +101,7 @@ void Application::HandleEvents() {
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEBUTTONUP:
         {
-          // Please check SDL website for button enums
+          // Please check SDL website for button enums.
           event_message["type"] = "mouse_button";
           event_message["button"] = event.button.button;
           event_message["button_pressed"] = event.button.state == SDL_PRESSED;
@@ -113,7 +111,7 @@ void Application::HandleEvents() {
         break;
       case SDL_MOUSEMOTION:
         {
-          // Please check SDL website for button mask enums
+          // Please check SDL website for button mask enums.
           event_message["type"] = "mouse_motion";
           event_message["button_mask"] = event.motion.state;
           event_message["x"] = event.motion.x;
@@ -124,7 +122,7 @@ void Application::HandleEvents() {
         break;
       case SDL_MOUSEWHEEL:
         {
-          // Please check SDL website for event detail
+          // Please check SDL website for event detail.
           event_message["type"] = "mouse_wheel";
           event_message["x"] = event.wheel.x;
           event_message["y"] = event.wheel.y;
@@ -136,6 +134,7 @@ void Application::HandleEvents() {
         {
           event_message["type"] = "key";
           event_message["key_pressed"] = event.key.state == SDL_PRESSED;
+          // Warning, there 
           event_message["key_code"] = SDL_GetKeyName(event.key.keysym.sym);
         }
         break;
@@ -146,7 +145,7 @@ void Application::HandleEvents() {
       continue;
     }
 
-    std::cout << event_message << std::endl;
+    // std::cout << event_message << std::endl;
     if (HandleMessage(event_message)) {
       continue;
     }
@@ -156,7 +155,7 @@ void Application::HandleEvents() {
 }
 
 bool Application::HandleMessage(const Json::Value& message) {
-  // We define only a few basic key mappings here
+  // We define only a few basic key mappings here.
   if (message["type"] == "key") {
     if (message["key_code"] == "1" && message["key_pressed"] == true) {
       draw_path_ = !draw_path_;
@@ -181,7 +180,7 @@ bool Application::HandleMessage(const Json::Value& message) {
   }
 
   if (message["type"] == "mouse_motion") {
-    if (message["button_mask"] == SDL_BUTTON_LMASK) {
+    if (message["button_mask"].asUInt() & SDL_BUTTON_LMASK) {
       float x_delta = message["xrel"].asFloat();
       float y_delta = message["yrel"].asFloat();
       camera_.Translate(Vector3f(x_delta, y_delta, 0));
