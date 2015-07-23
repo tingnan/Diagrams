@@ -205,11 +205,11 @@ Node* World::GetNodeByIndex(size_t index) {
 
 size_t World::GetNumNodes() { return node_map_.size(); }
 
-Joint* World::AddJoint(Joint tmp_joint) {
-  id_t ext_id = tmp_joint.id;
+Joint* World::AddJoint(std::unique_ptr<Joint> base_joint_ptr) {
+  id_t ext_id = base_joint_ptr->id;
   id_t int_id = id_pool_.GetID();
   // Move the content to the map
-  joint_map_[int_id] = make_unique<Joint>(std::move(tmp_joint));
+  joint_map_[int_id] = std::move(base_joint_ptr);
   Joint* joint_ptr = joint_map_[int_id].get();
   joint_ptr->id = int_id;
 

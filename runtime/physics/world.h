@@ -57,7 +57,7 @@ class World {
   Node* RemoveNodeByIntID(id_t);
 
   // For joints
-  Joint* AddJoint(Joint);
+  Joint* AddJoint(std::unique_ptr<Joint> base_ptr);
   Joint* GetJointByExtID(id_t) const;
   Joint* GetJointByIntID(id_t) const;
   Joint* GetJointByIndex(size_t);
