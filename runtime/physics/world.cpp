@@ -51,10 +51,10 @@ void World::Start(EngineType engine_type) {
                                         sin((2.0 * i) * M_PI / num_vertices)));
     }
     for (int i = 0; i < 10; ++i) {
+      Node* node_ptr = AddNodeInternal(make_unique<Node>());
       Polygon poly = Polygon(circle);
       poly.shape_info["type"] = static_cast<int>(ShapeType::kDisk);
       poly.shape_info["radius"] = static_cast<float>(10.0);
-      Node* node_ptr = AddNodeInternal(Node());
       node_ptr->polygons.emplace_back(poly);
       node_ptr->is_dynamic = true;
       node_ptr->material_info.restitution = 0.6;
@@ -116,16 +116,16 @@ void World::Step() {
   physics_engine_->SendDataToWorld();
 }
 
-const Node* World::AddNode(Node tmp_node) {
-  return AddNodeInternal(std::move(tmp_node));
+const Node* World::AddNode(std::unique_ptr<Node> new_node) {
+  return AddNodeInternal(std::move(new_node));
 }
 
-Node* World::AddNodeInternal(Node tmp_node) {
-  id_t ext_id = tmp_node.id;
+Node* World::AddNodeInternal(std::unique_ptr<Node> new_node) {
+  id_t ext_id = new_node->id;
   id_t int_id = id_pool_.GetID();
 
   // Move the content to the map
-  node_map_[int_id] = make_unique<Node>(std::move(tmp_node));
+  node_map_[int_id] = std::move(new_node);
   Node* node_ptr = node_map_[int_id].get();
   node_ptr->id = int_id;
 
@@ -142,11 +142,11 @@ Node* World::AddNodeInternal(Node tmp_node) {
 }
 // TODO(tingan) when remoe a node, we also needs to remove all the joints
 // connected to it
-Node* World::RemoveNodeByIntID(id_t id) {
-  Node* node_ptr = nullptr;
+std::unique_ptr<Node> World::RemoveNodeByIntID(id_t id) {
+  std::unique_ptr<Node> node_ptr;
   auto itr = node_map_.find(id);
   if (itr != node_map_.end()) {
-    node_ptr = itr->second.release();
+    node_ptr = std::move(itr->second);
   }
   node_map_.erase(id);
   node_id_map_.by<int_id>().erase(id);
@@ -159,7 +159,7 @@ Node* World::RemoveNodeByIntID(id_t id) {
       Joint* joint_ptr = itr->second.get();
       if (joint_ptr->node_1 == id || joint_ptr->node_2 == id) {
         // also destroy the joint
-        delete RemoveJointByIntID(joint_ptr->id);
+        RemoveJointByIntID(joint_ptr->id);
       }
     }
   }
@@ -177,12 +177,12 @@ Node* World::RemoveNodeByIntID(id_t id) {
   return node_ptr;
 }
 
-Node* World::RemoveNodeByExtID(id_t id) {
+std::unique_ptr<Node> World::RemoveNodeByExtID(id_t id) {
   auto itr = node_id_map_.by<ext_id>().find(id);
   if (itr != node_id_map_.by<ext_id>().end()) {
     return RemoveNodeByIntID(itr->get<int_id>());
   }
-  return nullptr;
+  return std::unique_ptr<Node>(nullptr);
 }
 
 const Node* World::GetNodeByIntID(id_t id) const {
@@ -232,19 +232,19 @@ Joint* World::AddJointInternal(std::unique_ptr<Joint> base_joint_ptr) {
   return joint_ptr;
 }
 
-Joint* World::RemoveJointByExtID(id_t id) {
+std::unique_ptr<Joint> World::RemoveJointByExtID(id_t id) {
   auto itr = joint_id_map_.by<ext_id>().find(id);
   if (itr != joint_id_map_.by<ext_id>().end()) {
     return RemoveJointByIntID(itr->get<int_id>());
   }
-  return nullptr;
+  return std::unique_ptr<Joint>(nullptr);
 }
 
-Joint* World::RemoveJointByIntID(id_t id) {
-  Joint* joint_ptr = nullptr;
+std::unique_ptr<Joint> World::RemoveJointByIntID(id_t id) {
+  std::unique_ptr<Joint> joint_ptr;
   auto itr = joint_map_.find(id);
   if (itr != joint_map_.end()) {
-    joint_ptr = itr->second.release();
+    joint_ptr = std::move(itr->second);
   }
   joint_map_.erase(id);
   joint_id_map_.by<int_id>().erase(id);
@@ -299,7 +299,7 @@ void World::ParseWorld(const Json::Value& world) {
   const Json::Value& child_obj = world["children"];
   Json::Value::const_iterator child_itr = child_obj.begin();
   for (; child_itr != child_obj.end(); ++child_itr) {
-    AddNode(ParseNode(*child_itr));
+    AddNode(make_unique<Node>(ParseNode(*child_itr)));
   }
 
   // can only parse the joint, after we know the children

@@ -147,7 +147,7 @@ void Application::HandleEvents() {
   }
 }
 
-Node* test_ptr = nullptr;
+std::unique_ptr<Node> test_ptr(nullptr);
 bool Application::HandleMessage(const Json::Value& message) {
   // We define only a few basic key mappings here.
   if (message["type"] == "key") {
@@ -168,23 +168,21 @@ bool Application::HandleMessage(const Json::Value& message) {
 
     if (message["key_code"] == "4" && message["key_pressed"] == true) {
       // Test remove an node by ext id;
-      Node* tmp_ptr = world_.RemoveNodeByExtID(1);
-      if (tmp_ptr) {
+      auto tmp_ptr = world_.RemoveNodeByExtID(1);
+      if (tmp_ptr != nullptr) {
         path_drawers_->RemoveNodeByID(tmp_ptr->id);
         poly_drawers_->RemoveNodeByID(tmp_ptr->id);
-        test_ptr = tmp_ptr;
+        test_ptr = std::move(tmp_ptr);
         test_ptr->id = 1;
       }
     }
 
     if (message["key_code"] == "5" && message["key_pressed"] == true) {
       // Test add the moved node back
-      if (test_ptr) {
-        const Node* tmp_ptr = world_.AddNode(*test_ptr);
+      if (test_ptr != nullptr) {
+        const Node* tmp_ptr = world_.AddNode(std::move(test_ptr));
         path_drawers_->AddNode(tmp_ptr);
         poly_drawers_->AddNode(tmp_ptr);
-        delete test_ptr;
-        test_ptr = nullptr;
       }
     }
   }

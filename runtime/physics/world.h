@@ -47,23 +47,28 @@ class World {
   float now() const;
   float simulation_time() const;
 
-  // Copy a node to the world and assign an id
-  const Node* AddNode(Node);
+  // Copy a new node to the world and return a const handle
+  // TODO(tingnan) should we use std::unique_ptr<Node> to transfer
+  // ownership?
+  const Node* AddNode(std::unique_ptr<Node> new_node);
   const Node* GetNodeByExtID(id_t) const;
   const Node* GetNodeByIntID(id_t) const;
   const Node* GetNodeByIndex(size_t) const;
   size_t GetNumNodes() const;
-  Node* RemoveNodeByExtID(id_t);
-  Node* RemoveNodeByIntID(id_t);
+  // Pop a node from the world and release its ownership.
+  std::unique_ptr<Node> RemoveNodeByExtID(id_t);
+  std::unique_ptr<Node> RemoveNodeByIntID(id_t);
 
-  // For joints
-  const Joint* AddJoint(std::unique_ptr<Joint> base_ptr);
+  // Copy a new joint to the world and return a const handle
+  // Joint is polymorphic type
+  const Joint* AddJoint(std::unique_ptr<Joint> new_joint);
   const Joint* GetJointByExtID(id_t) const;
   const Joint* GetJointByIntID(id_t) const;
   const Joint* GetJointByIndex(size_t) const;
   size_t GetNumJoints() const;
-  Joint* RemoveJointByExtID(id_t);
-  Joint* RemoveJointByIntID(id_t);
+  // Pop a joint from the world and release its ownership
+  std::unique_ptr<Joint> RemoveJointByExtID(id_t);
+  std::unique_ptr<Joint> RemoveJointByIntID(id_t);
 
  private:
   // Dummy tag structs used only for the bimap. Check Boost::Bimap
@@ -93,7 +98,7 @@ class World {
   // called by InitializeWorldDescription
   void ParseWorld(const Json::Value&);
 
-  Node* AddNodeInternal(Node new_node);
+  Node* AddNodeInternal(std::unique_ptr<Node> new_node);
   Joint* AddJointInternal(std::unique_ptr<Joint> new_joint);
 
   CoordinateFrame2D frame;
