@@ -126,7 +126,7 @@ Node* World::AddNode(Node tmp_node) {
   node_ptr->id = int_id;
 
   // Create the id mapping
-  node_id_map_.insert(std::make_pair(ext_id, node_ptr->id));
+  node_id_map_.insert(IDMap::value_type(ext_id, node_ptr->id));
 
   // Now we also would like to add the same node from the underlying
   // engine
@@ -145,34 +145,55 @@ Node* World::RemoveNodeByIntID(id_t id) {
     node_ptr = itr->second.release();
   }
   node_map_.erase(id);
-  node_id_map_.erase_by_value(id);
+  node_id_map_.by<int_id>().erase(id);
   id_pool_.RecycleID(id);
+
+  {
+    // we may want to also delete joints that use the node,
+    // or simply left for the user to handle the orphaned joint.
+    for (auto itr = joint_map_.begin(); itr != joint_map_.end(); ++itr) {
+      Joint* joint_ptr = itr->second.get();
+      if (joint_ptr->node_1 == id || joint_ptr->node_2 == id) {
+        // also destroy the joint
+        delete RemoveJointByIntID(joint_ptr->id);
+      }
+    }
+  }
+
   if (physics_engine_) {
     physics_engine_->RemoveNodeByID(id);
   }
   /*
-  std::cout << " and int id: " << id << std::endl;
+  std::cout << "int id: " << id << std::endl;
   std::cout << "int id table looks like: ";
-  for (auto itr = node_map_.begin(); itr != node_map_.end(); ++itr) {
-    std::cout << itr->first << " " << itr->second.get() << std::endl;
+  for (auto itr = node_id_map_.left.begin(); itr != node_id_map_.left.end();
+       ++itr) {
+    std::cout << itr->first << " " << itr->second << std::endl;
   }*/
   return node_ptr;
 }
 
 Node* World::RemoveNodeByExtID(id_t id) {
-  if (node_id_map_.contains_key(id)) {
-    /*
-    std::cout << "popped a node with ext id: " << id;
-    */
-    return RemoveNodeByIntID(node_id_map_.get_value(id));
+  auto itr = node_id_map_.by<ext_id>().find(id);
+  if (itr != node_id_map_.by<ext_id>().end()) {
+    return RemoveNodeByIntID(itr->get<int_id>());
   }
   return nullptr;
 }
 
-Node* World::GetNodeByIntID(id_t id) {
-  auto itr = node_map_.find(id);
-  if (itr != node_map_.end()) {
-    return itr->second.get();
+Node* World::GetNodeByIntID(id_t id) const {
+  auto const_itr = node_map_.find(id);
+  if (const_itr != node_map_.end()) {
+    return const_itr->second.get();
+  }
+  return nullptr;
+}
+
+Node* World::GetNodeByExtID(id_t id) const {
+  auto itr = node_id_map_.by<ext_id>().find(id);
+  if (itr != node_id_map_.by<ext_id>().end()) {
+    assert(node_map_.find(itr->get<int_id>()) != node_map_.end());
+    return GetNodeByIntID(itr->get<int_id>());
   }
   return nullptr;
 }
@@ -193,7 +214,7 @@ Joint* World::AddJoint(Joint tmp_joint) {
   joint_ptr->id = int_id;
 
   // Create the id mapping
-  node_id_map_.insert(std::make_pair(ext_id, joint_ptr->id));
+  joint_id_map_.insert(IDMap::value_type(ext_id, joint_ptr->id));
 
   // Now we also would like to add the same node from the underlying
   // engine
@@ -201,6 +222,54 @@ Joint* World::AddJoint(Joint tmp_joint) {
     physics_engine_->AddJoint(joint_ptr);
   }
   return joint_ptr;
+}
+
+Joint* World::RemoveJointByExtID(id_t id) {
+  auto itr = joint_id_map_.by<ext_id>().find(id);
+  if (itr != joint_id_map_.by<ext_id>().end()) {
+    return RemoveJointByIntID(itr->get<int_id>());
+  }
+  return nullptr;
+}
+
+Joint* World::RemoveJointByIntID(id_t id) {
+  Joint* joint_ptr = nullptr;
+  auto itr = joint_map_.find(id);
+  if (itr != joint_map_.end()) {
+    joint_ptr = itr->second.release();
+  }
+  joint_map_.erase(id);
+  joint_id_map_.by<int_id>().erase(id);
+  id_pool_.RecycleID(id);
+  if (physics_engine_) {
+    assert(0);
+    // physics_engine_->RemoveJointByID(id);
+  }
+  /*
+  std::cout << "int id: " << id << std::endl;
+  std::cout << "int id table looks like: ";
+  for (auto itr = node_id_map_.left.begin(); itr != node_id_map_.left.end();
+       ++itr) {
+    std::cout << itr->first << " " << itr->second << std::endl;
+  }*/
+  return joint_ptr;
+}
+
+Joint* World::GetJointByIntID(id_t id) const {
+  auto const_itr = joint_map_.find(id);
+  if (const_itr != joint_map_.end()) {
+    return const_itr->second.get();
+  }
+  return nullptr;
+}
+
+Joint* World::GetJointByExtID(id_t id) const {
+  auto itr = joint_id_map_.by<ext_id>().find(id);
+  if (itr != joint_id_map_.by<ext_id>().end()) {
+    assert(joint_map_.find(itr->get<int_id>()) != joint_map_.end());
+    return GetJointByIntID(itr->get<int_id>());
+  }
+  return nullptr;
 }
 
 float World::time_step() const { return timer_.tick_time(); }

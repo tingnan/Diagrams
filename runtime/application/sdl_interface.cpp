@@ -22,6 +22,7 @@ namespace diagrammar {
 
 Application::Application() {}
 Application::~Application() {
+  TTF_CloseFont(font_);
   SDL_StopTextInput();
   SDL_DestroyWindow(window_);
   SDL_Quit();
@@ -48,6 +49,9 @@ bool Application::Init(int w, int h) {
   if (gl_context_ == nullptr) {
     return EmitSDLError("error creating GL context");
   }
+
+  // Enable vsync
+  SDL_GL_SetSwapInterval(1);
 
   if (TTF_Init() != 0) {
     return EmitSDLError("error initialize font system");

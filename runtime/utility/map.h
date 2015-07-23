@@ -9,7 +9,6 @@
 #include <map>
 #include <unordered_map>
 #include <cassert>
-
 namespace diagrammar {
 
 // Utility container
@@ -190,74 +189,6 @@ void IndexedMap<Key, T, MapType>::clear() {
   container_.clear();
   lookup_table_.clear();
 }
-
-// This is a bijection map (one to one only)
-// No special allocators provided yet
-template <class Key, class T,
-          template <class _Key, class _Value, class... _OtherArgs>
-          class MapType = std::unordered_map>
-class BiMap {
- public:
-  bool contains_key(const Key& key) {
-    return key_value_map_.find(key) != key_value_map_.end();
-  }
-  bool contains_value(const T& val) {
-    return value_key_map_.find(val) != value_key_map_.end();
-  }
-  // If key/value is not contained, the returned reference will be invalid
-  // and may cause segfault
-  T& get_value(const Key& key) { return key_value_map_.find(key)->second; }
-  Key& get_key(const T& val) { return value_key_map_.find(val)->second; }
-  size_t erase_by_key(const Key& key) {
-    auto itr = key_value_map_.find(key);
-    if (itr != key_value_map_.end()) {
-      size_t num_erased = value_key_map_.erase(itr->second);
-      assert(key_value_map_.erase(key) == num_erased);
-      return num_erased;
-    }
-    return 0;
-  }
-  size_t erase_by_value(const T& val) {
-    auto itr = value_key_map_.find(val);
-    if (itr != value_key_map_.end()) {
-      size_t num_erased = key_value_map_.erase(itr->second);
-      assert(value_key_map_.erase(val) == num_erased);
-      return num_erased;
-    }
-    return 0;
-  }
-  // over write
-  void insert(const std::pair<Key, T>& key_val_pair) {
-    const auto& key = key_val_pair.first;
-    const auto& val = key_val_pair.second;
-    auto kv_itr = key_value_map_.find(key);
-    auto vk_itr = value_key_map_.find(val);
-
-    if (kv_itr == key_value_map_.end()) {
-      key_value_map_[key] = val;
-      if (vk_itr != value_key_map_.end()) key_value_map_.erase(vk_itr->second);
-      value_key_map_[val] = key;
-      return;
-    }
-
-    if (kv_itr != key_value_map_.end()) {
-      value_key_map_.erase(kv_itr->second);
-      key_value_map_[key] = val;
-      if (vk_itr != value_key_map_.end()) key_value_map_.erase(vk_itr->second);
-      value_key_map_[val] = key;
-    }
-  }
-
-  void clear() {
-    key_value_map_.clear();
-    value_key_map_.clear();
-  }
-
- private:
-  MapType<Key, T> key_value_map_;
-  MapType<T, Key> value_key_map_;
-};
-
 }  // namespace diagrammar
 
 #endif  // RUNTIME_UTILITY_MAP_H_
