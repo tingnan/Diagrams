@@ -48,24 +48,26 @@ class World {
   float simulation_time() const;
 
   // Copy a node to the world and assign an id
-  Node* AddNode(Node);
-  Node* GetNodeByExtID(id_t) const;
-  Node* GetNodeByIntID(id_t) const;
-  Node* GetNodeByIndex(size_t);
-  size_t GetNumNodes();
+  const Node* AddNode(Node);
+  const Node* GetNodeByExtID(id_t) const;
+  const Node* GetNodeByIntID(id_t) const;
+  const Node* GetNodeByIndex(size_t) const;
+  size_t GetNumNodes() const;
   Node* RemoveNodeByExtID(id_t);
   Node* RemoveNodeByIntID(id_t);
 
   // For joints
-  Joint* AddJoint(std::unique_ptr<Joint> base_ptr);
-  Joint* GetJointByExtID(id_t) const;
-  Joint* GetJointByIntID(id_t) const;
-  Joint* GetJointByIndex(size_t);
-  size_t GetNumJoints();
+  const Joint* AddJoint(std::unique_ptr<Joint> base_ptr);
+  const Joint* GetJointByExtID(id_t) const;
+  const Joint* GetJointByIntID(id_t) const;
+  const Joint* GetJointByIndex(size_t) const;
+  size_t GetNumJoints() const;
   Joint* RemoveJointByExtID(id_t);
   Joint* RemoveJointByIntID(id_t);
 
  private:
+  // Dummy tag structs used only for the bimap. Check Boost::Bimap
+  // for details.
   struct ext_id {};
   struct int_id {};
   typedef boost::bimap<
@@ -90,6 +92,9 @@ class World {
 
   // called by InitializeWorldDescription
   void ParseWorld(const Json::Value&);
+
+  Node* AddNodeInternal(Node new_node);
+  Joint* AddJointInternal(std::unique_ptr<Joint> new_joint);
 
   CoordinateFrame2D frame;
 

@@ -54,7 +54,7 @@ void World::Start(EngineType engine_type) {
       Polygon poly = Polygon(circle);
       poly.shape_info["type"] = static_cast<int>(ShapeType::kDisk);
       poly.shape_info["radius"] = static_cast<float>(10.0);
-      Node* node_ptr = AddNode(Node());
+      Node* node_ptr = AddNodeInternal(Node());
       node_ptr->polygons.emplace_back(poly);
       node_ptr->is_dynamic = true;
       node_ptr->material_info.restitution = 0.6;
@@ -116,7 +116,11 @@ void World::Step() {
   physics_engine_->SendDataToWorld();
 }
 
-Node* World::AddNode(Node tmp_node) {
+const Node* World::AddNode(Node tmp_node) {
+  return AddNodeInternal(std::move(tmp_node));
+}
+
+Node* World::AddNodeInternal(Node tmp_node) {
   id_t ext_id = tmp_node.id;
   id_t int_id = id_pool_.GetID();
 
@@ -181,7 +185,7 @@ Node* World::RemoveNodeByExtID(id_t id) {
   return nullptr;
 }
 
-Node* World::GetNodeByIntID(id_t id) const {
+const Node* World::GetNodeByIntID(id_t id) const {
   auto const_itr = node_map_.find(id);
   if (const_itr != node_map_.end()) {
     return const_itr->second.get();
@@ -189,7 +193,7 @@ Node* World::GetNodeByIntID(id_t id) const {
   return nullptr;
 }
 
-Node* World::GetNodeByExtID(id_t id) const {
+const Node* World::GetNodeByExtID(id_t id) const {
   auto itr = node_id_map_.by<ext_id>().find(id);
   if (itr != node_id_map_.by<ext_id>().end()) {
     assert(node_map_.find(itr->get<int_id>()) != node_map_.end());
@@ -198,14 +202,18 @@ Node* World::GetNodeByExtID(id_t id) const {
   return nullptr;
 }
 
-Node* World::GetNodeByIndex(size_t index) {
+const Node* World::GetNodeByIndex(size_t index) const {
   assert(index < node_map_.size());
   return node_map_.get(index).get();
 }
 
-size_t World::GetNumNodes() { return node_map_.size(); }
+size_t World::GetNumNodes() const { return node_map_.size(); }
 
-Joint* World::AddJoint(std::unique_ptr<Joint> base_joint_ptr) {
+const Joint* World::AddJoint(std::unique_ptr<Joint> base_joint_ptr) {
+  return AddJointInternal(std::move(base_joint_ptr));
+}
+
+Joint* World::AddJointInternal(std::unique_ptr<Joint> base_joint_ptr) {
   id_t ext_id = base_joint_ptr->id;
   id_t int_id = id_pool_.GetID();
   // Move the content to the map
@@ -255,7 +263,7 @@ Joint* World::RemoveJointByIntID(id_t id) {
   return joint_ptr;
 }
 
-Joint* World::GetJointByIntID(id_t id) const {
+const Joint* World::GetJointByIntID(id_t id) const {
   auto const_itr = joint_map_.find(id);
   if (const_itr != joint_map_.end()) {
     return const_itr->second.get();
@@ -263,7 +271,7 @@ Joint* World::GetJointByIntID(id_t id) const {
   return nullptr;
 }
 
-Joint* World::GetJointByExtID(id_t id) const {
+const Joint* World::GetJointByExtID(id_t id) const {
   auto itr = joint_id_map_.by<ext_id>().find(id);
   if (itr != joint_id_map_.by<ext_id>().end()) {
     assert(joint_map_.find(itr->get<int_id>()) != joint_map_.end());

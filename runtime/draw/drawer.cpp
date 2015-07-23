@@ -131,7 +131,7 @@ GLProgram LoadDefaultGLProgram() {
   return program;
 }
 
-NodePathDrawer::NodePathDrawer(Node* node) {
+NodePathDrawer::NodePathDrawer(const Node* node) {
   node_ = node;
   GenBuffers();
 }
@@ -229,7 +229,7 @@ void NodePathDrawer::Draw(GLProgram program, Camera* camera) {
   glDisableVertexAttribArray(program.color_loc);
 }
 
-NodePolyDrawer::NodePolyDrawer(Node* node) {
+NodePolyDrawer::NodePolyDrawer(const Node* node) {
   node_ = node;
   GenBuffers();
 }
@@ -355,7 +355,7 @@ Canvas<DrawerType>::Canvas(GLProgram program, Camera* camera)
     : program_(program), camera_(camera) {}
 
 template <class DrawerType>
-void Canvas<DrawerType>::AddNode(Node* node) {
+void Canvas<DrawerType>::AddNode(const Node* node) {
   drawers_[node->id] = make_unique<DrawerType>(node);
 }
 

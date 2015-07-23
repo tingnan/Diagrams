@@ -180,7 +180,7 @@ bool Application::HandleMessage(const Json::Value& message) {
     if (message["key_code"] == "5" && message["key_pressed"] == true) {
       // Test add the moved node back
       if (test_ptr) {
-        Node* tmp_ptr = world_.AddNode(*test_ptr);
+        const Node* tmp_ptr = world_.AddNode(*test_ptr);
         path_drawers_->AddNode(tmp_ptr);
         poly_drawers_->AddNode(tmp_ptr);
         delete test_ptr;
@@ -208,7 +208,7 @@ bool Application::HandleMessage(const Json::Value& message) {
 
 void Application::RenderID() {
   for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
-    Node* node = world_.GetNodeByIndex(i);
+    const Node* node = world_.GetNodeByIndex(i);
     if (true) {
       Vector2f pos = node->frame.GetTranslation();
       std::string label = std::to_string(node->id);
