@@ -10,6 +10,7 @@
 
 #include "utility/world_parser.h"
 #include "geometry/aabb.h"
+#include "utility/stl_memory.h"
 
 namespace diagrammar {
 Vector2f ParsePoint(const Json::Value& pt) {
@@ -73,34 +74,34 @@ Path ParsePath2D(const Json::Value& path_obj) {
 }
 
 // load a "child" node from the json descriptor
-Node ParseNode(const Json::Value& node_obj) {
+std::unique_ptr<Node> ParseNode(const Json::Value& node_obj) {
   std::string ntype = node_obj.get("type", "").asString();
   if (ntype != "node" && ntype != "open_path") {
     std::cout << ntype << std::endl;
     assert(0);
   }
 
-  Node node;
+  std::unique_ptr<Node> node_ptr = make_unique<Node>();
   if (node_obj.isMember("id")) {
-    node.id = node_obj["id"].asInt();
+    node_ptr->id = node_obj["id"].asInt();
   }
 
   if (node_obj.isMember("transform")) {
     const Isometry2f tr = ParseTransformation2D(node_obj["transform"]);
-    node.frame.SetRotation(tr.linear());
-    node.frame.SetTranslation(tr.translation());
+    node_ptr->frame.SetRotation(tr.linear());
+    node_ptr->frame.SetTranslation(tr.translation());
   }
 
   if (node_obj.isMember("path")) {
     auto& path_obj = node_obj["path"];
     if (ntype == "node") {
       auto polys = ResolveIntersections(Polygon(ParsePath2D(path_obj)));
-      node.polygons.insert(node.polygons.begin(),
+      node_ptr->polygons.insert(node_ptr->polygons.begin(),
                            std::make_move_iterator(polys.begin()),
                            std::make_move_iterator(polys.end()));
     }
     if (ntype == "open_path") {
-      node.paths.emplace_back(ParsePath2D(path_obj));
+      node_ptr->paths.emplace_back(ParsePath2D(path_obj));
     }
   }
 
@@ -119,12 +120,12 @@ Node ParseNode(const Json::Value& node_obj) {
     Polygon poly(box);
     poly.holes.emplace_back(path);
     auto polys = ResolveIntersections(poly);
-    node.polygons.insert(node.polygons.begin(),
+    node_ptr->polygons.insert(node_ptr->polygons.begin(),
                          std::make_move_iterator(polys.begin()),
                          std::make_move_iterator(polys.end()));
   }
 
-  return node;
+  return node_ptr;
 }
 
 std::unique_ptr<Joint> ParseJoint(const Json::Value& joint_obj) {

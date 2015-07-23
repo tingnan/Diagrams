@@ -48,8 +48,6 @@ class World {
   float simulation_time() const;
 
   // Copy a new node to the world and return a const handle
-  // TODO(tingnan) should we use std::unique_ptr<Node> to transfer
-  // ownership?
   const Node* AddNode(std::unique_ptr<Node> new_node);
   const Node* GetNodeByExtID(id_t) const;
   const Node* GetNodeByIntID(id_t) const;

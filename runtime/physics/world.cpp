@@ -299,13 +299,14 @@ void World::ParseWorld(const Json::Value& world) {
   const Json::Value& child_obj = world["children"];
   Json::Value::const_iterator child_itr = child_obj.begin();
   for (; child_itr != child_obj.end(); ++child_itr) {
-    AddNode(make_unique<Node>(ParseNode(*child_itr)));
+    AddNode(ParseNode(*child_itr));
   }
 
   // can only parse the joint, after we know the children
   const Json::Value& joint_obj = world["joints"];
   Json::Value::const_iterator joint_itr = joint_obj.begin();
   for (; joint_itr != joint_obj.end(); ++joint_itr) {
+    AddJoint(ParseJoint(*joint_itr));
   }
 }
 
