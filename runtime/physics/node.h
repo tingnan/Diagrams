@@ -22,6 +22,8 @@ struct MaterialProperty {
   Matrix3f inertia_matrix = Matrix3f::Identity();
 };
 
+enum class MotionType { kStatic, kKinematic, kDynamic };
+
 struct Node {
   std::vector<Polygon> polygons;
   std::vector<Path> paths;
@@ -36,7 +38,7 @@ struct Node {
   // The collision filtering ID, used for broad phase collision filtering only
   id_t collision_group_id;
   // Type of node : stationary or dynamic
-  bool is_dynamic = false;
+  MotionType motion_type = MotionType::kStatic;
   bool is_collidable = true;
 };
 

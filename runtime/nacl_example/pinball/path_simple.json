@@ -3829,6 +3829,7 @@
     },
     {
       "id": 11,
+      "motion_type" : "dynamic",
       "type": "node",
       "transform": [
         1,
@@ -4080,6 +4081,7 @@
     {
       "id": 12,
       "type": "node",
+      "motion_type": "dynamic",
       "transform": [
         1,
         0,
@@ -4363,8 +4365,8 @@
         "y": 0
       },
       "local_anchor_2" : {
-        "x": 0,
-        "y": 0
+        "x": -98,
+        "y": 375
       },
       "node_1": 11,
       "node_2": 0,
@@ -4373,7 +4375,29 @@
         "max_torque": 50
       },
       "limit" : {
-        "angle_min": 10,
+        "angle_min": -40,
+        "angle_max": 0
+      }
+    },
+    {
+      "type": "revolute",
+      "id" : 1,
+      "local_anchor_1" : {
+        "x": 0,
+        "y": 0
+      },
+      "local_anchor_2" : {
+        "x": 104,
+        "y": 365
+      },
+      "node_1": 12,
+      "node_2": 0,
+      "motor": {
+        "speed": 2,
+        "max_torque": 50
+      },
+      "limit" : {
+        "angle_min": 0,
         "angle_max": 40
       }
     }

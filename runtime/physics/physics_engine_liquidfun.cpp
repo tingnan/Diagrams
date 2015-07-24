@@ -12,14 +12,25 @@
 
 namespace {
 
-void AddRevoluteJointToWorld(b2World* world, b2Body* body1, b2Body* body2) {
+void AddRevoluteJointToWorld(const diagrammar::RevoluteJoint& joint_info,
+                             b2World* world, b2Body* body1, b2Body* body2) {
   b2RevoluteJointDef pin_def;
   pin_def.bodyA = body1;
   pin_def.bodyB = body2;
   pin_def.collideConnected = false;
-  pin_def.localAnchorA.SetZero();
-  b2Vec2 pos = body1->GetPosition();
-  pin_def.localAnchorB.Set(pos.x, pos.y);
+  pin_def.localAnchorA.Set(joint_info.local_anchor_1(0),
+                           joint_info.local_anchor_1(1));
+  pin_def.localAnchorB.Set(joint_info.local_anchor_2(0),
+                           joint_info.local_anchor_2(1));
+  if (joint_info.enable_limit_min) {
+    pin_def.enableLimit = true;
+    pin_def.lowerAngle = joint_info.angle_min;
+  }
+
+  if (joint_info.enable_limit_max) {
+    pin_def.enableLimit = true;
+    pin_def.upperAngle = joint_info.angle_max;
+  }
   world->CreateJoint(&pin_def);
 }
 
@@ -75,7 +86,9 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
   Vector2f pos = node->frame.GetTranslation();
   body_def.position.Set(pos(0) * kScaleDown, pos(1) * kScaleDown);
   body_def.angle = node->frame.GetRotationAngle();
-  if (node->is_dynamic) {
+  // TODO(tingnan) Add kinematic body
+  if (node->motion_type == MotionType::kDynamic) {
+    std::cout << node->id << std::endl;
     body_def.type = b2_dynamicBody;
     body_def.angularVelocity = node->angular_velocity;
     Vector2f velocity = node->velocity;
@@ -143,6 +156,15 @@ void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
   }
 }
 
-void PhysicsEngineLiquidFun::AddJoint(Joint* joint) {}
+void PhysicsEngineLiquidFun::AddJoint(Joint* joint) {
+  if (RevoluteJoint* revo_joint = dynamic_cast<RevoluteJoint*>(joint)) {
+    RevoluteJoint joint_info(*revo_joint);
+    joint_info.local_anchor_1 = kScaleDown * joint_info.local_anchor_1;
+    joint_info.local_anchor_2 = kScaleDown * joint_info.local_anchor_2;
+    AddRevoluteJointToWorld(joint_info, b2world_,
+                            body_table_[revo_joint->node_1],
+                            body_table_[revo_joint->node_2]);
+  }
+}
 
 }  // namespace diagrammar

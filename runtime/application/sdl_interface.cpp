@@ -195,7 +195,9 @@ bool Application::HandleMessage(const Json::Value& message) {
 
   if (message["type"] == "mouse_motion") {
     if (message["button_mask"].asUInt() & SDL_BUTTON_LMASK) {
-      float x_delta = message["xrel"].asFloat();
+      // We are moving the camera to the opposite position the mouse is moving
+      float x_delta = -message["xrel"].asFloat();
+      // In browser, y direction is reversed
       float y_delta = message["yrel"].asFloat();
       camera_.Translate(Vector3f(x_delta, y_delta, 0));
     }

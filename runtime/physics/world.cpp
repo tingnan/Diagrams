@@ -38,8 +38,8 @@ void World::Start(EngineType engine_type) {
   // Now generate some sample particles
   if (true) {
     std::random_device rd;
-    std::uniform_real_distribution<float> pos_distx(-250, 50.f);
-    std::uniform_real_distribution<float> pos_disty(50.f, 100.f);
+    std::uniform_real_distribution<float> pos_distx(-300, 0.f);
+    std::uniform_real_distribution<float> pos_disty(100.f, 150.f);
     std::uniform_real_distribution<float> vel_dist(-250.f, 250.f);
     std::default_random_engine generator(rd());
 
@@ -51,16 +51,17 @@ void World::Start(EngineType engine_type) {
                                         sin((2.0 * i) * M_PI / num_vertices)));
     }
     for (int i = 0; i < 10; ++i) {
-      Node* node_ptr = AddNodeInternal(make_unique<Node>());
+      auto node_ptr = make_unique<Node>();
       Polygon poly = Polygon(circle);
       poly.shape_info["type"] = static_cast<int>(ShapeType::kDisk);
       poly.shape_info["radius"] = static_cast<float>(10.0);
       node_ptr->polygons.emplace_back(poly);
-      node_ptr->is_dynamic = true;
-      node_ptr->material_info.restitution = 0.6;
+      node_ptr->motion_type = MotionType::kDynamic;
+      node_ptr->material_info.restitution = 0.8;
       node_ptr->frame.SetTranslation(
           Vector2f(pos_distx(generator), pos_disty(generator)));
       node_ptr->velocity = Vector2f(vel_dist(generator), vel_dist(generator));
+      AddNodeInternal(std::move(node_ptr));
     }
   }
 
@@ -76,6 +77,10 @@ void World::Start(EngineType engine_type) {
 
   for (size_t index = 0; index < node_map_.size(); ++index) {
     physics_engine_->AddNode(node_map_.get(index).get());
+  }
+
+  for (size_t index = 0; index < joint_map_.size(); ++index) {
+    physics_engine_->AddJoint(joint_map_.get(index).get());
   }
 
   timer_.Initialize();
@@ -117,21 +122,19 @@ void World::Step() {
 }
 
 const Node* World::AddNode(std::unique_ptr<Node> new_node) {
-  return AddNodeInternal(std::move(new_node));
+  id_t ext_id = new_node->id;
+  // Create the id mapping
+  Node* node_ptr = AddNodeInternal(std::move(new_node));
+  node_id_map_.insert(IDMap::value_type(ext_id, node_ptr->id));
+  return node_ptr;
 }
 
 Node* World::AddNodeInternal(std::unique_ptr<Node> new_node) {
-  id_t ext_id = new_node->id;
   id_t int_id = id_pool_.GetID();
-
   // Move the content to the map
   node_map_[int_id] = std::move(new_node);
   Node* node_ptr = node_map_[int_id].get();
   node_ptr->id = int_id;
-
-  // Create the id mapping
-  node_id_map_.insert(IDMap::value_type(ext_id, node_ptr->id));
-
   // Now we also would like to add the same node from the underlying
   // engine
   if (physics_engine_) {
@@ -140,7 +143,7 @@ Node* World::AddNodeInternal(std::unique_ptr<Node> new_node) {
 
   return node_ptr;
 }
-// TODO(tingan) when remoe a node, we also needs to remove all the joints
+// TODO(tingan) When remove a node, we also need to remove all the joints
 // connected to it
 std::unique_ptr<Node> World::RemoveNodeByIntID(id_t id) {
   std::unique_ptr<Node> node_ptr;
@@ -149,16 +152,16 @@ std::unique_ptr<Node> World::RemoveNodeByIntID(id_t id) {
     node_ptr = std::move(itr->second);
   }
   node_map_.erase(id);
-  node_id_map_.by<int_id>().erase(id);
+  node_id_map_.by<internal_id>().erase(id);
   id_pool_.RecycleID(id);
 
   {
-    // we may want to also delete joints that use the node,
+    // We may want to also delete joints that use the node,
     // or simply left for the user to handle the orphaned joint.
     for (auto itr = joint_map_.begin(); itr != joint_map_.end(); ++itr) {
       Joint* joint_ptr = itr->second.get();
       if (joint_ptr->node_1 == id || joint_ptr->node_2 == id) {
-        // also destroy the joint
+        // Also destroy the joint.
         RemoveJointByIntID(joint_ptr->id);
       }
     }
@@ -178,9 +181,9 @@ std::unique_ptr<Node> World::RemoveNodeByIntID(id_t id) {
 }
 
 std::unique_ptr<Node> World::RemoveNodeByExtID(id_t id) {
-  auto itr = node_id_map_.by<ext_id>().find(id);
-  if (itr != node_id_map_.by<ext_id>().end()) {
-    return RemoveNodeByIntID(itr->get<int_id>());
+  auto itr = node_id_map_.by<external_id>().find(id);
+  if (itr != node_id_map_.by<external_id>().end()) {
+    return RemoveNodeByIntID(itr->get<internal_id>());
   }
   return std::unique_ptr<Node>(nullptr);
 }
@@ -194,10 +197,10 @@ const Node* World::GetNodeByIntID(id_t id) const {
 }
 
 const Node* World::GetNodeByExtID(id_t id) const {
-  auto itr = node_id_map_.by<ext_id>().find(id);
-  if (itr != node_id_map_.by<ext_id>().end()) {
-    assert(node_map_.find(itr->get<int_id>()) != node_map_.end());
-    return GetNodeByIntID(itr->get<int_id>());
+  auto itr = node_id_map_.by<external_id>().find(id);
+  if (itr != node_id_map_.by<external_id>().end()) {
+    assert(node_map_.find(itr->get<internal_id>()) != node_map_.end());
+    return GetNodeByIntID(itr->get<internal_id>());
   }
   return nullptr;
 }
@@ -209,21 +212,27 @@ const Node* World::GetNodeByIndex(size_t index) const {
 
 size_t World::GetNumNodes() const { return node_map_.size(); }
 
-const Joint* World::AddJoint(std::unique_ptr<Joint> base_joint_ptr) {
-  return AddJointInternal(std::move(base_joint_ptr));
+const Joint* World::AddJoint(std::unique_ptr<Joint> new_joint) {
+  id_t ext_id = new_joint->id;
+  // Find the nodes internal used id;
+  id_t ext_node_1 = new_joint->node_1;
+  id_t ext_node_2 = new_joint->node_2;
+  new_joint->node_1 = node_id_map_.by<external_id>().at(ext_node_1);
+  new_joint->node_2 = node_id_map_.by<external_id>().at(ext_node_2);
+  Joint* joint_ptr = AddJointInternal(std::move(new_joint));
+  joint_id_map_.insert(IDMap::value_type(ext_id, joint_ptr->id));
+  // std::cerr << ext_id << " " << joint_ptr->id << std::endl;
+  // std::cerr << ext_node_1 << " " << joint_ptr->node_1 << std::endl;
+  // std::cerr << ext_node_2 << " " << joint_ptr->node_2 << std::endl;
+  return joint_ptr;
 }
 
-Joint* World::AddJointInternal(std::unique_ptr<Joint> base_joint_ptr) {
-  id_t ext_id = base_joint_ptr->id;
-  id_t int_id = id_pool_.GetID();
+Joint* World::AddJointInternal(std::unique_ptr<Joint> new_joint) {
   // Move the content to the map
-  joint_map_[int_id] = std::move(base_joint_ptr);
-  Joint* joint_ptr = joint_map_[int_id].get();
-  joint_ptr->id = int_id;
-
-  // Create the id mapping
-  joint_id_map_.insert(IDMap::value_type(ext_id, joint_ptr->id));
-
+  id_t joint_id = id_pool_.GetID();
+  joint_map_[joint_id] = std::move(new_joint);
+  Joint* joint_ptr = joint_map_[joint_id].get();
+  joint_ptr->id = joint_id;
   // Now we also would like to add the same node from the underlying
   // engine
   if (physics_engine_) {
@@ -233,9 +242,9 @@ Joint* World::AddJointInternal(std::unique_ptr<Joint> base_joint_ptr) {
 }
 
 std::unique_ptr<Joint> World::RemoveJointByExtID(id_t id) {
-  auto itr = joint_id_map_.by<ext_id>().find(id);
-  if (itr != joint_id_map_.by<ext_id>().end()) {
-    return RemoveJointByIntID(itr->get<int_id>());
+  auto itr = joint_id_map_.by<external_id>().find(id);
+  if (itr != joint_id_map_.by<external_id>().end()) {
+    return RemoveJointByIntID(itr->get<internal_id>());
   }
   return std::unique_ptr<Joint>(nullptr);
 }
@@ -247,7 +256,7 @@ std::unique_ptr<Joint> World::RemoveJointByIntID(id_t id) {
     joint_ptr = std::move(itr->second);
   }
   joint_map_.erase(id);
-  joint_id_map_.by<int_id>().erase(id);
+  joint_id_map_.by<internal_id>().erase(id);
   id_pool_.RecycleID(id);
   if (physics_engine_) {
     assert(0);
@@ -272,10 +281,10 @@ const Joint* World::GetJointByIntID(id_t id) const {
 }
 
 const Joint* World::GetJointByExtID(id_t id) const {
-  auto itr = joint_id_map_.by<ext_id>().find(id);
-  if (itr != joint_id_map_.by<ext_id>().end()) {
-    assert(joint_map_.find(itr->get<int_id>()) != joint_map_.end());
-    return GetJointByIntID(itr->get<int_id>());
+  auto itr = joint_id_map_.by<external_id>().find(id);
+  if (itr != joint_id_map_.by<external_id>().end()) {
+    assert(joint_map_.find(itr->get<internal_id>()) != joint_map_.end());
+    return GetJointByIntID(itr->get<internal_id>());
   }
   return nullptr;
 }

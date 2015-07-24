@@ -71,11 +71,11 @@ class World {
  private:
   // Dummy tag structs used only for the bimap. Check Boost::Bimap
   // for details.
-  struct ext_id {};
-  struct int_id {};
+  struct external_id {};
+  struct internal_id {};
   typedef boost::bimap<
-      boost::bimaps::unordered_set_of<boost::bimaps::tagged<id_t, ext_id>>,
-      boost::bimaps::unordered_set_of<boost::bimaps::tagged<id_t, int_id>>>
+      boost::bimaps::unordered_set_of<boost::bimaps::tagged<id_t, external_id>>,
+      boost::bimaps::unordered_set_of<boost::bimaps::tagged<id_t, internal_id>>>
       IDMap;
 
   class IDPool {

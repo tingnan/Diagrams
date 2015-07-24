@@ -16,7 +16,7 @@ namespace diagrammar {
 Vector2f ParsePoint(const Json::Value& pt) {
   Vector2f vec;
   vec(0) = pt.get("x", 0).asFloat();
-  vec(1) = pt.get("y", 0).asFloat();
+  vec(1) = -pt.get("y", 0).asFloat();
   return vec;
 }
 
@@ -55,11 +55,14 @@ Isometry2f ParseTransformation2D(const Json::Value& array) {
   Isometry2f t = Isometry2f::Identity();
   assert(array.size() == 6);
 
-  Matrix2f rot;
-  rot << array[0].asFloat(), array[2].asFloat(), array[1].asFloat(),
+  Matrix2f rot_mat;
+  rot_mat << array[0].asFloat(), array[2].asFloat(), array[1].asFloat(),
       array[3].asFloat();
+  Rotation2f rot(0);
+  rot.fromRotationMatrix(rot_mat);
   // rotate then translate, the order is important;
-  t.translate(Vector2f(array[4].asFloat(), array[5].asFloat())).rotate(rot);
+  t.translate(Vector2f(array[4].asFloat(), -array[5].asFloat()))
+      .rotate(rot.inverse());
   return t;
 }
 
@@ -86,6 +89,16 @@ std::unique_ptr<Node> ParseNode(const Json::Value& node_obj) {
     node_ptr->id = node_obj["id"].asInt();
   }
 
+  std::string motion_type_str =
+      node_obj.get("motion_type", "static").asString();
+  if (motion_type_str == "static") {
+    // no_op
+  } else if (motion_type_str == "dynamic") {
+    node_ptr->motion_type = MotionType::kDynamic;
+  } else {
+    node_ptr->motion_type = MotionType::kKinematic;
+  }
+
   if (node_obj.isMember("transform")) {
     const Isometry2f tr = ParseTransformation2D(node_obj["transform"]);
     node_ptr->frame.SetRotation(tr.linear());
@@ -97,8 +110,8 @@ std::unique_ptr<Node> ParseNode(const Json::Value& node_obj) {
     if (ntype == "node") {
       auto polys = ResolveIntersections(Polygon(ParsePath2D(path_obj)));
       node_ptr->polygons.insert(node_ptr->polygons.begin(),
-                           std::make_move_iterator(polys.begin()),
-                           std::make_move_iterator(polys.end()));
+                                std::make_move_iterator(polys.begin()),
+                                std::make_move_iterator(polys.end()));
     }
     if (ntype == "open_path") {
       node_ptr->paths.emplace_back(ParsePath2D(path_obj));
@@ -121,8 +134,8 @@ std::unique_ptr<Node> ParseNode(const Json::Value& node_obj) {
     poly.holes.emplace_back(path);
     auto polys = ResolveIntersections(poly);
     node_ptr->polygons.insert(node_ptr->polygons.begin(),
-                         std::make_move_iterator(polys.begin()),
-                         std::make_move_iterator(polys.end()));
+                              std::make_move_iterator(polys.begin()),
+                              std::make_move_iterator(polys.end()));
   }
 
   return node_ptr;
@@ -139,6 +152,7 @@ std::unique_ptr<Joint> ParseJoint(const Json::Value& joint_obj) {
   }
 
   // fill the base joint type
+  joint_ptr->id = joint_obj.get("id", 0).asInt();
 
   if (joint_obj.isMember("local_anchor_1")) {
     joint_ptr->local_anchor_1 = ParsePoint(joint_obj["local_anchor_1"]);
@@ -166,7 +180,7 @@ std::unique_ptr<Joint> ParseJoint(const Json::Value& joint_obj) {
 
     if (limit_obj.isMember("angle_max")) {
       derived_ptr->enable_limit_max = true;
-      derived_ptr->angle_min = limit_obj["angle_max"].asFloat();
+      derived_ptr->angle_max = limit_obj["angle_max"].asFloat();
     }
   }
 
