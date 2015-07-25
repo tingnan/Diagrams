@@ -14,6 +14,7 @@ class b2Joint;
 
 namespace diagrammar {
 struct Node;
+class JointDestructionListener;
 class PhysicsEngineLiquidFun : public PhysicsEngine {
  public:
   // This engine is special in that it will directly modify
@@ -31,9 +32,10 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   void RemoveJointByID(id_t id);
 
  private:
-  b2World* b2world_;
+  std::unique_ptr<b2World> b2world_;
   std::unordered_map<id_t, b2Body*> body_table_;
   std::unordered_map<id_t, b2Joint*> joint_table_;
+  std::unique_ptr<JointDestructionListener> joint_destruction_listener_;
 
   // Used internally for the LCP solver
   // DONOT modify unless you know what it is

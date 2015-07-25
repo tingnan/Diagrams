@@ -204,7 +204,7 @@ bool Application::HandleMessage(const Json::Value& message) {
     }
 
     if (message["key_code"] == "4" && message["key_pressed"] == true) {
-      // Test remove an node by ext id;
+      // Test remove a node by ext id;
       id_t test_id = 1;
       auto tmp_ptr = world_->RemoveNodeByExtID(test_id);
       if (tmp_ptr != nullptr) {
@@ -227,6 +227,7 @@ bool Application::HandleMessage(const Json::Value& message) {
     }
 
     if (message["key_code"] == "6" && message["key_pressed"] == true) {
+      // Test remove a joint by ext id;
       id_t test_id = 0;
       auto tmp_ptr = world_->RemoveJointByExtID(test_id);
       if (tmp_ptr != nullptr) {
@@ -240,6 +241,7 @@ bool Application::HandleMessage(const Json::Value& message) {
     }
 
     if (message["key_code"] == "7" && message["key_pressed"] == true) {
+      // Test add a joint back
       if (test_add_remove_joint != nullptr) {
         world_->AddJoint(std::move(test_add_remove_joint));
       }

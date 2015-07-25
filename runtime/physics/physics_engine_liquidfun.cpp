@@ -71,11 +71,31 @@ void AddDiskToBody(float radius, const diagrammar::MaterialProperty& m_property,
 
 namespace diagrammar {
 
+class JointDestructionListener : public b2DestructionListener {
+ public:
+  explicit JointDestructionListener(
+      std::unordered_map<diagrammar::id_t, b2Joint*>* p)
+      : table_ptr_(p) {}
+  void SayGoodbye(b2Fixture* fixture) {}
+  void SayGoodbye(b2Joint* joint) {
+    // remove all references to joint.
+    diagrammar::Joint* joint_ptr =
+        static_cast<diagrammar::Joint*>(joint->GetUserData());
+    table_ptr_->erase(joint_ptr->id);
+  }
+
+ private:
+  std::unordered_map<diagrammar::id_t, b2Joint*>* table_ptr_;
+};
+
 PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(float time_step)
     : PhysicsEngine(time_step) {
   // we now try to also create a box2d world
   b2Vec2 gravity(0.f, -4.9f);
-  b2world_ = new b2World(gravity);
+  b2world_ = make_unique<b2World>(gravity);
+  joint_destruction_listener_ =
+      make_unique<JointDestructionListener>(&joint_table_);
+  b2world_->SetDestructionListener(joint_destruction_listener_.get());
 }
 
 void PhysicsEngineLiquidFun::AddNode(Node* node) {
@@ -162,16 +182,18 @@ void PhysicsEngineLiquidFun::AddJoint(Joint* joint) {
     RevoluteJoint joint_info(*revo_joint);
     joint_info.local_anchor_1 = kScaleDown * joint_info.local_anchor_1;
     joint_info.local_anchor_2 = kScaleDown * joint_info.local_anchor_2;
-    joint_table_[joint->id] = AddRevoluteJointToWorld(
-        joint_info, b2world_, body_table_[revo_joint->node_1],
+    b2Joint* new_joint = AddRevoluteJointToWorld(
+        joint_info, b2world_.get(), body_table_[revo_joint->node_1],
         body_table_[revo_joint->node_2]);
+    joint_table_[joint->id] = new_joint;
+    new_joint->SetUserData(joint);
   }
 }
 
 void PhysicsEngineLiquidFun::RemoveJointByID(id_t id) {
   auto itr = joint_table_.find(id);
   if (itr != joint_table_.end()) {
-    if (itr->second) b2world_->DestroyJoint(itr->second);
+    b2world_->DestroyJoint(itr->second);
     joint_table_.erase(itr);
   }
 }
