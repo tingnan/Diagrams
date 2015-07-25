@@ -10,6 +10,7 @@
 
 class b2World;
 class b2Body;
+class b2Joint;
 
 namespace diagrammar {
 struct Node;
@@ -27,10 +28,12 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   // The joint CANNOT be initialized, if the nodes it connect are not there yet
   void AddJoint(Joint* joint);
   void RemoveNodeByID(id_t id);
+  void RemoveJointByID(id_t id);
 
  private:
   b2World* b2world_;
   std::unordered_map<id_t, b2Body*> body_table_;
+  std::unordered_map<id_t, b2Joint*> joint_table_;
 
   // Used internally for the LCP solver
   // DONOT modify unless you know what it is

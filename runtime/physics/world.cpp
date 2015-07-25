@@ -259,16 +259,8 @@ std::unique_ptr<Joint> World::RemoveJointByIntID(id_t id) {
   joint_id_map_.by<internal_id>().erase(id);
   id_pool_.RecycleID(id);
   if (physics_engine_) {
-    assert(0);
-    // physics_engine_->RemoveJointByID(id);
+    physics_engine_->RemoveJointByID(id);
   }
-  /*
-  std::cout << "int id: " << id << std::endl;
-  std::cout << "int id table looks like: ";
-  for (auto itr = node_id_map_.left.begin(); itr != node_id_map_.left.end();
-       ++itr) {
-    std::cout << itr->first << " " << itr->second << std::endl;
-  }*/
   return joint_ptr;
 }
 

@@ -12,8 +12,8 @@
 
 namespace {
 
-void AddRevoluteJointToWorld(const diagrammar::RevoluteJoint& joint_info,
-                             b2World* world, b2Body* body1, b2Body* body2) {
+b2Joint* AddRevoluteJointToWorld(const diagrammar::RevoluteJoint& joint_info,
+                                 b2World* world, b2Body* body1, b2Body* body2) {
   b2RevoluteJointDef pin_def;
   pin_def.bodyA = body1;
   pin_def.bodyB = body2;
@@ -31,17 +31,18 @@ void AddRevoluteJointToWorld(const diagrammar::RevoluteJoint& joint_info,
     pin_def.enableLimit = true;
     pin_def.upperAngle = joint_info.angle_max;
   }
-  world->CreateJoint(&pin_def);
+  return world->CreateJoint(&pin_def);
 }
 
-void AddShapeToBody(const b2Shape& shape,
-                    const diagrammar::MaterialProperty& m_property, b2Body* b) {
+b2Fixture* AddShapeToBody(const b2Shape& shape,
+                          const diagrammar::MaterialProperty& m_property,
+                          b2Body* b) {
   b2FixtureDef shape_fixture;
   shape_fixture.shape = &shape;
   shape_fixture.density = m_property.density;
   shape_fixture.friction = m_property.friction;
   shape_fixture.restitution = m_property.restitution;
-  b->CreateFixture(&shape_fixture);
+  return b->CreateFixture(&shape_fixture);
 }
 
 void AddTrianglesToBody(const diagrammar::TriangleMesh& mesh,
@@ -53,7 +54,6 @@ void AddTrianglesToBody(const diagrammar::TriangleMesh& mesh,
       auto& vertex = mesh.vertices[mesh.faces[i][vt_idx]];
       vertices[vt_idx].Set(vertex(0), vertex(1));
     }
-
     b2PolygonShape polygon;
     polygon.Set(vertices, 3);
     AddShapeToBody(polygon, m_property, b);
@@ -150,9 +150,10 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
 }
 
 void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
-  if (body_table_.find(id) != body_table_.end()) {
-    b2world_->DestroyBody(body_table_[id]);
-    body_table_.erase(id);
+  auto itr = body_table_.find(id);
+  if (itr != body_table_.end()) {
+    b2world_->DestroyBody(itr->second);
+    body_table_.erase(itr);
   }
 }
 
@@ -161,9 +162,17 @@ void PhysicsEngineLiquidFun::AddJoint(Joint* joint) {
     RevoluteJoint joint_info(*revo_joint);
     joint_info.local_anchor_1 = kScaleDown * joint_info.local_anchor_1;
     joint_info.local_anchor_2 = kScaleDown * joint_info.local_anchor_2;
-    AddRevoluteJointToWorld(joint_info, b2world_,
-                            body_table_[revo_joint->node_1],
-                            body_table_[revo_joint->node_2]);
+    joint_table_[joint->id] = AddRevoluteJointToWorld(
+        joint_info, b2world_, body_table_[revo_joint->node_1],
+        body_table_[revo_joint->node_2]);
+  }
+}
+
+void PhysicsEngineLiquidFun::RemoveJointByID(id_t id) {
+  auto itr = joint_table_.find(id);
+  if (itr != joint_table_.end()) {
+    if (itr->second) b2world_->DestroyJoint(itr->second);
+    joint_table_.erase(itr);
   }
 }
 

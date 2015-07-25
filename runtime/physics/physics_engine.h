@@ -26,11 +26,11 @@ class PhysicsEngine {
   virtual void Step() = 0;
   // update the world
   virtual void SendDataToWorld() = 0;
-
   virtual void AddNode(Node* node) = 0;
 
   // Remove a node using id
   virtual void RemoveNodeByID(id_t) = 0;
+  virtual void RemoveJointByID(id_t) = 0;
 
   // Add a constraint
   virtual void AddJoint(Joint* joint) = 0;
