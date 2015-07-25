@@ -16,6 +16,43 @@ bool EmitSDLError(const char* message) {
   return false;
 }
 
+// Store all external node ids.
+std::set<diagrammar::id_t> ext_node_ids;
+// Each joint also connects two node, we also store their external ids;
+std::map<diagrammar::id_t, std::pair<diagrammar::id_t, diagrammar::id_t>>
+    ext_joint_ids;
+// demo add and remove node from the world
+std::unique_ptr<diagrammar::Node> test_add_remove_node(nullptr);
+// demo add and remove joint from the world
+std::unique_ptr<diagrammar::Joint> test_add_remove_joint(nullptr);
+
+// construct a world
+std::unique_ptr<diagrammar::World> ParseWorld(const Json::Value& world) {
+  diagrammar::World simulation_world;
+  const Json::Value& node_obj = world["children"];
+  Json::Value::const_iterator node_itr = node_obj.begin();
+  for (; node_itr != node_obj.end(); ++node_itr) {
+    std::unique_ptr<diagrammar::Node> node_ptr =
+        diagrammar::ParseNode(*node_itr);
+    // record the node id;
+    ext_node_ids.insert(node_ptr->id);
+    simulation_world.AddNode(std::move(node_ptr));
+  }
+  // can only parse the joint after we know all the nodes
+  const Json::Value& joint_obj = world["joints"];
+  Json::Value::const_iterator joint_itr = joint_obj.begin();
+  for (; joint_itr != joint_obj.end(); ++joint_itr) {
+    std::unique_ptr<diagrammar::Joint> joint_ptr =
+        diagrammar::ParseJoint(*joint_itr);
+    // record ext joint id and node id;
+    ext_joint_ids[joint_ptr->id] =
+        std::make_pair(joint_ptr->node_1, joint_ptr->node_2);
+    simulation_world.AddJoint(std::move(joint_ptr));
+  }
+  return diagrammar::make_unique<diagrammar::World>(
+      std::move(simulation_world));
+}
+
 }  // namespace
 
 namespace diagrammar {
@@ -66,8 +103,9 @@ bool Application::Init(int w, int h) {
     return EmitSDLError(message.c_str());
   }
 
-  world_.Read(CreateJsonObject("path_simple.json"));
-  world_.Start();
+  // world_.Read);
+  world_ = ParseWorld((CreateJsonObject("path_simple.json")));
+  world_->Start();
 
   // 0.0015 is a scale, better to read from the input
   // e.g. 0.5 / max(world_.xspan(), world_.yspan());
@@ -76,14 +114,14 @@ bool Application::Init(int w, int h) {
   camera_.SetView(Vector3f(0, 0, 800), Vector3f(0, 0, 0), Vector3f(0, 1, 0));
   camera_.SetPerspective(M_PI / 2.0, 1, 10, 10000);
 
-  poly_drawers_ = make_unique<Canvas<NodePolyDrawer> >(gl_program_, &camera_);
-  for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
-    poly_drawers_->AddNode(world_.GetNodeByIndex(i));
+  poly_drawers_ = make_unique<Canvas<NodePolyDrawer>>(gl_program_, &camera_);
+  for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
+    poly_drawers_->AddNode(world_->GetNodeByIndex(i));
   }
 
-  path_drawers_ = make_unique<Canvas<NodePathDrawer> >(gl_program_, &camera_);
-  for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
-    path_drawers_->AddNode(world_.GetNodeByIndex(i));
+  path_drawers_ = make_unique<Canvas<NodePathDrawer>>(gl_program_, &camera_);
+  for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
+    path_drawers_->AddNode(world_->GetNodeByIndex(i));
   }
 
   text_drawer_ = make_unique<TextDrawer>(font_);
@@ -143,11 +181,10 @@ void Application::HandleEvents() {
     if (HandleMessage(event_message)) {
       continue;
     }
-    world_.HandleMessage(event_message);
+    world_->HandleMessage(event_message);
   }
 }
 
-std::unique_ptr<Node> test_ptr(nullptr);
 bool Application::HandleMessage(const Json::Value& message) {
   // We define only a few basic key mappings here.
   if (message["type"] == "key") {
@@ -168,22 +205,45 @@ bool Application::HandleMessage(const Json::Value& message) {
 
     if (message["key_code"] == "4" && message["key_pressed"] == true) {
       // Test remove an node by ext id;
-      auto tmp_ptr = world_.RemoveNodeByExtID(1);
+      id_t test_id = 1;
+      auto tmp_ptr = world_->RemoveNodeByExtID(test_id);
       if (tmp_ptr != nullptr) {
         path_drawers_->RemoveNodeByID(tmp_ptr->id);
         poly_drawers_->RemoveNodeByID(tmp_ptr->id);
-        test_ptr = std::move(tmp_ptr);
-        test_ptr->id = 1;
+        test_add_remove_node = std::move(tmp_ptr);
+        test_add_remove_node->id = test_id;
       }
+      return true;
     }
 
     if (message["key_code"] == "5" && message["key_pressed"] == true) {
       // Test add the moved node back
-      if (test_ptr != nullptr) {
-        const Node* tmp_ptr = world_.AddNode(std::move(test_ptr));
+      if (test_add_remove_node != nullptr) {
+        const Node* tmp_ptr = world_->AddNode(std::move(test_add_remove_node));
         path_drawers_->AddNode(tmp_ptr);
         poly_drawers_->AddNode(tmp_ptr);
       }
+      return true;
+    }
+
+    if (message["key_code"] == "6" && message["key_pressed"] == true) {
+      id_t test_id = 0;
+      auto tmp_ptr = world_->RemoveJointByExtID(test_id);
+      if (tmp_ptr != nullptr) {
+        test_add_remove_joint = std::move(tmp_ptr);
+        test_add_remove_joint->id = test_id;
+        auto id_pair = ext_joint_ids[test_id];
+        test_add_remove_joint->node_1 = id_pair.first;
+        test_add_remove_joint->node_2 = id_pair.second;
+      }
+      return true;
+    }
+
+    if (message["key_code"] == "7" && message["key_pressed"] == true) {
+      if (test_add_remove_joint != nullptr) {
+        world_->AddJoint(std::move(test_add_remove_joint));
+      }
+      return true;
     }
   }
 
@@ -207,8 +267,8 @@ bool Application::HandleMessage(const Json::Value& message) {
 }
 
 void Application::RenderID() {
-  for (size_t i = 0; i < world_.GetNumNodes(); ++i) {
-    const Node* node = world_.GetNodeByIndex(i);
+  for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
+    const Node* node = world_->GetNodeByIndex(i);
     if (true) {
       Vector2f pos = node->frame.GetTranslation();
       std::string label = std::to_string(node->id);
@@ -222,7 +282,7 @@ void Application::RenderID() {
 void Application::Render() {
   while (app_running_) {
     HandleEvents();
-    world_.Step();
+    world_->Step();
 
     glClearColor(0.3, 0.3, 0.3, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

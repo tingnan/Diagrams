@@ -3,7 +3,6 @@
 #ifndef RUNTIME_APPLICATION_SDL_INTERFACE_H_
 #define RUNTIME_APPLICATION_SDL_INTERFACE_H_
 
-
 #include <SDL2/SDL.h>
 #ifdef __APPLE__
 #include <SDL2/SDL_opengl.h>
@@ -21,12 +20,12 @@
 namespace diagrammar {
 
 class Application {
- public:  
+ public:
   Application();
   ~Application();
   bool Init(int, int);
   void Render();
-  
+
  private:
   void HandleEvents();
   bool HandleMessage(const Json::Value&);
@@ -38,7 +37,7 @@ class Application {
   SDL_GLContext gl_context_;
   GLProgram gl_program_;
   TTF_Font* font_;
-  World world_;
+  std::unique_ptr<World> world_;
   bool draw_poly_ = false;
   bool draw_path_ = true;
   bool draw_text_ = false;

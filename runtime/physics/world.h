@@ -13,6 +13,7 @@
 #include "utility/timer.h"
 #include "utility/stl_memory.h"
 #include "physics/node.h"
+#include "physics/physics_engine.h"
 
 namespace Json {
 class Value;
@@ -117,7 +118,7 @@ class World {
 
   // Pointer to the actual physics engine used;
   // we will allow user to switch engine;
-  std::unique_ptr<class PhysicsEngine> physics_engine_;
+  std::unique_ptr<PhysicsEngine> physics_engine_;
 
   // node id counter
   IDPool id_pool_;
