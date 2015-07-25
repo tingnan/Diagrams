@@ -20,13 +20,10 @@ std::string Stringify(const char* path);
 Json::Value CreateJsonObject(const char* file);
 // Parse the coordinate transformation
 Isometry2f ParseTransformation2D(const Json::Value& transformobj);
-// Parse a path;
-Path ParsePath2D(const Json::Value& pathobj);
-// Parse a node;
+// Parse a node
 std::unique_ptr<Node> ParseNode(const Json::Value& nodeobj);
 // Parse a joint, joint is a polymorphic struct
 std::unique_ptr<Joint> ParseJoint(const Json::Value& jointobj);
-
 }  // namespace diagrammar
 
 #endif  // RUNTIME_UTILITY_WORLD_PARSER_H_

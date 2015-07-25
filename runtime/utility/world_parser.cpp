@@ -12,12 +12,57 @@
 #include "geometry/aabb.h"
 #include "utility/stl_memory.h"
 
-namespace diagrammar {
-Vector2f ParsePoint(const Json::Value& pt) {
-  Vector2f vec;
+namespace {
+diagrammar::Vector2f ParsePoint(const Json::Value& pt) {
+  diagrammar::Vector2f vec;
   vec(0) = pt.get("x", 0).asFloat();
   vec(1) = -pt.get("y", 0).asFloat();
   return vec;
+}
+
+diagrammar::Path ParsePath(const Json::Value& path_obj) {
+  diagrammar::Path mypath;
+  Json::Value::const_iterator itr = path_obj.begin();
+  for (; itr != path_obj.end(); ++itr) {
+    const Json::Value& pt = *itr;
+    mypath.emplace_back(ParsePoint(pt));
+  }
+  return mypath;
+}
+
+std::vector<diagrammar::Polygon> ParsePolygon(const Json::Value& poly_obj) {
+  diagrammar::Polygon poly;
+  if (poly_obj.isMember("path")) {
+    poly.path = ParsePath(poly_obj["path"]);
+  }
+
+  if (poly_obj.isMember("hole")) {
+    poly.holes.emplace_back(ParsePath(poly_obj["hole"]));
+  }
+  // If the polygon has no path but only holes, we compute a box that can
+  // enclose all the holes
+  if (poly.path.empty()) {
+    std::vector<diagrammar::Vector2f> bounding_box(4,
+                                                   diagrammar::Vector2f(0, 0));
+    for (auto& hole : poly.holes) {
+      diagrammar::AABB box = diagrammar::GetAABBWithPadding(hole, 0.01);
+      // Expand the bounding box
+      if (bounding_box[0](0) > box.lower_bound(0))
+        bounding_box[0](0) = box.lower_bound(0);
+      if (bounding_box[0](1) > box.lower_bound(1))
+        bounding_box[0](1) = box.lower_bound(1);
+      if (bounding_box[2](0) < box.upper_bound(0))
+        bounding_box[2](0) = box.upper_bound(0);
+      if (bounding_box[2](1) < box.upper_bound(1))
+        bounding_box[2](1) = box.upper_bound(1);
+    }
+    bounding_box[1] =
+        diagrammar::Vector2f(bounding_box[2](0), bounding_box[0](1));
+    bounding_box[3] =
+        diagrammar::Vector2f(bounding_box[0](0), bounding_box[2](1));
+    poly.path = bounding_box;
+  }
+  return ResolveIntersections(poly);
 }
 
 }  // namespace
@@ -66,21 +111,11 @@ Isometry2f ParseTransformation2D(const Json::Value& array) {
   return t;
 }
 
-Path ParsePath2D(const Json::Value& path_obj) {
-  Path mypath;
-  Json::Value::const_iterator itr = path_obj.begin();
-  for (; itr != path_obj.end(); ++itr) {
-    const Json::Value& pt = *itr;
-    mypath.emplace_back(ParsePoint(pt));
-  }
-  return mypath;
-}
-
 // load a "child" node from the json descriptor
 std::unique_ptr<Node> ParseNode(const Json::Value& node_obj) {
   std::string ntype = node_obj.get("type", "").asString();
-  if (ntype != "node" && ntype != "open_path") {
-    std::cout << ntype << std::endl;
+  if (ntype != "node") {
+    std::cerr << ntype << std::endl;
     assert(0);
   }
 
@@ -89,10 +124,9 @@ std::unique_ptr<Node> ParseNode(const Json::Value& node_obj) {
     node_ptr->id = node_obj["id"].asInt();
   }
 
-  std::string motion_type_str =
-      node_obj.get("motion_type", "static").asString();
-  if (motion_type_str == "static") {
-    // no_op
+  std::string motion_type_str = node_obj.get("motion_type", "").asString();
+  if (motion_type_str == "") {
+    node_ptr->motion_type = MotionType::kStatic;
   } else if (motion_type_str == "dynamic") {
     node_ptr->motion_type = MotionType::kDynamic;
   } else {
@@ -105,39 +139,18 @@ std::unique_ptr<Node> ParseNode(const Json::Value& node_obj) {
     node_ptr->frame.SetTranslation(tr.translation());
   }
 
-  if (node_obj.isMember("path")) {
-    auto& path_obj = node_obj["path"];
-    if (ntype == "node") {
-      auto polys = ResolveIntersections(Polygon(ParsePath2D(path_obj)));
-      node_ptr->polygons.insert(node_ptr->polygons.begin(),
-                                std::make_move_iterator(polys.begin()),
-                                std::make_move_iterator(polys.end()));
-    }
-    if (ntype == "open_path") {
-      node_ptr->paths.emplace_back(ParsePath2D(path_obj));
-    }
+  if (node_obj.isMember("open_path")) {
+    // Allow later to have a set of open_paths
+    auto& path_obj = node_obj["open_path"];
+    node_ptr->paths.emplace_back(ParsePath(path_obj));
   }
 
-  if (node_obj.isMember("inner_path")) {
-    const std::vector<Vector2f>& path = ParsePath2D(node_obj["inner_path"]);
-    AABB bounding_box = GetAABBWithPadding(path, 2e-2);
-    std::vector<Vector2f> box;
-    Vector2f pt0 = bounding_box.lower_bound;
-    Vector2f pt2 = bounding_box.upper_bound;
-    Vector2f pt1(pt2(0), pt0(1));
-    Vector2f pt3(pt0(0), pt2(1));
-    box.emplace_back(pt0);
-    box.emplace_back(pt1);
-    box.emplace_back(pt2);
-    box.emplace_back(pt3);
-    Polygon poly(box);
-    poly.holes.emplace_back(path);
-    auto polys = ResolveIntersections(poly);
-    node_ptr->polygons.insert(node_ptr->polygons.begin(),
-                              std::make_move_iterator(polys.begin()),
-                              std::make_move_iterator(polys.end()));
-  }
-
+  // TODO(tingnan) move polygon into a sub Json object: polygons
+  auto& poly_obj = node_obj;
+  auto polygons = ParsePolygon(poly_obj);
+  node_ptr->polygons.insert(node_ptr->polygons.begin(),
+                            std::make_move_iterator(polygons.begin()),
+                            std::make_move_iterator(polygons.end()));
   return node_ptr;
 }
 
