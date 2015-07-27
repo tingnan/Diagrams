@@ -10,6 +10,12 @@
 #include "utility/world_parser.h"
 #include "physics/physics_engine_liquidfun.h"
 
+namespace {
+// Demo state variables goes here
+bool left_flipper_pressed = false;
+bool right_flipper_pressed = false;
+}  // namespace
+
 namespace diagrammar {
 
 World::World() {}
@@ -37,11 +43,11 @@ void World::Start(EngineType engine_type) {
 
   // Now generate some sample particles
   if (true) {
-    std::random_device rd;
+    std::random_device rd_device;
+    std::default_random_engine rd_generator(rd_device());
     std::uniform_real_distribution<float> pos_distx(-300, 0.f);
     std::uniform_real_distribution<float> pos_disty(100.f, 150.f);
     std::uniform_real_distribution<float> vel_dist(-250.f, 250.f);
-    std::default_random_engine generator(rd());
 
     // create a disk
     Path circle;
@@ -59,8 +65,9 @@ void World::Start(EngineType engine_type) {
       node_ptr->motion_type = MotionType::kDynamic;
       node_ptr->material_info.restitution = 0.8;
       node_ptr->frame.SetTranslation(
-          Vector2f(pos_distx(generator), pos_disty(generator)));
-      node_ptr->velocity = Vector2f(vel_dist(generator), vel_dist(generator));
+          Vector2f(pos_distx(rd_generator), pos_disty(rd_generator)));
+      node_ptr->velocity =
+          Vector2f(vel_dist(rd_generator), vel_dist(rd_generator));
       AddNodeInternal(std::move(node_ptr));
     }
   }
@@ -119,6 +126,71 @@ void World::Step() {
   }
 
   physics_engine_->SendDataToWorld();
+}
+
+bool World::HandleMessage(const Json::Value& message) {
+  // Scoped state machine
+  {
+    const id_t left_flipper_id = 11;
+    const id_t right_flipper_id = 12;
+    const float torque = 15000;
+    const float angular_impulse = 9000;
+
+    std::random_device rd_device;
+    std::uniform_real_distribution<float> impulse_dist(0.f, 250.f);
+    std::default_random_engine rd_generator(rd_device());
+
+    if (left_flipper_pressed) {
+      // Apply a torque
+      physics_engine_->ApplyTorqueToNode(left_flipper_id, torque);
+    }
+
+    if (right_flipper_pressed) {
+      // Apply a torque
+      physics_engine_->ApplyTorqueToNode(right_flipper_id, -torque);
+    }
+
+    // Handed coded play rule for now
+    if (message["type"] == "key") {
+      if (message["key_code"] == "A" && message["key_pressed"] == true) {
+        if (!left_flipper_pressed) {
+          // Apply an impulse
+          physics_engine_->ApplyAngularImpulseToNode(left_flipper_id,
+                                                     angular_impulse);
+        }
+        left_flipper_pressed = true;
+      }
+
+      if (message["key_code"] == "A" && message["key_pressed"] == false) {
+        left_flipper_pressed = false;
+      }
+
+      if (message["key_code"] == "D" && message["key_pressed"] == true) {
+        if (!right_flipper_pressed) {
+          // Apply an angular impulse initially
+          physics_engine_->ApplyAngularImpulseToNode(right_flipper_id,
+                                                     -angular_impulse);
+        }
+        right_flipper_pressed = true;
+      }
+
+      if (message["key_code"] == "D" && message["key_pressed"] == false) {
+        right_flipper_pressed = false;
+      }
+
+      if (message["key_code"] == "R" && message["key_pressed"] == true) {
+        // boost all particles
+        for (decltype(node_map_)::const_iterator itr = node_map_.cbegin();
+             itr != node_map_.cend(); ++itr) {
+          Vector2f impulse(impulse_dist(rd_generator),
+                           impulse_dist(rd_generator));
+          physics_engine_->ApplyImpulseToNode(itr->first, impulse,
+                                              Vector2f(0, 0));
+        }
+      }
+    }
+  }
+  return false;
 }
 
 const Node* World::AddNode(std::unique_ptr<Node> new_node) {

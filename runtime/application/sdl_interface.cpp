@@ -24,7 +24,8 @@ std::map<diagrammar::id_t, std::pair<diagrammar::id_t, diagrammar::id_t>>
 // demo add and remove node from the world
 std::unique_ptr<diagrammar::Node> test_add_remove_node(nullptr);
 // demo add and remove joint from the world
-std::unique_ptr<diagrammar::Joint> test_add_remove_joint(nullptr);
+std::unique_ptr<diagrammar::Joint> test_add_remove_joint_1(nullptr);
+std::unique_ptr<diagrammar::Joint> test_add_remove_joint_2(nullptr);
 
 // construct a world
 std::unique_ptr<diagrammar::World> ParseWorld(const Json::Value& world) {
@@ -202,50 +203,63 @@ bool Application::HandleMessage(const Json::Value& message) {
       draw_text_ = !draw_text_;
       return true;
     }
-
-    if (message["key_code"] == "4" && message["key_pressed"] == true) {
-      // Test remove a node by ext id;
-      id_t test_id = 1;
-      auto tmp_ptr = world_->RemoveNodeByExtID(test_id);
-      if (tmp_ptr != nullptr) {
-        path_drawers_->RemoveNodeByID(tmp_ptr->id);
-        poly_drawers_->RemoveNodeByID(tmp_ptr->id);
-        test_add_remove_node = std::move(tmp_ptr);
-        test_add_remove_node->id = test_id;
+    // Test Add/Remove feature of the system
+    {
+      if (message["key_code"] == "4" && message["key_pressed"] == true) {
+        // Test remove a node by ext id;
+        if (test_add_remove_node != nullptr) {
+          const Node* tmp_ptr =
+              world_->AddNode(std::move(test_add_remove_node));
+          path_drawers_->AddNode(tmp_ptr);
+          poly_drawers_->AddNode(tmp_ptr);
+        } else {
+          id_t test_id = 1;
+          auto tmp_ptr = world_->RemoveNodeByExtID(test_id);
+          if (tmp_ptr != nullptr) {
+            path_drawers_->RemoveNodeByID(tmp_ptr->id);
+            poly_drawers_->RemoveNodeByID(tmp_ptr->id);
+            test_add_remove_node = std::move(tmp_ptr);
+            test_add_remove_node->id = test_id;
+          }
+        }
+        return true;
       }
-      return true;
-    }
 
-    if (message["key_code"] == "5" && message["key_pressed"] == true) {
-      // Test add the moved node back
-      if (test_add_remove_node != nullptr) {
-        const Node* tmp_ptr = world_->AddNode(std::move(test_add_remove_node));
-        path_drawers_->AddNode(tmp_ptr);
-        poly_drawers_->AddNode(tmp_ptr);
+      if (message["key_code"] == "Q" && message["key_pressed"] == true) {
+        // Test remove/add joint by ext id;
+        if (test_add_remove_joint_1 != nullptr) {
+          world_->AddJoint(std::move(test_add_remove_joint_1));
+        } else {
+          id_t test_id = 0;
+          auto tmp_ptr = world_->RemoveJointByExtID(test_id);
+          if (tmp_ptr != nullptr) {
+            test_add_remove_joint_1 = std::move(tmp_ptr);
+            test_add_remove_joint_1->id = test_id;
+            auto id_pair = ext_joint_ids[test_id];
+            test_add_remove_joint_1->node_1 = id_pair.first;
+            test_add_remove_joint_1->node_2 = id_pair.second;
+          }
+        }
+        return true;
       }
-      return true;
-    }
 
-    if (message["key_code"] == "6" && message["key_pressed"] == true) {
-      // Test remove a joint by ext id;
-      id_t test_id = 0;
-      auto tmp_ptr = world_->RemoveJointByExtID(test_id);
-      if (tmp_ptr != nullptr) {
-        test_add_remove_joint = std::move(tmp_ptr);
-        test_add_remove_joint->id = test_id;
-        auto id_pair = ext_joint_ids[test_id];
-        test_add_remove_joint->node_1 = id_pair.first;
-        test_add_remove_joint->node_2 = id_pair.second;
+      if (message["key_code"] == "E" && message["key_pressed"] == true) {
+        // Test remove/add joint by ext id;
+        if (test_add_remove_joint_2 != nullptr) {
+          world_->AddJoint(std::move(test_add_remove_joint_2));
+        } else {
+          id_t test_id = 1;
+          auto tmp_ptr = world_->RemoveJointByExtID(test_id);
+          if (tmp_ptr != nullptr) {
+            test_add_remove_joint_2 = std::move(tmp_ptr);
+            test_add_remove_joint_2->id = test_id;
+            auto id_pair = ext_joint_ids[test_id];
+            test_add_remove_joint_2->node_1 = id_pair.first;
+            test_add_remove_joint_2->node_2 = id_pair.second;
+          }
+        }
+        return true;
       }
-      return true;
-    }
-
-    if (message["key_code"] == "7" && message["key_pressed"] == true) {
-      // Test add a joint back
-      if (test_add_remove_joint != nullptr) {
-        world_->AddJoint(std::move(test_add_remove_joint));
-      }
-      return true;
     }
   }
 

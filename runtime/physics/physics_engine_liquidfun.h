@@ -49,8 +49,8 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   int position_iterations_ = 5;
 
   // The engine is running on a different scale
-  const float kScaleUp = 10;
-  const float kScaleDown = 0.1f;
+  const float kScaleUp = 40;
+  const float kScaleDown = 0.025f;
 };
 }  // namespace diagrammar
 

@@ -107,7 +107,7 @@ class JointDestructionListener : public b2DestructionListener {
 PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(float time_step)
     : PhysicsEngine(time_step) {
   // we now try to also create a box2d world
-  b2Vec2 gravity(0.f, -4.9f);
+  b2Vec2 gravity(0.f, -2.8f);
   b2world_ = make_unique<b2World>(gravity);
   joint_destruction_listener_ =
       make_unique<JointDestructionListener>(&joint_table_);
@@ -218,7 +218,9 @@ void PhysicsEngineLiquidFun::ApplyForceToNode(id_t id, const Vector2f& force,
                                               const Vector2f& offset) {
   auto itr = body_table_.find(id);
   if (itr != body_table_.end()) {
-    ApplyForceToBody(itr->second, force, offset);
+    // Important, when length is scaled down, force also scales down
+    // in SI unit force is kg m s^-2
+    ApplyForceToBody(itr->second, kScaleDown * force, kScaleDown * offset);
   }
 }
 
@@ -227,20 +229,21 @@ void PhysicsEngineLiquidFun::ApplyImpulseToNode(id_t id,
                                                 const Vector2f& offset) {
   auto itr = body_table_.find(id);
   if (itr != body_table_.end()) {
-    ApplyImpulseToBody(itr->second, impulse, offset);
+    ApplyImpulseToBody(itr->second, kScaleDown * impulse, kScaleDown * offset);
   }
 }
 
 void PhysicsEngineLiquidFun::ApplyTorqueToNode(id_t id, float torque) {
   auto itr = body_table_.find(id);
   if (itr != body_table_.end()) {
-    ApplyTorqueToBody(itr->second, torque);
+    // When length is scaled, the torque is scaled twice (kg m^2 s^-2)
+    ApplyTorqueToBody(itr->second, kScaleDown * kScaleDown * torque);
   }
 }
 void PhysicsEngineLiquidFun::ApplyAngularImpulseToNode(id_t id, float impulse) {
   auto itr = body_table_.find(id);
   if (itr != body_table_.end()) {
-    ApplyAngularImpulseToBody(itr->second, impulse);
+    ApplyAngularImpulseToBody(itr->second, kScaleDown * kScaleDown * impulse);
   }
 }
 

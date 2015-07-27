@@ -106,6 +106,13 @@ class IndexedMap {
     return const_iterator(lookup_table_.end(), &container_);
   }
 
+  const_iterator cbegin() const {
+    return const_iterator(lookup_table_.begin(), &container_);
+  }
+  const_iterator cend() const {
+    return const_iterator(lookup_table_.end(), &container_);
+  }
+
   // iterface
   size_type size() const;
   iterator find(const key_type& key);
