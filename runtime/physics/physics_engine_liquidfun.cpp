@@ -11,29 +11,6 @@
 #include "geometry/geometry2.h"
 
 namespace {
-
-b2Joint* AddRevoluteJointToWorld(const diagrammar::RevoluteJoint& joint_info,
-                                 b2World* world, b2Body* body1, b2Body* body2) {
-  b2RevoluteJointDef pin_def;
-  pin_def.bodyA = body1;
-  pin_def.bodyB = body2;
-  pin_def.collideConnected = false;
-  pin_def.localAnchorA.Set(joint_info.local_anchor_1(0),
-                           joint_info.local_anchor_1(1));
-  pin_def.localAnchorB.Set(joint_info.local_anchor_2(0),
-                           joint_info.local_anchor_2(1));
-  if (joint_info.enable_limit_min) {
-    pin_def.enableLimit = true;
-    pin_def.lowerAngle = joint_info.angle_min;
-  }
-
-  if (joint_info.enable_limit_max) {
-    pin_def.enableLimit = true;
-    pin_def.upperAngle = joint_info.angle_max;
-  }
-  return world->CreateJoint(&pin_def);
-}
-
 b2Fixture* AddShapeToBody(const b2Shape& shape,
                           const diagrammar::MaterialProperty& m_property,
                           b2Body* b) {
@@ -67,6 +44,45 @@ void AddDiskToBody(float radius, const diagrammar::MaterialProperty& m_property,
   AddShapeToBody(disk, m_property, b);
 }
 
+b2Joint* AddRevoluteJointToWorld(const diagrammar::RevoluteJoint& joint_info,
+                                 b2World* world, b2Body* body1, b2Body* body2) {
+  b2RevoluteJointDef pin_def;
+  pin_def.bodyA = body1;
+  pin_def.bodyB = body2;
+  pin_def.collideConnected = false;
+  pin_def.localAnchorA.Set(joint_info.local_anchor_1(0),
+                           joint_info.local_anchor_1(1));
+  pin_def.localAnchorB.Set(joint_info.local_anchor_2(0),
+                           joint_info.local_anchor_2(1));
+  if (joint_info.enable_limit_min) {
+    pin_def.enableLimit = true;
+    pin_def.lowerAngle = joint_info.angle_min;
+  }
+
+  if (joint_info.enable_limit_max) {
+    pin_def.enableLimit = true;
+    pin_def.upperAngle = joint_info.angle_max;
+  }
+  return world->CreateJoint(&pin_def);
+}
+
+void ApplyForceToBody(b2Body* body, const diagrammar::Vector2f& force,
+                      const diagrammar::Vector2f& offset) {
+  body->ApplyForce(b2Vec2(force(0), force(1)),
+                   body->GetWorldPoint(b2Vec2(offset(0), offset(1))));
+}
+
+void ApplyImpulseToBody(b2Body* body, const diagrammar::Vector2f& impulse,
+                        const diagrammar::Vector2f& offset) {
+  body->ApplyLinearImpulse(b2Vec2(impulse(0), impulse(1)),
+                           body->GetWorldPoint(b2Vec2(offset(0), offset(1))));
+}
+
+void ApplyTorqueToBody(b2Body* body, float torq) { body->ApplyTorque(torq); }
+void ApplyAngularImpulseToBody(b2Body* body, float impulse) {
+  body->ApplyAngularImpulse(impulse);
+}
+
 }  // namespace
 
 namespace diagrammar {
@@ -96,6 +112,26 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(float time_step)
   joint_destruction_listener_ =
       make_unique<JointDestructionListener>(&joint_table_);
   b2world_->SetDestructionListener(joint_destruction_listener_.get());
+}
+
+PhysicsEngineLiquidFun::~PhysicsEngineLiquidFun() {}
+
+void PhysicsEngineLiquidFun::Step() {
+  b2world_->Step(time_step_, velocity_iterations_, position_iterations_);
+}
+
+void PhysicsEngineLiquidFun::SendDataToWorld() {
+  for (b2Body* b = b2world_->GetBodyList(); b; b = b->GetNext()) {
+    Node* node = reinterpret_cast<Node*>(b->GetUserData());
+    if (node) {
+      Vector2f translation(b->GetPosition().x * kScaleUp,
+                           b->GetPosition().y * kScaleUp);
+      node->frame.SetTranslation(translation);
+      node->frame.SetRotation(b->GetAngle());
+      node->velocity = Vector2f(b->GetLinearVelocity().x * kScaleUp,
+                                b->GetLinearVelocity().y * kScaleUp);
+    }
+  }
 }
 
 void PhysicsEngineLiquidFun::AddNode(Node* node) {
@@ -149,26 +185,6 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
   }
 }
 
-PhysicsEngineLiquidFun::~PhysicsEngineLiquidFun() {}
-
-void PhysicsEngineLiquidFun::Step() {
-  b2world_->Step(time_step_, velocity_iterations_, position_iterations_);
-}
-
-void PhysicsEngineLiquidFun::SendDataToWorld() {
-  for (b2Body* b = b2world_->GetBodyList(); b; b = b->GetNext()) {
-    Node* node = reinterpret_cast<Node*>(b->GetUserData());
-    if (node) {
-      Vector2f translation(b->GetPosition().x * kScaleUp,
-                           b->GetPosition().y * kScaleUp);
-      node->frame.SetTranslation(translation);
-      node->frame.SetRotation(b->GetAngle());
-      node->velocity = Vector2f(b->GetLinearVelocity().x * kScaleUp,
-                                b->GetLinearVelocity().y * kScaleUp);
-    }
-  }
-}
-
 void PhysicsEngineLiquidFun::RemoveNodeByID(id_t id) {
   auto itr = body_table_.find(id);
   if (itr != body_table_.end()) {
@@ -195,6 +211,36 @@ void PhysicsEngineLiquidFun::RemoveJointByID(id_t id) {
   if (itr != joint_table_.end()) {
     b2world_->DestroyJoint(itr->second);
     joint_table_.erase(itr);
+  }
+}
+
+void PhysicsEngineLiquidFun::ApplyForceToNode(id_t id, const Vector2f& force,
+                                              const Vector2f& offset) {
+  auto itr = body_table_.find(id);
+  if (itr != body_table_.end()) {
+    ApplyForceToBody(itr->second, force, offset);
+  }
+}
+
+void PhysicsEngineLiquidFun::ApplyImpulseToNode(id_t id,
+                                                const Vector2f& impulse,
+                                                const Vector2f& offset) {
+  auto itr = body_table_.find(id);
+  if (itr != body_table_.end()) {
+    ApplyImpulseToBody(itr->second, impulse, offset);
+  }
+}
+
+void PhysicsEngineLiquidFun::ApplyTorqueToNode(id_t id, float torque) {
+  auto itr = body_table_.find(id);
+  if (itr != body_table_.end()) {
+    ApplyTorqueToBody(itr->second, torque);
+  }
+}
+void PhysicsEngineLiquidFun::ApplyAngularImpulseToNode(id_t id, float impulse) {
+  auto itr = body_table_.find(id);
+  if (itr != body_table_.end()) {
+    ApplyAngularImpulseToBody(itr->second, impulse);
   }
 }
 

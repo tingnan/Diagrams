@@ -31,6 +31,12 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   void RemoveNodeByID(id_t id);
   void RemoveJointByID(id_t id);
 
+  void ApplyForceToNode(id_t, const Vector2f& force, const Vector2f& offset);
+  void ApplyImpulseToNode(id_t, const Vector2f& impulse,
+                          const Vector2f& offset);
+  void ApplyTorqueToNode(id_t, float torque);
+  void ApplyAngularImpulseToNode(id_t, float torque);
+
  private:
   std::unique_ptr<b2World> b2world_;
   std::unordered_map<id_t, b2Body*> body_table_;

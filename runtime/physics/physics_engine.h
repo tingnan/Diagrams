@@ -27,13 +27,19 @@ class PhysicsEngine {
   // update the world
   virtual void SendDataToWorld() = 0;
   virtual void AddNode(Node* node) = 0;
-
   // Remove a node using id
   virtual void RemoveNodeByID(id_t) = 0;
-  virtual void RemoveJointByID(id_t) = 0;
-
   // Add a constraint
   virtual void AddJoint(Joint* joint) = 0;
+  virtual void RemoveJointByID(id_t) = 0;
+  virtual void ApplyForceToNode(id_t, const Vector2f& force,
+                                const Vector2f& offset) = 0;
+  virtual void ApplyImpulseToNode(id_t, const Vector2f& impulse,
+                                  const Vector2f& offset) = 0;
+  // Torque direction can either be coiunter clockwise (positive) or clockwise
+  // (negative)
+  virtual void ApplyTorqueToNode(id_t, float torque) = 0;
+  virtual void ApplyAngularImpulseToNode(id_t, float torque) = 0;
 
  protected:
   float time_step_;
