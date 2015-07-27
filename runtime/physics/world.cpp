@@ -133,6 +133,7 @@ bool World::HandleMessage(const Json::Value& message) {
   {
     const id_t left_flipper_id = 11;
     const id_t right_flipper_id = 12;
+    //
     const float torque = 15000;
     const float angular_impulse = 9000;
 
