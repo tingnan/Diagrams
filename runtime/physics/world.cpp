@@ -163,6 +163,8 @@ bool World::HandleMessage(const Json::Value& message) {
       }
 
       if (message["key_code"] == "A" && message["key_pressed"] == false) {
+        physics_engine_->ApplyAngularImpulseToNode(left_flipper_id,
+                                                   -1.25 * angular_impulse);
         left_flipper_pressed = false;
       }
 
@@ -176,6 +178,8 @@ bool World::HandleMessage(const Json::Value& message) {
       }
 
       if (message["key_code"] == "D" && message["key_pressed"] == false) {
+        physics_engine_->ApplyAngularImpulseToNode(right_flipper_id,
+                                                   1.25 * angular_impulse);
         right_flipper_pressed = false;
       }
 
