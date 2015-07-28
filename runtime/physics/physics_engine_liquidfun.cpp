@@ -69,18 +69,21 @@ b2Joint* AddRevoluteJointToWorld(const diagrammar::RevoluteJoint& joint_info,
 void ApplyForceToBody(b2Body* body, const diagrammar::Vector2f& force,
                       const diagrammar::Vector2f& offset) {
   body->ApplyForce(b2Vec2(force(0), force(1)),
-                   body->GetWorldPoint(b2Vec2(offset(0), offset(1))));
+                   body->GetWorldPoint(b2Vec2(offset(0), offset(1))), true);
 }
 
 void ApplyImpulseToBody(b2Body* body, const diagrammar::Vector2f& impulse,
                         const diagrammar::Vector2f& offset) {
   body->ApplyLinearImpulse(b2Vec2(impulse(0), impulse(1)),
-                           body->GetWorldPoint(b2Vec2(offset(0), offset(1))));
+                           body->GetWorldPoint(b2Vec2(offset(0), offset(1))),
+                           true);
 }
 
-void ApplyTorqueToBody(b2Body* body, float torq) { body->ApplyTorque(torq); }
+void ApplyTorqueToBody(b2Body* body, float torq) {
+  body->ApplyTorque(torq, true);
+}
 void ApplyAngularImpulseToBody(b2Body* body, float impulse) {
-  body->ApplyAngularImpulse(impulse);
+  body->ApplyAngularImpulse(impulse, true);
 }
 
 }  // namespace

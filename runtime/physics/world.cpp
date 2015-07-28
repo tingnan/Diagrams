@@ -9,6 +9,7 @@
 #include "physics/world.h"
 #include "utility/world_parser.h"
 #include "physics/physics_engine_liquidfun.h"
+#include "physics/physics_engine_bullet.h"
 
 namespace {
 // Demo state variables goes here
@@ -76,6 +77,9 @@ void World::Start(EngineType engine_type) {
   switch (engine_type) {
     case kLiquidFun:
       physics_engine_.reset(new PhysicsEngineLiquidFun(time_step()));
+      break;
+    case kBullet:
+      physics_engine_.reset(new PhysicsEngineBullet(time_step()));
       break;
     default:
       physics_engine_.reset(new PhysicsEngineLiquidFun(time_step()));

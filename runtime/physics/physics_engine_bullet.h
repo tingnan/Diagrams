@@ -26,7 +26,8 @@ struct Node;
 struct btRigidBodyResource {
   std::unique_ptr<btRigidBody> body;
   std::unique_ptr<btDefaultMotionState> motion_state;
-  std::vector<std::unique_ptr<btCollisionShape>> collison_shapes;
+  // this could be a compound shape :)
+  std::unique_ptr<btCollisionShape> collision_shape;
 };
 
 class PhysicsEngineBullet : public PhysicsEngine {
