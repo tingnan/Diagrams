@@ -87,9 +87,9 @@ void ApplyAngularImpulseToBody(b2Body* body, float impulse) {
 
 namespace diagrammar {
 
-class JointDestructionListener : public b2DestructionListener {
+class Box2DJointDestructionListener : public b2DestructionListener {
  public:
-  explicit JointDestructionListener(
+  explicit Box2DJointDestructionListener(
       std::unordered_map<diagrammar::id_t, b2Joint*>* p)
       : table_ptr_(p) {}
   void SayGoodbye(b2Fixture* fixture) {}
@@ -110,7 +110,7 @@ PhysicsEngineLiquidFun::PhysicsEngineLiquidFun(float time_step)
   b2Vec2 gravity(0.f, -2.8f);
   b2world_ = make_unique<b2World>(gravity);
   joint_destruction_listener_ =
-      make_unique<JointDestructionListener>(&joint_table_);
+      make_unique<Box2DJointDestructionListener>(&joint_table_);
   b2world_->SetDestructionListener(joint_destruction_listener_.get());
 }
 
@@ -130,6 +130,7 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
       node->frame.SetRotation(b->GetAngle());
       node->velocity = Vector2f(b->GetLinearVelocity().x * kScaleUp,
                                 b->GetLinearVelocity().y * kScaleUp);
+      node->angular_velocity = b->GetAngularVelocity();
     }
   }
 }

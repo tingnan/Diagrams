@@ -1,4 +1,4 @@
-file(GLOB sources "*.cpp") 
+file(GLOB sources "*.cpp")
 file(GLOB headers "*.h")
 add_executable(main ${sources} ${headers})
 if(NACL)
@@ -14,4 +14,4 @@ include_directories(${BZIP2_INCLUDE_DIRS})
 include_directories(${ZLIB_INCLUDE_DIRS})
 include_directories(${PNG_INCLUDE_DIRS})
 
-target_link_libraries(main ${SDL_FLAG} diagrender diagphysics diaggeometry diagutility ${JSONCPP_LIBRARIES} ${POLY2TRI_LIBRARIES} ${LIQUIDFUN_LIBRARIES} ${SDL2_LIBRARIES} ${FREETYPE_LIBRARIES} ${PNG_LIBRARIES} ${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES} ${OPENGL_LIBRARIES} ${NACL_LIBRARIES})
+target_link_libraries(main ${SDL_FLAG} diagrender diagphysics diaggeometry diagutility ${JSONCPP_LIBRARIES} ${POLY2TRI_LIBRARIES} ${LIQUIDFUN_LIBRARIES} ${BULLETPHYSICS_LIBRARIES} ${SDL2_LIBRARIES} ${FREETYPE_LIBRARIES} ${PNG_LIBRARIES} ${BZIP2_LIBRARIES} ${ZLIB_LIBRARIES} ${OPENGL_LIBRARIES} ${NACL_LIBRARIES})

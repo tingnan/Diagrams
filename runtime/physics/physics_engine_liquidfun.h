@@ -14,19 +14,17 @@ class b2Joint;
 
 namespace diagrammar {
 struct Node;
-class JointDestructionListener;
+class Box2DJointDestructionListener;
 class PhysicsEngineLiquidFun : public PhysicsEngine {
  public:
-  // This engine is special in that it will directly modify
-  // the objects in the world
-  // other physics engines only obtain immutable copies
   explicit PhysicsEngineLiquidFun(float time_step);
   ~PhysicsEngineLiquidFun();
 
-  void SendDataToWorld();
   void Step();
+  void SendDataToWorld();
+
   void AddNode(Node* node);
-  // The joint CANNOT be initialized, if the nodes it connect are not there yet
+  // The joint CANNOT be initialized, if the nodes it connect are not there yet.
   void AddJoint(Joint* joint);
   void RemoveNodeByID(id_t id);
   void RemoveJointByID(id_t id);
@@ -41,14 +39,14 @@ class PhysicsEngineLiquidFun : public PhysicsEngine {
   std::unique_ptr<b2World> b2world_;
   std::unordered_map<id_t, b2Body*> body_table_;
   std::unordered_map<id_t, b2Joint*> joint_table_;
-  std::unique_ptr<JointDestructionListener> joint_destruction_listener_;
+  std::unique_ptr<Box2DJointDestructionListener> joint_destruction_listener_;
 
-  // Used internally for the LCP solver
-  // DONOT modify unless you know what it is
+  // Used internally for the LCP solver.
+  // DONOT modify unless you know what they are.
   int velocity_iterations_ = 5;
   int position_iterations_ = 5;
 
-  // The engine is running on a different scale
+  // The engine is running on a different length (force/torque) scale.
   const float kScaleUp = 40;
   const float kScaleDown = 0.025f;
 };

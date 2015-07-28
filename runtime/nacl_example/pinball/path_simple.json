@@ -4361,12 +4361,12 @@
       "type": "revolute",
       "id" : 0,
       "local_anchor_1" : {
-        "x": 0,
-        "y": 0
+        "x": -12,
+        "y": -8
       },
       "local_anchor_2" : {
-        "x": -98,
-        "y": 375
+        "x": -106,
+        "y": 365
       },
       "node_1": 11,
       "node_2": 0,

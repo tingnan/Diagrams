@@ -7,11 +7,11 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
-# need c++11 
+# need c++11
 if(NOT NACL)
 
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
-  find_package(Eigen3)  
+  find_package(Eigen3)
   include_directories(${EIGEN3_INCLUDE_DIRS})
   find_package(SDL2)
   include_directories(${SDL2_INCLUDE_DIRS})
@@ -19,9 +19,11 @@ if(NOT NACL)
   include_directories(${JSONCPP_INCLUDE_DIRS})
   find_package(Box2D)
   include_directories(${LIQUIDFUN_INCLUDE_DIRS})
+  find_package(BulletPhysics)
+  include_directories(${BULLETPHYSICS_INCLUDE_DIRS})
   find_package(OpenGL)
 
-  set(SDL 1)  
+  set(SDL 1)
   if(NOT SDL)
     find_package(GLEW)
     find_library(GLFW_LIBRARIES glfw3 /opt/physics/lib)
@@ -34,7 +36,7 @@ if(NOT NACL)
     -lXi
     )
   endif()
-  find_library(FREETYPE_LIBRARIES NAMES freetype)  
+  find_library(FREETYPE_LIBRARIES NAMES freetype)
   include_directories(./ third_party/poly2tri third_party/clipper)
   add_subdirectory(third_party/poly2tri)
   set(POLY2TRI_LIBRARIES poly2tri)
@@ -52,15 +54,15 @@ if(NOT NACL)
   endif()
 
 else()
-  
+
   IF(${NACL_ARCH} STREQUAL "pnacl")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=gnu++11")
   else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++11")
   endif()
-  
+
   include_directories(./ )
-  find_package(Eigen3)  
+  find_package(Eigen3)
   include_directories(${EIGEN3_INCLUDE_DIRS})
   find_package(SDL2)
   include_directories(${SDL2_INCLUDE_DIRS})
@@ -69,12 +71,13 @@ else()
   find_package(JsonCpp)
   include_directories(${JSONCPP_INCLUDE_DIRS})
   find_package(Poly2Tri)
-  include_directories(${POLY2TRI_INCLUDE_DIRS})  
+  include_directories(${POLY2TRI_INCLUDE_DIRS})
   find_package(Clipper)
   include_directories(${CLIPPER_INCLUDE_DIRS})
   find_package(Box2D)
   include_directories(${LIQUIDFUN_INCLUDE_DIRS})
-  
+  find_package(BulletPhysics)
+  include_directories(${BULLETPHYSICS_INCLUDE_DIRS})
 
   add_subdirectory(geometry)
   add_subdirectory(physics)
