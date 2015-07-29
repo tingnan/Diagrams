@@ -18,6 +18,7 @@ class btDiscreteDynamicsWorld;
 class btCollisionShape;
 class btRigidBody;
 struct btDefaultMotionState;
+class btTypedConstraint;
 
 namespace diagrammar {
 struct Node;
@@ -64,6 +65,8 @@ class PhysicsEngineBullet : public PhysicsEngine {
   std::unordered_map<id_t, btRigidBodyResource> body_table_;
   btRigidBodyResource ground_plane_;
   std::unordered_map<btRigidBody*, Node*> body_node_table_;
+  // joints
+  std::unordered_map<id_t, std::unique_ptr<btTypedConstraint>> joint_table_;
 
   // The engine is running on a different length (force/torque) scale.
   const float kScaleUp = 40;

@@ -9,6 +9,7 @@
 
 #include "utility/stl_memory.h"
 #include "physics/physics_engine_bullet.h"
+#include "physics/node.h"
 #include "geometry/aabb.h"
 
 namespace {
@@ -187,8 +188,54 @@ void PhysicsEngineBullet::AddNode(Node* node) {
 }
 
 // TODO(tingan) implement each of those
-void PhysicsEngineBullet::AddJoint(Joint* joint) {}
-void PhysicsEngineBullet::RemoveNodeByID(id_t id) {}
+void PhysicsEngineBullet::AddJoint(Joint* joint) {
+  if (RevoluteJoint* revo_joint = dynamic_cast<RevoluteJoint*>(joint)) {
+    RevoluteJoint joint_info(*revo_joint);
+    joint_info.local_anchor_1 = kScaleDown * joint_info.local_anchor_1;
+    joint_info.local_anchor_2 = kScaleDown * joint_info.local_anchor_2;
+    btVector3 axis_in_both(0, 0, 1);
+    btVector3 pivot_1(joint_info.local_anchor_1(0),
+                      joint_info.local_anchor_1(1), 0);
+    btVector3 pivot_2(joint_info.local_anchor_2(0),
+                      joint_info.local_anchor_2(1), 0);
+    joint_table_[joint_info.id].reset(
+        new btHingeConstraint(*(body_table_[joint_info.node_1].body),
+                              *(body_table_[joint_info.node_2].body), pivot_1,
+                              pivot_2, axis_in_both, axis_in_both));
+    btHingeConstraint* bt_hinge_joint =
+        dynamic_cast<btHingeConstraint*>(joint_table_[joint_info.id].get());
+    if (joint_info.enable_limit_min || joint_info.enable_limit_max)
+      bt_hinge_joint->setLimit(joint_info.angle_min, joint_info.angle_max, 1.0,
+                               1.0, 0.0);
+    btworld_->addConstraint(bt_hinge_joint, true);
+  }
+}
+void PhysicsEngineBullet::RemoveNodeByID(id_t id) {
+  auto body_itr = body_table_.find(id);
+  if (body_itr != body_table_.end()) {
+    btRigidBody* body = body_itr->second.body.get();
+    // destroy all joints attached to the body first
+    std::vector<id_t> joint_ids;
+    for (auto joint_itr = joint_table_.begin(); joint_itr != joint_table_.end();
+         ++joint_itr) {
+      auto joint_ptr = joint_itr->second.get();
+      btRigidBody& body_a = joint_ptr->getRigidBodyA();
+      btRigidBody& body_b = joint_ptr->getRigidBodyB();
+      if (&body_a == body || &body_b == body) {
+        btworld_->removeConstraint(joint_ptr);
+        joint_ids.emplace_back(joint_itr->first);
+      }
+    }
+    // Release the joint memory
+    for (auto id : joint_ids) {
+      joint_table_.erase(id);
+    }
+
+    // Now clean the body
+    btworld_->removeRigidBody(body);
+    body_table_.erase(body_itr);
+  }
+}
 void PhysicsEngineBullet::RemoveJointByID(id_t id) {}
 
 void PhysicsEngineBullet::ApplyForceToNode(id_t, const Vector2f& force,
