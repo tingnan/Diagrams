@@ -4,6 +4,7 @@
 
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionShapes/btTriangleShape.h>
+#include <BulletCollision/CollisionShapes/btConvexHullShape.h>
 #include <BulletCollision/CollisionShapes/btCompoundShape.h>
 
 #include "utility/stl_memory.h"
@@ -24,6 +25,22 @@ std::vector<std::unique_ptr<btCollisionShape>> CreateTriangleShapes(
   }
   return shapes;
 }
+
+std::vector<std::unique_ptr<btCollisionShape>> CreateConvexHullShapes(
+    const diagrammar::TriangleMesh& mesh, float depth) {
+  std::vector<std::unique_ptr<btCollisionShape>> shapes(mesh.faces.size());
+  for (size_t i = 0; i < mesh.faces.size(); ++i) {
+    shapes[i].reset(new btConvexHullShape());
+    btConvexHullShape* hull = static_cast<btConvexHullShape*>(shapes[i].get());
+    for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
+      auto& vertex = mesh.vertices[mesh.faces[i][vt_idx]];
+      hull->addPoint(btVector3(vertex(0), vertex(1), 0.5 * depth));
+      hull->addPoint(btVector3(vertex(0), vertex(1), -0.5 * depth));
+    }
+  }
+  return shapes;
+}
+
 }  // namespace
 
 namespace diagrammar {
@@ -96,7 +113,8 @@ void PhysicsEngineBullet::AddNode(Node* node) {
       for (auto& v : mesh.vertices) {
         v = kScaleDown * v;
       }
-      auto shapes = CreateTriangleShapes(mesh);
+      // We use triangles for now (and v-hacd is a better choice).
+      auto shapes = CreateConvexHullShapes(mesh, kDepth);
       for (auto& shape_ptr : shapes) {
         compound->addChildShape(trans, shape_ptr.get());
       }
@@ -111,7 +129,7 @@ void PhysicsEngineBullet::AddNode(Node* node) {
       for (auto& v : mesh.vertices) {
         v = kScaleDown * v;
       }
-      auto shapes = CreateTriangleShapes(mesh);
+      auto shapes = CreateConvexHullShapes(mesh, kDepth);
       for (auto& shape_ptr : shapes) {
         compound->addChildShape(trans, shape_ptr.get());
       }
