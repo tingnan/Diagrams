@@ -62,6 +62,7 @@ class PhysicsEngineBullet : public PhysicsEngine {
 
   // Resource management.
   std::unordered_map<id_t, btRigidBodyResource> body_table_;
+  btRigidBodyResource ground_plane_;
   std::unordered_map<btRigidBody*, Node*> body_node_table_;
 
   // The engine is running on a different length (force/torque) scale.

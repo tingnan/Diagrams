@@ -302,6 +302,7 @@ void Application::Render() {
 
     glClearColor(0.3, 0.3, 0.3, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     if (draw_poly_) poly_drawers_->Draw();
     if (draw_path_) path_drawers_->Draw();
     if (draw_text_) RenderID();

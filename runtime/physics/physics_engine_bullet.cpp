@@ -54,7 +54,20 @@ PhysicsEngineBullet::PhysicsEngineBullet(float time_step)
   btworld_ = make_unique<btDiscreteDynamicsWorld>(
       bt_collision_dispatcher_.get(), bt_broad_phase_interface_.get(),
       bt_solver_.get(), bt_collision_config_.get());
-  btworld_->setGravity(btVector3(0, -2.8, 0));
+  btworld_->setGravity(btVector3(0, -2.8, -2.8));
+  // Add a ground plane
+  ground_plane_.collision_shape.reset(
+      new btStaticPlaneShape(btVector3(0, 0, 1), 0));
+  btTransform initial_transform;
+  initial_transform.setIdentity();
+  initial_transform.setOrigin(btVector3(0, 0, -kDepth * 0.5));
+  ground_plane_.motion_state =
+      make_unique<btDefaultMotionState>(initial_transform);
+  ground_plane_.body.reset(
+      new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(
+          0, ground_plane_.motion_state.get(),
+          ground_plane_.collision_shape.get(), btVector3(0, 0, 0))));
+  btworld_->addRigidBody(ground_plane_.body.get());
 }
 
 PhysicsEngineBullet::~PhysicsEngineBullet() {}
