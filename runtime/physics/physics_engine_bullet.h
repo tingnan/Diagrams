@@ -72,7 +72,7 @@ class PhysicsEngineBullet : public PhysicsEngine {
   const float kScaleUp = 40;
   const float kScaleDown = 0.025f;
   // All object will be extended in z-direction in [-Height/2, Height/2].
-  const float kDepth = 3.0;
+  const float kDepth = 10.0;
 };
 
 }  // namespace diagrammar
