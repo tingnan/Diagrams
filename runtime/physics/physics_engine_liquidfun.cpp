@@ -145,10 +145,12 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
   b2BodyDef body_def;
   Vector2f pos = node->frame.GetTranslation();
   body_def.position.Set(pos(0) * kScaleDown, pos(1) * kScaleDown);
+  if (node->id == 13) {
+    std::cout << pos(0) * kScaleDown << " " << pos(1) * kScaleDown << std::endl;
+  }
   body_def.angle = node->frame.GetRotationAngle();
   // TODO(tingnan) Add kinematic body
   if (node->motion_type == MotionType::kDynamic) {
-    std::cout << node->id << std::endl;
     body_def.type = b2_dynamicBody;
     body_def.angularVelocity = node->angular_velocity;
     Vector2f velocity = node->velocity;

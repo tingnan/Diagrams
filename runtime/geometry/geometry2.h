@@ -47,9 +47,6 @@ TriangleMesh TriangulatePolygon(const Polygon& polygon);
 // Inflate by the offset amount (same unit as the input path).
 TriangleMesh TriangulatePolyline(const Path& path, float offset);
 
-// Use V-HACD to decompose a complex polygon to convexhulls
-std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon);
-
 // The method takes an input polygon, then:
 // - detect the self intersections in its boundary path and resolve them.
 // - detect the self intersections in all the holes and resolve them.

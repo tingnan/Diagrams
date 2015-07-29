@@ -2,11 +2,29 @@
 
 #include <iostream>
 
-#include <bullet/btBulletDynamicsCommon.h>
+#include <btBulletDynamicsCommon.h>
+#include <BulletCollision/CollisionShapes/btTriangleShape.h>
+#include <BulletCollision/CollisionShapes/btCompoundShape.h>
 
 #include "utility/stl_memory.h"
 #include "physics/physics_engine_bullet.h"
 #include "geometry/aabb.h"
+
+namespace {
+std::vector<std::unique_ptr<btCollisionShape>> CreateTriangleShapes(
+    const diagrammar::TriangleMesh& mesh) {
+  std::vector<std::unique_ptr<btCollisionShape>> shapes(mesh.faces.size());
+  for (size_t i = 0; i < mesh.faces.size(); ++i) {
+    btVector3 vertices[3];
+    for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
+      auto& vertex = mesh.vertices[mesh.faces[i][vt_idx]];
+      vertices[vt_idx] = btVector3(vertex(0), vertex(1), 0);
+    }
+    shapes[i].reset(new btTriangleShape(vertices[0], vertices[1], vertices[2]));
+  }
+  return shapes;
+}
+}  // namespace
 
 namespace diagrammar {
 PhysicsEngineBullet::PhysicsEngineBullet(float time_step)
@@ -40,7 +58,12 @@ void PhysicsEngineBullet::SendDataToWorld() {
       btQuaternion quat = trans.getRotation();
       node->frame.SetTranslation(
           Vector2f(pos.getX() * kScaleUp, pos.getY() * kScaleUp));
-      node->frame.SetRotation(quat.getAngle());
+      btVector3 rot_axis = quat.getAxis();
+      float rot_angle = quat.getAngle();
+      if (rot_axis.z() < 0) {
+        rot_angle = -rot_angle;
+      }
+      node->frame.SetRotation(rot_angle);
       // TODO(tingnan) also add velocity and angular velocity
     }
   }
@@ -48,34 +71,56 @@ void PhysicsEngineBullet::SendDataToWorld() {
 
 void PhysicsEngineBullet::AddNode(Node* node) {
   // hack: ignore the board first
-  if (node->id == 0) return;
   assert(body_table_.find(node->id) == body_table_.end());
   btRigidBodyResource& rigid_body = body_table_[node->id];
-  // TODO(tingnan) Create collision shape from polygon and polyline
-  // cheating with balls first
-  {
-    AABB aabb;
-    for (const auto& poly : node->polygons) {
-      aabb = GetAABBWithPadding(poly.path, 0.0);
+
+  if (true) {
+    rigid_body.collision_shape.reset(new btCompoundShape());
+    btCompoundShape* compound =
+        static_cast<btCompoundShape*>(rigid_body.collision_shape.get());
+    btTransform trans;
+    trans.setIdentity();
+    for (auto& polygon : node->polygons) {
+      if (polygon.shape_info.isMember("type")) {
+        auto shape_type = polygon.shape_info["type"].asInt();
+        if (static_cast<ShapeType>(shape_type) == ShapeType::kDisk) {
+          float radius = polygon.shape_info["radius"].asFloat() * kScaleDown;
+          rigid_body.child_shapes.emplace_back();
+          rigid_body.child_shapes.back().reset(new btSphereShape(radius));
+          compound->addChildShape(trans, rigid_body.child_shapes.back().get());
+          continue;
+        }
+      }
+
+      TriangleMesh mesh = TriangulatePolygon(polygon);
+      for (auto& v : mesh.vertices) {
+        v = kScaleDown * v;
+      }
+      auto shapes = CreateTriangleShapes(mesh);
+      for (auto& shape_ptr : shapes) {
+        compound->addChildShape(trans, shape_ptr.get());
+      }
+      rigid_body.child_shapes.insert(rigid_body.child_shapes.begin(),
+                                     std::make_move_iterator(shapes.begin()),
+                                     std::make_move_iterator(shapes.end()));
     }
-    for (const auto& path : node->paths) {
-      aabb = GetAABBWithPadding(path, 0.0);
+
+    for (auto& path : node->paths) {
+      // Expand by 1.5 unit
+      TriangleMesh mesh = TriangulatePolyline(path, 1.5);
+      for (auto& v : mesh.vertices) {
+        v = kScaleDown * v;
+      }
+      auto shapes = CreateTriangleShapes(mesh);
+      for (auto& shape_ptr : shapes) {
+        compound->addChildShape(trans, shape_ptr.get());
+      }
+      rigid_body.child_shapes.insert(rigid_body.child_shapes.begin(),
+                                     std::make_move_iterator(shapes.begin()),
+                                     std::make_move_iterator(shapes.end()));
     }
-    float radius = (aabb.upper_bound - aabb.lower_bound).norm() / 2.0;
-    rigid_body.collision_shape.reset(new btSphereShape(radius * kScaleDown));
-    // We also modify the original path for now
-    node->paths.clear();
-    node->polygons.clear();
-    const size_t n_pts = 30;
-    Path path, hole;
-    for (size_t i = 0; i < n_pts; ++i) {
-      float angle = M_PI * float(i) * 2.0 / float(n_pts);
-      path.emplace_back(radius * cos(angle), radius * sin(angle));
-      hole.emplace_back(radius * 0.8 * cos(angle), radius * 0.8 * sin(angle));
-    }
-    node->polygons.emplace_back(Polygon(path));
-    node->polygons[0].holes.emplace_back(hole);
   }
+
   // Compute inertial matrix.
   float mass = 0;
   if (node->motion_type == MotionType::kDynamic) {
@@ -91,6 +136,7 @@ void PhysicsEngineBullet::AddNode(Node* node) {
   btTransform initial_transform;
   initial_transform.setOrigin(
       btVector3(pos(0) * kScaleDown, pos(1) * kScaleDown, 0));
+
   initial_transform.setRotation(
       btQuaternion(quat.x(), quat.y(), quat.z(), quat.w()));
   rigid_body.motion_state =
@@ -100,8 +146,8 @@ void PhysicsEngineBullet::AddNode(Node* node) {
       new btRigidBody(btRigidBody::btRigidBodyConstructionInfo(
           mass, rigid_body.motion_state.get(), rigid_body.collision_shape.get(),
           local_inertia)));
-  rigid_body.body->setLinearVelocity(btVector3(node->velocity(0) * kScaleDown,
-                                               node->velocity(1) * kScaleDown));
+  rigid_body.body->setLinearVelocity(btVector3(
+      node->velocity(0) * kScaleDown, node->velocity(1) * kScaleDown, 0));
   rigid_body.body->setAngularVelocity(btVector3(0, 0, node->angular_velocity));
   // Add the body to the btworld;
   btworld_->addRigidBody(rigid_body.body.get());
