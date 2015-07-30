@@ -22,7 +22,7 @@ b2Fixture* AddShapeToBody(const b2Shape& shape,
   return b->CreateFixture(&shape_fixture);
 }
 
-void AddTrianglesToBody(const diagrammar::TriangleMesh& mesh,
+void AddTrianglesToBody(const diagrammar::TriangleMesh2D& mesh,
                         const diagrammar::MaterialProperty& m_property,
                         b2Body* b) {
   for (size_t i = 0; i < mesh.faces.size(); ++i) {
@@ -169,14 +169,14 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
   for (auto& polygon : node->polygons) {
     if (polygon.shape_info.isMember("type")) {
       auto shape_type = polygon.shape_info["type"].asInt();
-      if (static_cast<ShapeType>(shape_type) == ShapeType::kDisk) {
+      if (static_cast<Shape2DType>(shape_type) == Shape2DType::kDisk) {
         AddDiskToBody(polygon.shape_info["radius"].asFloat() * kScaleDown,
                       node->material_info, body);
         continue;
       }
     }
 
-    TriangleMesh mesh = TriangulatePolygon(polygon);
+    TriangleMesh2D mesh = TriangulatePolygon(polygon);
     for (auto& v : mesh.vertices) {
       v = kScaleDown * v;
     }
@@ -185,7 +185,7 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
 
   for (auto& path : node->paths) {
     // Expand by 1.5 unit
-    TriangleMesh mesh = TriangulatePolyline(path, 1.5);
+    TriangleMesh2D mesh = TriangulatePolyline(path, 1.5);
     for (auto& v : mesh.vertices) {
       v = kScaleDown * v;
     }

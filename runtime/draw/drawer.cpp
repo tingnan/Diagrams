@@ -141,7 +141,7 @@ NodePathDrawer::~NodePathDrawer() {
   glDeleteBuffers(vertex_color_buffer_.size(), vertex_color_buffer_.data());
 }
 
-void NodePathDrawer::GenPathBuffer(const Path& polyline, bool is_closed) {
+void NodePathDrawer::GenPathBuffer(const Path2D& polyline, bool is_closed) {
   GLuint vert_vbo;
   glGenBuffers(1, &vert_vbo);
   vertex_buffer_.emplace_back(vert_vbo);
@@ -257,7 +257,7 @@ void NodePolyDrawer::GenBuffers() {
 }
 
 // TODO(tingnan) fix rendering
-void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh& mesh) {
+void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh2D& mesh) {
   size_t num_vertices = mesh.vertices.size();
   vertex_size_.emplace_back(num_vertices);
 

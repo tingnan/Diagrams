@@ -51,7 +51,7 @@ void World::Start(EngineType engine_type) {
     std::uniform_real_distribution<float> vel_dist(-250.f, 250.f);
 
     // create a disk
-    Path circle;
+    Path2D circle;
     const size_t num_vertices = 30;
     for (int i = 0; i < num_vertices; ++i) {
       circle.emplace_back(10 * Vector2f(cos((2.0 * i) * M_PI / num_vertices),
@@ -59,8 +59,8 @@ void World::Start(EngineType engine_type) {
     }
     for (int i = 0; i < 10; ++i) {
       auto node_ptr = make_unique<Node>();
-      Polygon poly = Polygon(circle);
-      poly.shape_info["type"] = static_cast<int>(ShapeType::kDisk);
+      Polygon2D poly = Polygon2D(circle);
+      poly.shape_info["type"] = static_cast<int>(Shape2DType::kDisk);
       poly.shape_info["radius"] = static_cast<float>(10.0);
       node_ptr->polygons.emplace_back(poly);
       node_ptr->motion_type = MotionType::kDynamic;

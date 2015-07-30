@@ -58,7 +58,7 @@ double SqrdDistSegmentToPoint(const diagrammar::Vector2f& bg,
 const float kUScale = 1000.f;
 const float kDScale = 0.001f;
 
-ClipperLib::Path UScalePathDiaToClipper(const diagrammar::Path& path) {
+ClipperLib::Path UScalePathDiaToClipper(const diagrammar::Path2D& path) {
   ClipperLib::Path scaled_path;
   scaled_path.reserve(path.size());
   for (const auto& pt : path) {
@@ -77,8 +77,8 @@ std::vector<p2t::Point> DScalePathClipperToPoly(const ClipperLib::Path& path) {
   return out;
 }
 
-diagrammar::Path DScalePathClipperToDia(const ClipperLib::Path& path) {
-  diagrammar::Path out;
+diagrammar::Path2D DScalePathClipperToDia(const ClipperLib::Path& path) {
+  diagrammar::Path2D out;
   out.reserve(path.size());
   for (const auto& pt : path) {
     out.emplace_back(pt.X * kDScale, pt.Y * kDScale);
@@ -88,14 +88,14 @@ diagrammar::Path DScalePathClipperToDia(const ClipperLib::Path& path) {
 
 // Wrapper of Clipper CleanPolygon for poly2tri to use
 // The function does not check for self intersections!
-std::vector<p2t::Point> CleanPolygon(const diagrammar::Path& path) {
+std::vector<p2t::Point> CleanPolygon(const diagrammar::Path2D& path) {
   ClipperLib::Path scaled_path = UScalePathDiaToClipper(path);
   ClipperLib::CleanPolygon(scaled_path);
   return DScalePathClipperToPoly(scaled_path);
 }
 
 std::vector<std::vector<p2t::Point> > CleanPolygons(
-    const std::vector<diagrammar::Path>& paths) {
+    const std::vector<diagrammar::Path2D>& paths) {
   std::vector<std::vector<p2t::Point> > out;
   out.reserve(paths.size());
   for (const auto& path : paths) {
@@ -107,7 +107,7 @@ std::vector<std::vector<p2t::Point> > CleanPolygons(
 // time complexity NlogN with worst case O(N^2)
 // where N is the size of input path
 void PolylineDouglasPeuckerRecursive(const size_t bg, const size_t ed,
-                                     const diagrammar::Path& path, float tol,
+                                     const diagrammar::Path2D& path, float tol,
                                      std::vector<bool>* out) {
   if (bg == ed - 1) return;
   double max_dist = 0;
@@ -132,7 +132,7 @@ void PolylineDouglasPeuckerRecursive(const size_t bg, const size_t ed,
   }
 }
 
-diagrammar::Path PolylineDouglasPeuckerIterative(const diagrammar::Path& path,
+diagrammar::Path2D PolylineDouglasPeuckerIterative(const diagrammar::Path2D& path,
                                                  float tol) {
   if (path.size() <= 2) {
     return path;
@@ -171,7 +171,7 @@ diagrammar::Path PolylineDouglasPeuckerIterative(const diagrammar::Path& path,
     }
   }
 
-  diagrammar::Path out;
+  diagrammar::Path2D out;
   out.reserve(path.size());
   for (size_t i = 0; i < path.size(); ++i) {
     if (toKeep[i]) {
@@ -181,8 +181,8 @@ diagrammar::Path PolylineDouglasPeuckerIterative(const diagrammar::Path& path,
   return out;
 }
 
-diagrammar::TriangleMesh DelaunaySweepline(
-    const diagrammar::Path& path, const std::vector<diagrammar::Path>& holes) {
+diagrammar::TriangleMesh2D DelaunaySweepline(
+    const diagrammar::Path2D& path, const std::vector<diagrammar::Path2D>& holes) {
   assert(path.size() >= 3);
   std::vector<p2t::Point> cleaned_path = CleanPolygon(path);
   std::vector<p2t::Point*> path_ptr(cleaned_path.size());
@@ -212,7 +212,7 @@ diagrammar::TriangleMesh DelaunaySweepline(
     num_vertices += hole.size();
   }
   std::unordered_map<p2t::Point*, size_t> pt2index;
-  diagrammar::TriangleMesh mesh;
+  diagrammar::TriangleMesh2D mesh;
   mesh.vertices.reserve(num_vertices);
   mesh.faces.resize(triangles.size());
   for (size_t i = 0; i < triangles.size(); ++i) {
@@ -263,8 +263,8 @@ int PointInCircumcenter(const diagrammar::Vector2f& a,
 // boundary paths)
 // Please check
 // http://stackoverflow.com/questions/23578760/how-to-simplify-a-single-complex-uibezierpath-polygon-in-ios
-std::vector<diagrammar::Path> ResolveIntersectionsClosedPath(
-    const diagrammar::Path& path) {
+std::vector<diagrammar::Path2D> ResolveIntersectionsClosedPath(
+    const diagrammar::Path2D& path) {
   ClipperLib::Path scaled_path = UScalePathDiaToClipper(path);
   ClipperLib::Clipper clipper;
   clipper.AddPath(scaled_path, ClipperLib::ptSubject, true);
@@ -284,7 +284,7 @@ std::vector<diagrammar::Path> ResolveIntersectionsClosedPath(
   clipper.Execute(ClipperLib::ctUnion, unioned_paths, ClipperLib::pftNonZero,
                   ClipperLib::pftNonZero);
   clipper.Clear();
-  std::vector<diagrammar::Path> resolved_paths;
+  std::vector<diagrammar::Path2D> resolved_paths;
   for (auto& p : unioned_paths) {
     resolved_paths.emplace_back(DScalePathClipperToDia(p));
   }
@@ -292,8 +292,8 @@ std::vector<diagrammar::Path> ResolveIntersectionsClosedPath(
 }
 
 // This is a very expensive operation!
-std::vector<diagrammar::Path> ResolveIntersectionsClosedPaths(
-    const std::vector<diagrammar::Path>& paths) {
+std::vector<diagrammar::Path2D> ResolveIntersectionsClosedPaths(
+    const std::vector<diagrammar::Path2D>& paths) {
   ClipperLib::Clipper clipper;
 
   for (auto& path : paths) {
@@ -317,7 +317,7 @@ std::vector<diagrammar::Path> ResolveIntersectionsClosedPaths(
                   ClipperLib::pftNonZero);
   clipper.Clear();
 
-  std::vector<diagrammar::Path> resolved_paths;
+  std::vector<diagrammar::Path2D> resolved_paths;
   for (auto& p : unioned_paths) {
     resolved_paths.emplace_back(DScalePathClipperToDia(p));
   }
@@ -329,7 +329,7 @@ std::vector<diagrammar::Path> ResolveIntersectionsClosedPaths(
 
 namespace diagrammar {
 
-std::vector<Vector2f> SimplifyPolyline(const Path& path, float rel_tol) {
+std::vector<Vector2f> SimplifyPolyline(const Path2D& path, float rel_tol) {
   if (path.size() <= 2) {
     return path;
   }
@@ -352,11 +352,11 @@ std::vector<Vector2f> SimplifyPolyline(const Path& path, float rel_tol) {
   return out;
 }
 
-TriangleMesh TriangulatePolygon(const Polygon& polygon) {
+TriangleMesh2D TriangulatePolygon(const Polygon2D& polygon) {
   return DelaunaySweepline(polygon.path, polygon.holes);
 }
 
-TriangleMesh TriangulatePolyline(const Path& path, float offset) {
+TriangleMesh2D TriangulatePolyline(const Path2D& path, float offset) {
   // clipper only works with integer points
   ClipperLib::Path scaled_path = UScalePathDiaToClipper(path);
 
@@ -373,7 +373,7 @@ TriangleMesh TriangulatePolyline(const Path& path, float offset) {
   // maybe we allow this later using union
   // assert(inflated.size() == 1 && "inflated path has holes");
   std::vector<Vector2f> pts = DScalePathClipperToDia(inflated[0]);
-  return DelaunaySweepline(pts, std::vector<Path>());
+  return DelaunaySweepline(pts, std::vector<Path2D>());
 }
 /*
 std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
@@ -427,7 +427,7 @@ std::vector<Polygon> DecomposePolygonToConvexhulls(const Polygon& polygon) {
   return polygons;
 }
 */
-std::vector<Polygon> ResolveIntersections(const Polygon& polygon) {
+std::vector<Polygon2D> ResolveIntersections(const Polygon2D& polygon) {
   // the polygon boundary maybe splitted during this process
   // auto paths = ResolveIntersectionsClosedPath(polygon.path);
   // auto holes = ResolveIntersectionsClosedPaths(polygon.holes);
@@ -453,7 +453,7 @@ std::vector<Polygon> ResolveIntersections(const Polygon& polygon) {
                   ClipperLib::pftNonZero);
 
   // iterating into the tree
-  std::vector<Polygon> polygons;
+  std::vector<Polygon2D> polygons;
   // only store the pointer to outer polygons
   std::unordered_map<ClipperLib::PolyNode*, size_t> polynode_map;
   for (ClipperLib::PolyNode* node_ptr = path_tree.GetFirst(); node_ptr;
@@ -463,7 +463,7 @@ std::vector<Polygon> ResolveIntersections(const Polygon& polygon) {
       poly_ptr = poly_ptr->Parent;
     }
     if (polynode_map.find(poly_ptr) == polynode_map.end()) {
-      polygons.emplace_back(Polygon());
+      polygons.emplace_back(Polygon2D());
       polygons.back().path = DScalePathClipperToDia(poly_ptr->Contour);
       polynode_map[poly_ptr] = polygons.size() - 1;
     } else {

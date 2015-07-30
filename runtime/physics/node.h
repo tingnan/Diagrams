@@ -25,8 +25,8 @@ struct MaterialProperty {
 enum class MotionType { kStatic, kKinematic, kDynamic };
 
 struct Node {
-  std::vector<Polygon> polygons;
-  std::vector<Path> paths;
+  std::vector<Polygon2D> polygons;
+  std::vector<Path2D> paths;
 
   CoordinateFrame frame;
   Vector3f velocity = Vector3f(0, 0, 0);

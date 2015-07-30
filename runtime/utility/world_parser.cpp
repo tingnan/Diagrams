@@ -20,8 +20,8 @@ diagrammar::Vector2f ParsePoint(const Json::Value& pt) {
   return vec;
 }
 
-diagrammar::Path ParsePath(const Json::Value& path_obj) {
-  diagrammar::Path mypath;
+diagrammar::Path2D ParsePath(const Json::Value& path_obj) {
+  diagrammar::Path2D mypath;
   Json::Value::const_iterator itr = path_obj.begin();
   for (; itr != path_obj.end(); ++itr) {
     const Json::Value& pt = *itr;
@@ -30,8 +30,8 @@ diagrammar::Path ParsePath(const Json::Value& path_obj) {
   return mypath;
 }
 
-std::vector<diagrammar::Polygon> ParsePolygon(const Json::Value& poly_obj) {
-  diagrammar::Polygon poly;
+std::vector<diagrammar::Polygon2D> ParsePolygon(const Json::Value& poly_obj) {
+  diagrammar::Polygon2D poly;
   if (poly_obj.isMember("path")) {
     poly.path = ParsePath(poly_obj["path"]);
   }

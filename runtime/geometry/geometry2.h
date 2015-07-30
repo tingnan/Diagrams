@@ -12,40 +12,40 @@
 
 namespace diagrammar {
 
-struct TriangleMesh {
+struct TriangleMesh2D {
   std::vector<Vector2f> vertices;
   // Each face stores 3 indices to the actual vertex in the "vertices" vector
   // Warning: clang-newlib cannot handle std::array correctly right now
   std::vector<std::array<size_t, 3> > faces;
 };
 
-typedef std::vector<Vector2f> Path;
+typedef std::vector<Vector2f> Path2D;
 
-enum class ShapeType { kNone, kDisk };
+enum class Shape2DType { kNone, kDisk };
 
 // typedef std::underlying_type<ShapeType>::type ShapeTypeInteral;
 
 // We can have different choices for this metadata: boost::any or Json::Value
 typedef Json::Value Metadata;
 
-struct Polygon {
+struct Polygon2D {
   Metadata shape_info;
-  Path path;
-  std::vector<Path> holes;
-  Polygon() = default;
-  explicit Polygon(Path p) : path(std::move(p)) {}
+  Path2D path;
+  std::vector<Path2D> holes;
+  Polygon2D() = default;
+  explicit Polygon2D(Path2D p) : path(std::move(p)) {}
 };
 
 // Simplify a path with a relative tolerance
-Path SimplifyPolyline(const Path& path, float rel_tol = 0.005);
+Path2D SimplifyPolyline(const Path2D& path, float rel_tol = 0.005);
 
 // Triangulates a polygon described by a closed path.
 // The path must not be self intersecting
-TriangleMesh TriangulatePolygon(const Polygon& polygon);
+TriangleMesh2D TriangulatePolygon(const Polygon2D& polygon);
 
 // Inflates and triangulates an open path.
 // Inflate by the offset amount (same unit as the input path).
-TriangleMesh TriangulatePolyline(const Path& path, float offset);
+TriangleMesh2D TriangulatePolyline(const Path2D& path, float offset);
 
 // The method takes an input polygon, then:
 // - detect the self intersections in its boundary path and resolve them.
@@ -54,7 +54,7 @@ TriangleMesh TriangulatePolyline(const Path& path, float offset);
 // - clip the polygon with holes (using diff operation)
 // - the output maybe a single polygon (with holes) or a vector of polygons
 //   if the holes cut the polygon into separate pieces.
-std::vector<Polygon> ResolveIntersections(const Polygon& polygon);
+std::vector<Polygon2D> ResolveIntersections(const Polygon2D& polygon);
 
 }  // namespace diagrammar
 

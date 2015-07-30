@@ -14,7 +14,7 @@
 
 namespace {
 std::vector<std::unique_ptr<btCollisionShape>> CreateTriangleShapes(
-    const diagrammar::TriangleMesh& mesh) {
+    const diagrammar::TriangleMesh2D& mesh) {
   std::vector<std::unique_ptr<btCollisionShape>> shapes(mesh.faces.size());
   for (size_t i = 0; i < mesh.faces.size(); ++i) {
     btVector3 vertices[3];
@@ -28,7 +28,7 @@ std::vector<std::unique_ptr<btCollisionShape>> CreateTriangleShapes(
 }
 
 std::vector<std::unique_ptr<btCollisionShape>> CreateConvexHullShapes(
-    const diagrammar::TriangleMesh& mesh, float depth) {
+    const diagrammar::TriangleMesh2D& mesh, float depth) {
   std::vector<std::unique_ptr<btCollisionShape>> shapes(mesh.faces.size());
   for (size_t i = 0; i < mesh.faces.size(); ++i) {
     shapes[i].reset(new btConvexHullShape());
@@ -113,7 +113,7 @@ void PhysicsEngineBullet::AddNode(Node* node) {
     for (auto& polygon : node->polygons) {
       if (polygon.shape_info.isMember("type")) {
         auto shape_type = polygon.shape_info["type"].asInt();
-        if (static_cast<ShapeType>(shape_type) == ShapeType::kDisk) {
+        if (static_cast<Shape2DType>(shape_type) == Shape2DType::kDisk) {
           float radius = polygon.shape_info["radius"].asFloat() * kScaleDown;
           rigid_body.child_shapes.emplace_back();
           rigid_body.child_shapes.back().reset(new btSphereShape(radius));
@@ -122,7 +122,7 @@ void PhysicsEngineBullet::AddNode(Node* node) {
         }
       }
 
-      TriangleMesh mesh = TriangulatePolygon(polygon);
+      TriangleMesh2D mesh = TriangulatePolygon(polygon);
       for (auto& v : mesh.vertices) {
         v = kScaleDown * v;
       }
@@ -138,7 +138,7 @@ void PhysicsEngineBullet::AddNode(Node* node) {
 
     for (auto& path : node->paths) {
       // Expand by 1.5 unit
-      TriangleMesh mesh = TriangulatePolyline(path, 1.5);
+      TriangleMesh2D mesh = TriangulatePolyline(path, 1.5);
       for (auto& v : mesh.vertices) {
         v = kScaleDown * v;
       }

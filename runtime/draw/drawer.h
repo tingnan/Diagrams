@@ -53,7 +53,7 @@ class NodePathDrawer : public NodeDrawer {
   void Draw(GLProgram program, Camera* camera);
 
  private:
-  void GenPathBuffer(const Path&, bool);
+  void GenPathBuffer(const Path2D&, bool);
   void GenBuffers();
 };
 
@@ -66,7 +66,7 @@ class NodePolyDrawer : public NodeDrawer {
   void Draw(GLProgram program, Camera* camera);
 
  private:
-  void GenTriangleBuffer(const TriangleMesh&);
+  void GenTriangleBuffer(const TriangleMesh2D&);
   void GenBuffers();
 
   std::vector<GLuint> index_buffer_;
