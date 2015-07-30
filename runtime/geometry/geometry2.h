@@ -11,29 +11,41 @@
 #include "include/matrix_types.h"
 
 namespace diagrammar {
+typedef std::vector<Vector2f> Path2D;
+
+enum class Shape2DType { kDisk, kPolyLine, kPolygon };
+
+struct CollisionShape2D {
+  virtual ~CollisionShape2D() = 0;
+  CollisionShape2D(Shape2DType shape_type) : shape_type(shape_type) {}
+  Shape2DType shape_type;
+};
+
+struct Disk2D : CollisionShape2D {
+  explicit Disk2D(float radius)
+      : CollisionShape2D(Shape2DType::kDisk), radius(radius) {}
+  float radius;
+};
+
+struct Line2D : CollisionShape2D {
+  explicit Line2D(Path2D path)
+      : CollisionShape2D(Shape2DType::kPolyLine), path(path) {}
+  Path2D path;
+};
+
+struct Polygon2D : CollisionShape2D {
+  Polygon2D() : CollisionShape2D(Shape2DType::kPolygon) {}
+  explicit Polygon2D(Path2D path)
+      : CollisionShape2D(Shape2DType::kPolygon), path(std::move(path)) {}
+  Path2D path;
+  std::vector<Path2D> holes;
+};
 
 struct TriangleMesh2D {
   std::vector<Vector2f> vertices;
   // Each face stores 3 indices to the actual vertex in the "vertices" vector
   // Warning: clang-newlib cannot handle std::array correctly right now
   std::vector<std::array<size_t, 3> > faces;
-};
-
-typedef std::vector<Vector2f> Path2D;
-
-enum class Shape2DType { kNone, kDisk };
-
-// typedef std::underlying_type<ShapeType>::type ShapeTypeInteral;
-
-// We can have different choices for this metadata: boost::any or Json::Value
-typedef Json::Value Metadata;
-
-struct Polygon2D {
-  Metadata shape_info;
-  Path2D path;
-  std::vector<Path2D> holes;
-  Polygon2D() = default;
-  explicit Polygon2D(Path2D p) : path(std::move(p)) {}
 };
 
 // Simplify a path with a relative tolerance
