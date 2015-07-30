@@ -128,9 +128,9 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
                            b->GetPosition().y * kScaleUp, 0);
       node->frame.SetTranslation(translation);
       node->frame.SetRotation(AngleAxisf(b->GetAngle(), Vector3f(0, 0, 1)));
-      node->velocity = Vector2f(b->GetLinearVelocity().x * kScaleUp,
-                                b->GetLinearVelocity().y * kScaleUp);
-      node->angular_velocity = b->GetAngularVelocity();
+      node->velocity = Vector3f(b->GetLinearVelocity().x * kScaleUp,
+                                b->GetLinearVelocity().y * kScaleUp, 0);
+      node->angular_velocity = Vector3f(0, 0, b->GetAngularVelocity());
     }
   }
 }
@@ -154,10 +154,10 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
   // TODO(tingnan) Add kinematic body
   if (node->motion_type == MotionType::kDynamic) {
     body_def.type = b2_dynamicBody;
-    body_def.angularVelocity = node->angular_velocity;
-    Vector2f velocity = node->velocity;
-    body_def.linearVelocity.Set(velocity(0) * kScaleDown,
-                                velocity(1) * kScaleDown);
+    // only the z component
+    body_def.angularVelocity = node->angular_velocity(2);
+    body_def.linearVelocity.Set(node->velocity(0) * kScaleDown,
+                                node->velocity(1) * kScaleDown);
   }
   b2Body* body = b2world_->CreateBody(&body_def);
   // Add to look up table

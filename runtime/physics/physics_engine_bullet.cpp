@@ -178,7 +178,9 @@ void PhysicsEngineBullet::AddNode(Node* node) {
           local_inertia)));
   rigid_body.body->setLinearVelocity(btVector3(
       node->velocity(0) * kScaleDown, node->velocity(1) * kScaleDown, 0));
-  rigid_body.body->setAngularVelocity(btVector3(0, 0, node->angular_velocity));
+  rigid_body.body->setAngularVelocity(btVector3(node->angular_velocity(0),
+                                                node->angular_velocity(1),
+                                                node->angular_velocity(2)));
   // Add the body to the btworld;
   btworld_->addRigidBody(rigid_body.body.get());
   // Create the reverse mapping.

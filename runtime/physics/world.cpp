@@ -68,7 +68,7 @@ void World::Start(EngineType engine_type) {
       node_ptr->frame.SetTranslation(
           Vector3f(pos_distx(rd_generator), pos_disty(rd_generator), 0));
       node_ptr->velocity =
-          Vector2f(vel_dist(rd_generator), vel_dist(rd_generator));
+          Vector3f(vel_dist(rd_generator), vel_dist(rd_generator), 0);
       AddNodeInternal(std::move(node_ptr));
     }
   }

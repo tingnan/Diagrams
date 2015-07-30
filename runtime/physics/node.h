@@ -29,8 +29,8 @@ struct Node {
   std::vector<Path> paths;
 
   CoordinateFrame frame;
-  Vector2f velocity;
-  float angular_velocity;
+  Vector3f velocity = Vector3f(0, 0, 0);
+  Vector3f angular_velocity = Vector3f(0, 0, 0);
 
   MaterialProperty material_info;
   // The unique ID (managed by World)
