@@ -88,14 +88,12 @@ void PhysicsEngineBullet::SendDataToWorld() {
       Node* node = body_node_table_.find(body)->second;
       const btVector3& pos = trans.getOrigin();
       btQuaternion quat = trans.getRotation();
-      node->frame.SetTranslation(
-          Vector2f(pos.getX() * kScaleUp, pos.getY() * kScaleUp));
+      node->frame.SetTranslation(Vector3f(
+          pos.getX() * kScaleUp, pos.getY() * kScaleUp, pos.getZ() * kScaleUp));
       btVector3 rot_axis = quat.getAxis();
       float rot_angle = quat.getAngle();
-      if (rot_axis.z() < 0) {
-        rot_angle = -rot_angle;
-      }
-      node->frame.SetRotation(rot_angle);
+      node->frame.SetRotation(AngleAxisf(
+          rot_angle, Vector3f(rot_axis.x(), rot_axis.y(), rot_axis.z())));
       // TODO(tingnan) also add velocity and angular velocity
     }
   }
@@ -163,13 +161,12 @@ void PhysicsEngineBullet::AddNode(Node* node) {
   btVector3 local_inertia(0, 0, 0);
   rigid_body.collision_shape->calculateLocalInertia(mass, local_inertia);
   // Now create a motion state.
-  Vector2f pos = node->frame.GetTranslation();
-  float rotation_angle = node->frame.GetRotationAngle();
-  Eigen::Quaternionf quat(Eigen::AngleAxisf(rotation_angle, Vector3f::UnitZ()));
-  btTransform initial_transform;
-  initial_transform.setOrigin(
-      btVector3(pos(0) * kScaleDown, pos(1) * kScaleDown, 0));
 
+  btTransform initial_transform;
+  Vector3f pos = node->frame.GetTranslation();
+  initial_transform.setOrigin(
+      btVector3(pos(0) * kScaleDown, pos(1) * kScaleDown, pos(2) * kScaleDown));
+  Eigen::Quaternionf quat = node->frame.GetRotation();
   initial_transform.setRotation(
       btQuaternion(quat.x(), quat.y(), quat.z(), quat.w()));
   rigid_body.motion_state =

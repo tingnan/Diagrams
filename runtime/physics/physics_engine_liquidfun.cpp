@@ -124,10 +124,10 @@ void PhysicsEngineLiquidFun::SendDataToWorld() {
   for (b2Body* b = b2world_->GetBodyList(); b; b = b->GetNext()) {
     Node* node = reinterpret_cast<Node*>(b->GetUserData());
     if (node) {
-      Vector2f translation(b->GetPosition().x * kScaleUp,
-                           b->GetPosition().y * kScaleUp);
+      Vector3f translation(b->GetPosition().x * kScaleUp,
+                           b->GetPosition().y * kScaleUp, 0);
       node->frame.SetTranslation(translation);
-      node->frame.SetRotation(b->GetAngle());
+      node->frame.SetRotation(AngleAxisf(b->GetAngle(), Vector3f(0, 0, 1)));
       node->velocity = Vector2f(b->GetLinearVelocity().x * kScaleUp,
                                 b->GetLinearVelocity().y * kScaleUp);
       node->angular_velocity = b->GetAngularVelocity();
@@ -140,12 +140,17 @@ void PhysicsEngineLiquidFun::AddNode(Node* node) {
          "node was added before!");
 
   b2BodyDef body_def;
-  Vector2f pos = node->frame.GetTranslation();
+  Vector3f pos = node->frame.GetTranslation();
   body_def.position.Set(pos(0) * kScaleDown, pos(1) * kScaleDown);
   if (node->id == 13) {
     std::cout << pos(0) * kScaleDown << " " << pos(1) * kScaleDown << std::endl;
   }
-  body_def.angle = node->frame.GetRotationAngle();
+  AngleAxisf rotation(node->frame.GetRotation());
+  Vector3f axis = rotation.axis();
+  body_def.angle = rotation.angle();
+  if (axis(2) < 0) {
+    body_def.angle = -body_def.angle;
+  }
   // TODO(tingnan) Add kinematic body
   if (node->motion_type == MotionType::kDynamic) {
     body_def.type = b2_dynamicBody;

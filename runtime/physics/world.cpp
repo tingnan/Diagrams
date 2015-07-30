@@ -26,7 +26,7 @@ World::~World() {}
 void World::Reset() {
   node_map_.clear();
   node_id_map_.clear();
-  frame = CoordinateFrame2D(Isometry2f::Identity());
+  frame = CoordinateFrame(Isometry2f::Identity());
   step_time_.clear();
   id_pool_.Reset();
   auto engine_ptr = physics_engine_.release();
@@ -66,7 +66,7 @@ void World::Start(EngineType engine_type) {
       node_ptr->motion_type = MotionType::kDynamic;
       node_ptr->material_info.restitution = 0.8;
       node_ptr->frame.SetTranslation(
-          Vector2f(pos_distx(rd_generator), pos_disty(rd_generator)));
+          Vector3f(pos_distx(rd_generator), pos_disty(rd_generator), 0));
       node_ptr->velocity =
           Vector2f(vel_dist(rd_generator), vel_dist(rd_generator));
       AddNodeInternal(std::move(node_ptr));
@@ -374,7 +374,7 @@ void World::ParseWorld(const Json::Value& world) {
   // Construct the initial world
 
   if (world.isMember("transform")) {
-    frame = CoordinateFrame2D(ParseTransformation2D(world["transform"]));
+    frame = CoordinateFrame(ParseTransformation2D(world["transform"]));
   }
   const Json::Value& child_obj = world["children"];
   Json::Value::const_iterator child_itr = child_obj.begin();

@@ -103,11 +103,9 @@ Isometry2f ParseTransformation2D(const Json::Value& array) {
   Matrix2f rot_mat;
   rot_mat << array[0].asFloat(), array[2].asFloat(), array[1].asFloat(),
       array[3].asFloat();
-  Rotation2f rot(0);
-  rot.fromRotationMatrix(rot_mat);
   // rotate then translate, the order is important;
   t.translate(Vector2f(array[4].asFloat(), -array[5].asFloat()))
-      .rotate(rot.inverse());
+      .rotate(rot_mat.transpose());
   return t;
 }
 
@@ -135,8 +133,12 @@ std::unique_ptr<Node> ParseNode(const Json::Value& node_obj) {
 
   if (node_obj.isMember("transform")) {
     const Isometry2f tr = ParseTransformation2D(node_obj["transform"]);
-    node_ptr->frame.SetRotation(tr.linear());
-    node_ptr->frame.SetTranslation(tr.translation());
+    Matrix3f rot_mat = Matrix3f::Identity();
+    rot_mat.topLeftCorner<2, 2>() = tr.rotation();
+    node_ptr->frame.SetRotation(rot_mat);
+    Vector3f disp(0, 0, 0);
+    disp.head<2>() = tr.translation();
+    node_ptr->frame.SetTranslation(disp);
   }
 
   if (node_obj.isMember("open_path")) {

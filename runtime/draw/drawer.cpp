@@ -217,8 +217,8 @@ void NodePathDrawer::Draw(GLProgram program, Camera* camera) {
     glEnableVertexAttribArray(program.color_loc);
 
     Matrix4f u_mvp(Matrix4f::Identity());
-    u_mvp.topLeftCorner<2, 2>() = node_->frame.GetRotationMatrix();
-    u_mvp.col(3).head<2>() = node_->frame.GetTranslation();
+    u_mvp.topLeftCorner<3, 3>() = node_->frame.GetRotationMatrix();
+    u_mvp.col(3).head<3>() = node_->frame.GetTranslation();
     u_mvp = camera->GetViewProjection() * u_mvp;
     glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 
@@ -337,8 +337,8 @@ void NodePolyDrawer::Draw(GLProgram program, Camera* camera) {
     glEnableVertexAttribArray(program.color_loc);
 
     Matrix4f u_mvp(Matrix4f::Identity());
-    u_mvp.topLeftCorner<2, 2>() = node_->frame.GetRotationMatrix();
-    u_mvp.col(3).head<2>() = node_->frame.GetTranslation();
+    u_mvp.topLeftCorner<3, 3>() = node_->frame.GetRotationMatrix();
+    u_mvp.col(3).head<3>() = node_->frame.GetTranslation();
     u_mvp = camera->GetViewProjection() * u_mvp;
     glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
 

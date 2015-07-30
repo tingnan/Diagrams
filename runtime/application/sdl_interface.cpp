@@ -286,11 +286,12 @@ void Application::RenderID() {
   for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
     const Node* node = world_->GetNodeByIndex(i);
     if (true) {
-      Vector2f pos = node->frame.GetTranslation();
+      Vector3f pos = node->frame.GetTranslation();
       std::string label = std::to_string(node->id);
       label +=
           ":(" + std::to_string(pos(0)) + "," + std::to_string(pos(1)) + ")";
-      text_drawer_->Draw(label, pos, gl_program_, &camera_);
+      text_drawer_->Draw(label, Vector2f(pos(0), pos(1)), gl_program_,
+                         &camera_);
     }
   }
 }

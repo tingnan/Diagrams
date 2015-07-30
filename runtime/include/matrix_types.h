@@ -16,8 +16,8 @@ typedef ::Eigen::Matrix3f Matrix3f;
 typedef ::Eigen::Matrix4f Matrix4f;
 typedef ::Eigen::Isometry2f Isometry2f;
 typedef ::Eigen::Isometry3f Isometry3f;
-typedef ::Eigen::Affine3f Affine3f;
-typedef ::Eigen::Rotation2Df Rotation2f;
+typedef ::Eigen::AngleAxisf AngleAxisf;
+typedef ::Eigen::Quaternionf Quaternionf;
 }  // namespace diagrammar
 
 #endif  // RUNTIME_INCLUDE_H_

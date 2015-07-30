@@ -13,50 +13,39 @@ namespace diagrammar {
 // a vector v can be transformed in to the parent frame using:
 // Translation * Rotation * v
 // This CoordinateFrame part needs precaution when modifying
-class CoordinateFrame2D {
+class CoordinateFrame {
  public:
-  CoordinateFrame2D();
-  explicit CoordinateFrame2D(const Isometry2f& transform);
+  CoordinateFrame();
+  explicit CoordinateFrame(const Isometry2f& transform);
+  explicit CoordinateFrame(const Isometry3f& transform) : frame_(transform) {}
 
- public:
-  // notice: it differs from SetTranslation because
-  // it adds on top of existing translation
-  void Translate(const Vector2f& disp);
+  void Translate(const Vector3f& disp);
+  void SetTranslation(const Vector3f& disp);
 
-  void SetTranslation(const Vector2f& disp);
+  void Rotate(const Matrix3f& rot_mat);
+  void Rotate(const AngleAxisf& rotation);
+  void SetRotation(const Matrix3f& rot_mat);
+  void SetRotation(const AngleAxisf& rotation);
 
-  // similarly, we have SetRotation and Rotate function
-  // the rotate functions here ONLY rotate the frame
-  // about its center. It is NOT about the parent's center
-  // i.e. the rotation is IN PLACE.
-  void Rotate(const Matrix2f& rotmat);
+  // void RotateAboutParentCenter(const Matrix2f& rotmat);
+  // void RotateAboutParentCenter(const Rotation2f& rot);
 
-  void Rotate(const Rotation2f& rot);
+  Vector3f TransformVector(const Vector3f& vec) const;
+  Vector3f InverseTransformVector(const Vector3f& vec) const;
+  Vector3f TransformPoint(const Vector3f& vec) const;
+  Vector3f InverseTransformPoint(const Vector3f& vec) const;
 
-  void SetRotation(const Matrix2f& rotmat);
-
-  void SetRotation(const Rotation2f& rot);
-
-  void RotateAboutParentCenter(const Matrix2f& rotmat);
-  void RotateAboutParentCenter(const Rotation2f& rot);
-
-  Vector2f TransformVector(const Vector2f& vec) const;
-  Vector2f InverseTransformVector(const Vector2f& vec) const;
-
-  Vector2f TransformPoint(const Vector2f& vec) const;
-  Vector2f InverseTransformPoint(const Vector2f& vec) const;
-
-  // get the translation of the frame (relative to the parent frame)
-  Vector2f GetTranslation() const;
-  // get the rotation angle of the frame (relative to the parent frame)
-  float GetRotationAngle() const;
-  // get the rotatio matrix
-  Matrix2f GetRotationMatrix() const;
-
+  // Get the translation of the frame (relative to the parent frame).
+  Vector3f GetTranslation() const;
+  // The most common representation of rotation
+  Quaternionf GetRotation() const;
+  Matrix3f GetRotationMatrix() const;
+  // Alignment required for Isometry3f member
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
   // our coordinate frame can be treated as a isometry
   // 3x3 matrix
-  Isometry2f frame_;
+  Isometry3f frame_ = Isometry3f::Identity();
 };
 }  // namespace diagrammar
 

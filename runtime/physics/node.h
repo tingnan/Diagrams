@@ -28,7 +28,7 @@ struct Node {
   std::vector<Polygon> polygons;
   std::vector<Path> paths;
 
-  CoordinateFrame2D frame;
+  CoordinateFrame frame;
   Vector2f velocity;
   float angular_velocity;
 

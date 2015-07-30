@@ -100,7 +100,7 @@ class World {
   Node* AddNodeInternal(std::unique_ptr<Node> new_node);
   Joint* AddJointInternal(std::unique_ptr<Joint> new_joint);
 
-  CoordinateFrame2D frame;
+  CoordinateFrame frame;
 
   // Quick access to node by unique id
   IndexedMap<id_t, std::unique_ptr<Node>> node_map_;
