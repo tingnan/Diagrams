@@ -106,7 +106,7 @@ bool Application::Init(int w, int h) {
 
   // world_.Read);
   world_ = ParseWorld((CreateJsonObject("path_simple.json")));
-  world_->Start(World::EngineType::kBullet);
+  world_->Start(World::EngineType::kLiquidFun);
 
   // 0.0015 is a scale, better to read from the input
   // e.g. 0.5 / max(world_.xspan(), world_.yspan());

@@ -110,45 +110,45 @@ void PhysicsEngineBullet::AddNode(Node* node) {
         static_cast<btCompoundShape*>(rigid_body.collision_shape.get());
     btTransform trans;
     trans.setIdentity();
-    for (auto& polygon : node->polygons) {
-      if (polygon.shape_info.isMember("type")) {
-        auto shape_type = polygon.shape_info["type"].asInt();
-        if (static_cast<Shape2DType>(shape_type) == Shape2DType::kDisk) {
-          float radius = polygon.shape_info["radius"].asFloat() * kScaleDown;
-          rigid_body.child_shapes.emplace_back();
-          rigid_body.child_shapes.back().reset(new btSphereShape(radius));
+    for (auto& shape_ptr : node->collision_shapes) {
+      switch (shape_ptr->shape_type) {
+        case Shape2DType::kDisk: {
+          auto sphere_ptr = dynamic_cast<Disk2D*>(shape_ptr.get());
+          rigid_body.child_shapes.emplace_back(
+              make_unique<btSphereShape>(sphere_ptr->radius * kScaleDown));
           compound->addChildShape(trans, rigid_body.child_shapes.back().get());
-          continue;
-        }
+        } break;
+        case Shape2DType::kPolygon: {
+          auto poly_ptr = dynamic_cast<Polygon2D*>(shape_ptr.get());
+          TriangleMesh2D mesh = TriangulatePolygon(*poly_ptr);
+          for (auto& v : mesh.vertices) {
+            v = kScaleDown * v;
+          }
+          auto hulls = CreateConvexHullShapes(mesh, kDepth);
+          for (auto& hull_ptr : hulls) {
+            compound->addChildShape(trans, hull_ptr.get());
+          }
+          rigid_body.child_shapes.insert(rigid_body.child_shapes.begin(),
+                                         std::make_move_iterator(hulls.begin()),
+                                         std::make_move_iterator(hulls.end()));
+        } break;
+        case Shape2DType::kPolyLine: {
+          auto line_ptr = dynamic_cast<Line2D*>(shape_ptr.get());
+          TriangleMesh2D mesh = TriangulatePolyline(line_ptr->path, 1.5);
+          for (auto& v : mesh.vertices) {
+            v = kScaleDown * v;
+          }
+          auto hulls = CreateConvexHullShapes(mesh, kDepth);
+          for (auto& hull_ptr : hulls) {
+            compound->addChildShape(trans, hull_ptr.get());
+          }
+          rigid_body.child_shapes.insert(rigid_body.child_shapes.begin(),
+                                         std::make_move_iterator(hulls.begin()),
+                                         std::make_move_iterator(hulls.end()));
+        } break;
+        default:
+          break;
       }
-
-      TriangleMesh2D mesh = TriangulatePolygon(polygon);
-      for (auto& v : mesh.vertices) {
-        v = kScaleDown * v;
-      }
-      // We use triangles for now (and v-hacd is a better choice).
-      auto shapes = CreateConvexHullShapes(mesh, kDepth);
-      for (auto& shape_ptr : shapes) {
-        compound->addChildShape(trans, shape_ptr.get());
-      }
-      rigid_body.child_shapes.insert(rigid_body.child_shapes.begin(),
-                                     std::make_move_iterator(shapes.begin()),
-                                     std::make_move_iterator(shapes.end()));
-    }
-
-    for (auto& path : node->paths) {
-      // Expand by 1.5 unit
-      TriangleMesh2D mesh = TriangulatePolyline(path, 1.5);
-      for (auto& v : mesh.vertices) {
-        v = kScaleDown * v;
-      }
-      auto shapes = CreateConvexHullShapes(mesh, kDepth);
-      for (auto& shape_ptr : shapes) {
-        compound->addChildShape(trans, shape_ptr.get());
-      }
-      rigid_body.child_shapes.insert(rigid_body.child_shapes.begin(),
-                                     std::make_move_iterator(shapes.begin()),
-                                     std::make_move_iterator(shapes.end()));
     }
   }
 

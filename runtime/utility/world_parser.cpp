@@ -144,15 +144,17 @@ std::unique_ptr<Node> ParseNode(const Json::Value& node_obj) {
   if (node_obj.isMember("open_path")) {
     // Allow later to have a set of open_paths
     auto& path_obj = node_obj["open_path"];
-    node_ptr->paths.emplace_back(ParsePath(path_obj));
+    node_ptr->collision_shapes.emplace_back(
+        make_unique<Line2D>(ParsePath(path_obj)));
   }
 
   // TODO(tingnan) move polygon into a sub Json object: polygons
   auto& poly_obj = node_obj;
   auto polygons = ParsePolygon(poly_obj);
-  node_ptr->polygons.insert(node_ptr->polygons.begin(),
-                            std::make_move_iterator(polygons.begin()),
-                            std::make_move_iterator(polygons.end()));
+  for (auto poly : polygons) {
+    node_ptr->collision_shapes.emplace_back(
+        make_unique<Polygon2D>(std::move(poly)));
+  }
   return node_ptr;
 }
 

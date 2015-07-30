@@ -132,8 +132,8 @@ void PolylineDouglasPeuckerRecursive(const size_t bg, const size_t ed,
   }
 }
 
-diagrammar::Path2D PolylineDouglasPeuckerIterative(const diagrammar::Path2D& path,
-                                                 float tol) {
+diagrammar::Path2D PolylineDouglasPeuckerIterative(
+    const diagrammar::Path2D& path, float tol) {
   if (path.size() <= 2) {
     return path;
   }
@@ -182,7 +182,8 @@ diagrammar::Path2D PolylineDouglasPeuckerIterative(const diagrammar::Path2D& pat
 }
 
 diagrammar::TriangleMesh2D DelaunaySweepline(
-    const diagrammar::Path2D& path, const std::vector<diagrammar::Path2D>& holes) {
+    const diagrammar::Path2D& path,
+    const std::vector<diagrammar::Path2D>& holes) {
   assert(path.size() >= 3);
   std::vector<p2t::Point> cleaned_path = CleanPolygon(path);
   std::vector<p2t::Point*> path_ptr(cleaned_path.size());
@@ -328,6 +329,7 @@ std::vector<diagrammar::Path2D> ResolveIntersectionsClosedPaths(
 }  // namespace
 
 namespace diagrammar {
+CollisionShape2D::~CollisionShape2D() {}
 
 std::vector<Vector2f> SimplifyPolyline(const Path2D& path, float rel_tol) {
   if (path.size() <= 2) {

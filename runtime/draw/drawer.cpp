@@ -187,19 +187,35 @@ void NodePathDrawer::GenPathBuffer(const Path2D& polyline, bool is_closed) {
 void NodePathDrawer::GenBuffers() {
   assert(node_ != nullptr);
 
-  // All closed path
-  for (auto& polygon : node_->polygons) {
-    unsigned num_paths = 1 + polygon.holes.size();
-    for (size_t pa_idx = 0; pa_idx < num_paths; ++pa_idx) {
-      const std::vector<Vector2f>& polyline =
-          pa_idx == 0 ? polygon.path : polygon.holes[pa_idx - 1];
-      GenPathBuffer(polyline, true);
+  for (auto& shape_ptr : node_->collision_shapes) {
+    switch (shape_ptr->shape_type) {
+      case Shape2DType::kDisk: {
+        auto sphere_ptr = dynamic_cast<Disk2D*>(shape_ptr.get());
+        const size_t num_vertices = 30;
+        Path2D polyline;
+        for (size_t i = 0; i < num_vertices; ++i) {
+          float theta = float(i) / num_vertices * M_PI * 2;
+          polyline.emplace_back(cos(theta) * sphere_ptr->radius,
+                                sin(theta) * sphere_ptr->radius);
+        }
+        GenPathBuffer(polyline, true);
+      } break;
+      case Shape2DType::kPolygon: {
+        auto poly_ptr = dynamic_cast<Polygon2D*>(shape_ptr.get());
+        unsigned num_paths = 1 + poly_ptr->holes.size();
+        for (size_t i = 0; i < num_paths; ++i) {
+          const std::vector<Vector2f>& polyline =
+              i == 0 ? poly_ptr->path : poly_ptr->holes[i - 1];
+          GenPathBuffer(polyline, true);
+        }
+      } break;
+      case Shape2DType::kPolyLine: {
+        auto line_ptr = dynamic_cast<Line2D*>(shape_ptr.get());
+        GenPathBuffer(line_ptr->path, false);
+      } break;
+      default:
+        break;
     }
-  }
-
-  // All open path
-  for (auto& path : node_->paths) {
-    GenPathBuffer(path, false);
   }
 }
 
@@ -242,17 +258,33 @@ NodePolyDrawer::~NodePolyDrawer() {
 
 void NodePolyDrawer::GenBuffers() {
   assert(node_ != nullptr);
-
-  // All closed path
-  for (auto& polygon : node_->polygons) {
-    auto mesh = TriangulatePolygon(polygon);
-    GenTriangleBuffer(mesh);
-  }
-
-  // All open path
-  for (auto& path : node_->paths) {
-    auto mesh = TriangulatePolyline(path, 1.5);
-    GenTriangleBuffer(mesh);
+  for (auto& shape_ptr : node_->collision_shapes) {
+    switch (shape_ptr->shape_type) {
+      case Shape2DType::kDisk: {
+        auto sphere_ptr = dynamic_cast<Disk2D*>(shape_ptr.get());
+        const size_t num_vertices = 30;
+        Polygon2D polygon;
+        for (size_t i = 0; i < num_vertices; ++i) {
+          float theta = float(i) / num_vertices * M_PI * 2;
+          polygon.path.emplace_back(cos(theta) * sphere_ptr->radius,
+                                    sin(theta) * sphere_ptr->radius);
+        }
+        auto mesh = TriangulatePolygon(polygon);
+        GenTriangleBuffer(mesh);
+      } break;
+      case Shape2DType::kPolygon: {
+        auto poly_ptr = dynamic_cast<Polygon2D*>(shape_ptr.get());
+        auto mesh = TriangulatePolygon(*poly_ptr);
+        GenTriangleBuffer(mesh);
+      } break;
+      case Shape2DType::kPolyLine: {
+        auto line_ptr = dynamic_cast<Line2D*>(shape_ptr.get());
+        auto mesh = TriangulatePolyline(line_ptr->path, 1.5);
+        GenTriangleBuffer(mesh);
+      } break;
+      default:
+        break;
+    }
   }
 }
 
