@@ -222,36 +222,41 @@ void PhysicsEngineLiquidFun::RemoveJointByID(id_t id) {
   }
 }
 
-void PhysicsEngineLiquidFun::ApplyForceToNode(id_t id, const Vector2f& force,
-                                              const Vector2f& offset) {
+void PhysicsEngineLiquidFun::ApplyForceToNode(id_t id, const Vector3f& force,
+                                              const Vector3f& offset) {
   auto itr = body_table_.find(id);
   if (itr != body_table_.end()) {
     // Important, when length is scaled down, force also scales down
     // in SI unit force is kg m s^-2
-    ApplyForceToBody(itr->second, kScaleDown * force, kScaleDown * offset);
+    ApplyForceToBody(itr->second, kScaleDown * force.head<2>(),
+                     kScaleDown * offset.head<2>());
   }
 }
 
 void PhysicsEngineLiquidFun::ApplyImpulseToNode(id_t id,
-                                                const Vector2f& impulse,
-                                                const Vector2f& offset) {
+                                                const Vector3f& impulse,
+                                                const Vector3f& offset) {
   auto itr = body_table_.find(id);
   if (itr != body_table_.end()) {
-    ApplyImpulseToBody(itr->second, kScaleDown * impulse, kScaleDown * offset);
+    ApplyImpulseToBody(itr->second, kScaleDown * impulse.head<2>(),
+                       kScaleDown * offset.head<2>());
   }
 }
 
-void PhysicsEngineLiquidFun::ApplyTorqueToNode(id_t id, float torque) {
+void PhysicsEngineLiquidFun::ApplyTorqueToNode(id_t id,
+                                               const Vector3f& torque) {
   auto itr = body_table_.find(id);
   if (itr != body_table_.end()) {
     // When length is scaled, the torque is scaled twice (kg m^2 s^-2)
-    ApplyTorqueToBody(itr->second, kScaleDown * kScaleDown * torque);
+    ApplyTorqueToBody(itr->second, kScaleDown * kScaleDown * torque(2));
   }
 }
-void PhysicsEngineLiquidFun::ApplyAngularImpulseToNode(id_t id, float impulse) {
+void PhysicsEngineLiquidFun::ApplyAngularImpulseToNode(
+    id_t id, const Vector3f& impulse) {
   auto itr = body_table_.find(id);
   if (itr != body_table_.end()) {
-    ApplyAngularImpulseToBody(itr->second, kScaleDown * kScaleDown * impulse);
+    ApplyAngularImpulseToBody(itr->second,
+                              kScaleDown * kScaleDown * impulse(2));
   }
 }
 

@@ -138,8 +138,8 @@ bool World::HandleMessage(const Json::Value& message) {
     const id_t left_flipper_id = 11;
     const id_t right_flipper_id = 12;
     //
-    const float torque = 15000;
-    const float angular_impulse = 9000;
+    const Vector3f torque(0, 0, 15000);
+    const Vector3f angular_impulse(0, 0, 9000);
 
     std::random_device rd_device;
     std::uniform_real_distribution<float> impulse_dist(0.f, 250.f);
@@ -191,10 +191,10 @@ bool World::HandleMessage(const Json::Value& message) {
         // boost all particles
         for (decltype(node_map_)::const_iterator itr = node_map_.cbegin();
              itr != node_map_.cend(); ++itr) {
-          Vector2f impulse(impulse_dist(rd_generator),
-                           impulse_dist(rd_generator));
+          Vector3f impulse(impulse_dist(rd_generator),
+                           impulse_dist(rd_generator), 0);
           physics_engine_->ApplyImpulseToNode(itr->first, impulse,
-                                              Vector2f(0, 0));
+                                              Vector3f(0, 0, 0));
         }
       }
     }

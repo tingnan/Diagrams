@@ -244,10 +244,11 @@ void PhysicsEngineBullet::RemoveJointByID(id_t id) {
   }
 }
 
-void PhysicsEngineBullet::ApplyForceToNode(id_t, const Vector2f& force,
-                                           const Vector2f& offset) {}
-void PhysicsEngineBullet::ApplyImpulseToNode(id_t, const Vector2f& impulse,
-                                             const Vector2f& offset) {}
-void PhysicsEngineBullet::ApplyTorqueToNode(id_t, float torque) {}
-void PhysicsEngineBullet::ApplyAngularImpulseToNode(id_t, float torque) {}
+void PhysicsEngineBullet::ApplyForceToNode(id_t id, const Vector3f& force,
+                                           const Vector3f& offset) {}
+void PhysicsEngineBullet::ApplyImpulseToNode(id_t id, const Vector3f& impulse,
+                                             const Vector3f& offset) {}
+void PhysicsEngineBullet::ApplyTorqueToNode(id_t id, const Vector3f& torque) {}
+void PhysicsEngineBullet::ApplyAngularImpulseToNode(id_t id,
+                                                    const Vector3f& torque) {}
 }  // namespace diagrammar

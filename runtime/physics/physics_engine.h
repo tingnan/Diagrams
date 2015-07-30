@@ -32,14 +32,12 @@ class PhysicsEngine {
   // Add a constraint
   virtual void AddJoint(Joint* joint) = 0;
   virtual void RemoveJointByID(id_t) = 0;
-  virtual void ApplyForceToNode(id_t, const Vector2f& force,
-                                const Vector2f& offset) = 0;
-  virtual void ApplyImpulseToNode(id_t, const Vector2f& impulse,
-                                  const Vector2f& offset) = 0;
-  // Torque direction can either be coiunter clockwise (positive) or clockwise
-  // (negative)
-  virtual void ApplyTorqueToNode(id_t, float torque) = 0;
-  virtual void ApplyAngularImpulseToNode(id_t, float torque) = 0;
+  virtual void ApplyForceToNode(id_t, const Vector3f& force,
+                                const Vector3f& offset) = 0;
+  virtual void ApplyImpulseToNode(id_t, const Vector3f& impulse,
+                                  const Vector3f& offset) = 0;
+  virtual void ApplyTorqueToNode(id_t, const Vector3f& torque) = 0;
+  virtual void ApplyAngularImpulseToNode(id_t, const Vector3f& torque) = 0;
 
  protected:
   float time_step_;

@@ -47,11 +47,11 @@ class PhysicsEngineBullet : public PhysicsEngine {
   void RemoveNodeByID(id_t id);
   void RemoveJointByID(id_t id);
 
-  void ApplyForceToNode(id_t, const Vector2f& force, const Vector2f& offset);
-  void ApplyImpulseToNode(id_t, const Vector2f& impulse,
-                          const Vector2f& offset);
-  void ApplyTorqueToNode(id_t, float torque);
-  void ApplyAngularImpulseToNode(id_t, float torque);
+  void ApplyForceToNode(id_t id, const Vector3f& force, const Vector3f& offset);
+  void ApplyImpulseToNode(id_t id, const Vector3f& impulse,
+                          const Vector3f& offset);
+  void ApplyTorqueToNode(id_t id, const Vector3f& torque);
+  void ApplyAngularImpulseToNode(id_t id, const Vector3f& torque);
 
  private:
   // Bullet world specs params.
