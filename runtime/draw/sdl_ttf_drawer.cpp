@@ -8,6 +8,38 @@
 #include "draw/camera.h"
 
 namespace {
+const char kFragShaderSource[] =
+    "precision mediump float;\n"
+    "varying vec4 v_color;\n"
+    "varying vec2 tex_coord;\n"
+    "uniform sampler2D tex_data;\n"
+    "void main() {\n"
+    "  vec4 alpha = vec4(1.0, 1.0, 1.0, texture2D(tex_data, tex_coord).a);\n"
+    "  gl_FragColor = v_color * alpha;\n"
+    "}\n";
+
+const char kVertShaderSource[] =
+    "uniform mat4 u_mvp;\n"
+    "attribute vec4 position;\n"
+    "attribute vec4 color;\n"
+    "varying vec4 v_color;\n"
+    "varying vec2 tex_coord;\n"
+    "void main() {\n"
+    "  gl_Position = u_mvp * vec4(position.xy, 0.0, 1.0);\n"
+    "  tex_coord = position.zw;\n"
+    "  v_color = vec4(color.xyz, 1.0);\n"
+    "}\n";
+
+const std::array<GLfloat, 16> kQuad = {{-0.5, 0.5, 0.0, 0.0, 0.5, 0.5, 1.0, 0.0,
+                                        0.5, -0.5, 1.0, 1.0, -0.5, -0.5, 0.0,
+                                        1.0}};
+
+const std::array<GLfloat, 16> kQuadColor = {{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                                             1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+                                             1.0, 1.0}};
+
+const std::array<GLuint, 6> kQuadIndices = {{0, 1, 2, 2, 3, 0}};
+
 SDL_Surface* StringToSDLSurface(const char* message, TTF_Font* font) {
   SDL_Color color = {255, 255, 255, 255};
   SDL_Surface* ttf_surface = TTF_RenderText_Blended(font, message, color);
@@ -15,32 +47,8 @@ SDL_Surface* StringToSDLSurface(const char* message, TTF_Font* font) {
     std::cerr << "TTF_RenderText: " << SDL_GetError() << std::endl;
     return nullptr;
   }
-  
-  // std::cout << std::hex << std::setw(8) << std::setfill('0') << ttf_surface->format->Rmask << "\n";
-  // std::cout << std::hex << std::setw(8) << std::setfill('0') << ttf_surface->format->Gmask << "\n";
-  // std::cout << std::hex << std::setw(8) << std::setfill('0') << ttf_surface->format->Bmask << "\n";
-  // std::cout << std::hex << std::setw(8) << std::setfill('0') << ttf_surface->format->Amask << "\n";
-  // std::cout << int(ttf_surface->format->BytesPerPixel) << "\n";
-  // SDL_SaveBMP(ttf_surface, "image.bmp");
-  // exit(0);
   return ttf_surface;
 }
-
-const std::array<GLfloat, 16> kQuad = {
-   -0.5, 0.5, 0.0, 0.0, 
-    0.5, 0.5, 1.0, 0.0,
-    0.5,-0.5, 1.0, 1.0,
-   -0.5,-0.5, 0.0, 1.0
- };
-
-const std::array<GLfloat, 16> kQuadColor = {
-    1.0, 1.0, 1.0, 1.0, 
-    1.0, 1.0, 1.0, 1.0,
-    1.0, 1.0, 1.0, 1.0,
-    1.0, 1.0, 1.0, 1.0
-};
-
-const std::array<GLuint, 6> kQuadIndices = {0, 1, 2, 2, 3, 0};
 
 }  // namespace
 
@@ -48,6 +56,11 @@ namespace diagrammar {
 
 TextDrawer::TextDrawer(TTF_Font* font) : font_(font) {
   GenBuffers();
+  program_.pid = CreateGLProgram(kVertShaderSource, kFragShaderSource);
+  program_.u_mvp = glGetUniformLocation(program_.pid, "u_mvp");
+  program_.color = glGetAttribLocation(program_.pid, "color");
+  program_.vertex = glGetAttribLocation(program_.pid, "position");
+  program_.texture = glGetUniformLocation(program_.pid, "tex_data");
 }
 
 void TextDrawer::GenBuffers() {
@@ -59,27 +72,29 @@ void TextDrawer::GenBuffers() {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glBindTexture(GL_TEXTURE_2D, 0);
-  
+
   glGenBuffers(1, &vert_buffer_);
 
   glGenBuffers(1, &vert_indice_);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vert_indice_);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * kQuadIndices.size(), kQuadIndices.data(),
-               GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * kQuadIndices.size(),
+               kQuadIndices.data(), GL_STATIC_DRAW);
   glGenBuffers(1, &vert_color_);
   glBindBuffer(GL_ARRAY_BUFFER, vert_color_);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * kQuadColor.size(), kQuadColor.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * kQuadColor.size(),
+               kQuadColor.data(), GL_STATIC_DRAW);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void TextDrawer::Draw(const std::string& text, const Vector2f& pos, GLProgram program,  Camera* camera) {
-
+void TextDrawer::Draw(const std::string& text, const Vector2f& pos,
+                      Camera* camera) {
+  GLProgram program = program_;
   SDL_Surface* surface = StringToSDLSurface(text.c_str(), font_);
   if (surface == nullptr) {
     return;
   }
 
-  glUseProgram(program.program_id);
+  glUseProgram(program.pid);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   // texture
@@ -89,7 +104,7 @@ void TextDrawer::Draw(const std::string& text, const Vector2f& pos, GLProgram pr
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0, GL_RGBA,
                GL_UNSIGNED_BYTE, surface->pixels);
   // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  glUniform1i(program.texture_loc, 0);
+  glUniform1i(program.texture, 0);
 
   // vertex
   glBindBuffer(GL_ARRAY_BUFFER, vert_buffer_);
@@ -101,18 +116,18 @@ void TextDrawer::Draw(const std::string& text, const Vector2f& pos, GLProgram pr
   glBufferData(GL_ARRAY_BUFFER, vert_array.size() * sizeof(GLfloat),
                vert_array.data(), GL_STATIC_DRAW);
 
-  glVertexAttribPointer(program.vertex_loc, 4, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(program.vertex_loc);
+  glVertexAttribPointer(program.vertex, 4, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(program.vertex);
 
   // color
   glBindBuffer(GL_ARRAY_BUFFER, vert_color_);
-  glVertexAttribPointer(program.color_loc, 4, GL_FLOAT, GL_FALSE, 0, 0);
-  glEnableVertexAttribArray(program.color_loc);
+  glVertexAttribPointer(program.color, 4, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(program.color);
 
   // text location
   Matrix4f u_mvp(Matrix4f::Identity());
   u_mvp = camera->GetViewProjection() * u_mvp;
-  glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
+  glUniformMatrix4fv(program.u_mvp, 1, false, u_mvp.data());
 
   // scale
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vert_indice_);

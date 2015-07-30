@@ -14,21 +14,11 @@
 #include <unordered_map>
 
 #include "physics/node.h"
+#include "draw/gl_utility.h"
 
 namespace diagrammar {
 
 class Camera;
-
-struct GLProgram {
-  // the user provided model_view_projection matrix
-  GLuint u_mvp_loc;
-  GLuint color_loc;
-  GLuint vertex_loc;
-  GLuint texture_loc;
-  GLuint program_id;
-};
-
-GLProgram LoadDefaultGLProgram();
 
 class NodeDrawer {
  public:

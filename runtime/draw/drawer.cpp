@@ -11,68 +11,7 @@
 #include "utility/stl_memory.h"
 
 namespace {
-
 const GLuint kVertDim = 4;
-
-const char kFragShaderSource[] =
-    "precision mediump float;\n"
-    "varying vec4 v_color;\n"
-    "varying vec2 tex_coord;\n"
-    "uniform sampler2D tex_data;\n"
-    "void main() {\n"
-    "  vec4 alpha = vec4(1.0, 1.0, 1.0, texture2D(tex_data, tex_coord).a);\n"
-    "  gl_FragColor = v_color * alpha;\n"
-    "}\n";
-
-const char kVertShaderSource[] =
-    "uniform mat4 u_mvp;\n"
-    "attribute vec4 position;\n"
-    "attribute vec4 color;\n"
-    "varying vec4 v_color;\n"
-    "varying vec2 tex_coord;\n"
-    "void main() {\n"
-    "  gl_Position = u_mvp * vec4(position.xy, 0.0, 1.0);\n"
-    "  tex_coord = position.zw;\n"
-    "  v_color = vec4(color.xyz, 1.0);\n"
-    "}\n";
-
-void ShaderErrorHandler(GLuint shader_id) {
-  GLint log_size;
-  glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &log_size);
-  log_size = log_size > 0 ? log_size : 1024;
-  std::vector<char> compileLog(log_size);
-  glGetShaderInfoLog(shader_id, log_size, nullptr, compileLog.data());
-  std::cerr << "Compile Error: " << compileLog.data() << std::endl;
-}
-
-void ProgarmErrorHanlder(GLuint program_id) {
-  GLint log_size;
-  glGetProgramiv(program_id, GL_INFO_LOG_LENGTH, &log_size);
-  log_size = log_size > 0 ? log_size : 1024;
-  std::vector<char> errorMessage(log_size);
-  glGetProgramInfoLog(program_id, log_size, nullptr, errorMessage.data());
-  std::cerr << "Linking Error: " << errorMessage.data() << std::endl;
-}
-
-GLuint CompileShaderFromSource(const char* data, GLenum type) {
-  GLuint shader_id = glCreateShader(type);
-  glShaderSource(shader_id, 1, &data, nullptr);
-  glCompileShader(shader_id);
-  GLint result = GL_FALSE;
-  glGetShaderiv(shader_id, GL_COMPILE_STATUS, &result);
-  if (result != GL_TRUE) {
-    ShaderErrorHandler(shader_id);
-    return 0;
-  }
-  return shader_id;
-}
-
-GLuint CompileShaderFromFile(const char* fname, GLenum type) {
-  std::string shader_text = diagrammar::Stringify(fname);
-  const char* shader_text_cstr = shader_text.c_str();
-  return CompileShaderFromSource(shader_text_cstr, type);
-}
-
 /*
 void RenderString(FT_Face fc, std::string s, float x, float y, float sx,
                     float sy) {
@@ -98,38 +37,9 @@ void RenderString(FT_Face fc, std::string s, float x, float y, float sx,
   }
 }
 */
-
 }  // namespace
 
 namespace diagrammar {
-
-GLProgram LoadDefaultGLProgram() {
-  GLuint vert_shader_id =
-      CompileShaderFromSource(kVertShaderSource, GL_VERTEX_SHADER);
-  GLuint frag_shader_id =
-      CompileShaderFromSource(kFragShaderSource, GL_FRAGMENT_SHADER);
-  // now we can link the program
-
-  GLuint program_id = glCreateProgram();
-  glAttachShader(program_id, vert_shader_id);
-  glAttachShader(program_id, frag_shader_id);
-  glLinkProgram(program_id);
-  GLint result;
-  glGetProgramiv(program_id, GL_LINK_STATUS, &result);
-  if (result != GL_TRUE) {
-    ProgarmErrorHanlder(program_id);
-  }
-  glDeleteShader(vert_shader_id);
-  glDeleteShader(frag_shader_id);
-
-  GLProgram program;
-  program.texture_loc = glGetUniformLocation(program_id, "tex_data");
-  program.u_mvp_loc = glGetUniformLocation(program_id, "u_mvp");
-  program.color_loc = glGetAttribLocation(program_id, "color");
-  program.vertex_loc = glGetAttribLocation(program_id, "position");
-  program.program_id = program_id;
-  return program;
-}
 
 NodePathDrawer::NodePathDrawer(const Node* node) {
   node_ = node;
@@ -223,26 +133,24 @@ void NodePathDrawer::Draw(GLProgram program, Camera* camera) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
-    glVertexAttribPointer(program.vertex_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
-                          0);
-    glEnableVertexAttribArray(program.vertex_loc);
+    glVertexAttribPointer(program.vertex, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(program.vertex);
 
     glBindBuffer(GL_ARRAY_BUFFER, vertex_color_buffer_[i]);
-    glVertexAttribPointer(program.color_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
-                          0);
-    glEnableVertexAttribArray(program.color_loc);
+    glVertexAttribPointer(program.color, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(program.color);
 
     Matrix4f u_mvp(Matrix4f::Identity());
     u_mvp.topLeftCorner<3, 3>() = node_->frame.GetRotationMatrix();
     u_mvp.col(3).head<3>() = node_->frame.GetTranslation();
     u_mvp = camera->GetViewProjection() * u_mvp;
-    glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
+    glUniformMatrix4fv(program.u_mvp, 1, false, u_mvp.data());
 
     glDrawArrays(GL_LINE_STRIP, 0, vertex_size_[i]);
   }
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glDisableVertexAttribArray(program.vertex_loc);
-  glDisableVertexAttribArray(program.color_loc);
+  glDisableVertexAttribArray(program.vertex);
+  glDisableVertexAttribArray(program.color);
 }
 
 NodePolyDrawer::NodePolyDrawer(const Node* node) {
@@ -359,26 +267,24 @@ void NodePolyDrawer::Draw(GLProgram program, Camera* camera) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
-    glVertexAttribPointer(program.vertex_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
-                          0);
-    glEnableVertexAttribArray(program.vertex_loc);
+    glVertexAttribPointer(program.vertex, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(program.vertex);
 
     glBindBuffer(GL_ARRAY_BUFFER, vertex_color_buffer_[i]);
-    glVertexAttribPointer(program.color_loc, kVertDim, GL_FLOAT, GL_FALSE, 0,
-                          0);
-    glEnableVertexAttribArray(program.color_loc);
+    glVertexAttribPointer(program.color, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(program.color);
 
     Matrix4f u_mvp(Matrix4f::Identity());
     u_mvp.topLeftCorner<3, 3>() = node_->frame.GetRotationMatrix();
     u_mvp.col(3).head<3>() = node_->frame.GetTranslation();
     u_mvp = camera->GetViewProjection() * u_mvp;
-    glUniformMatrix4fv(program.u_mvp_loc, 1, false, u_mvp.data());
+    glUniformMatrix4fv(program.u_mvp, 1, false, u_mvp.data());
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_[i]);
     glDrawElements(GL_TRIANGLES, index_size_[i], GL_UNSIGNED_INT, 0);
   }
-  glDisableVertexAttribArray(program.vertex_loc);
-  glDisableVertexAttribArray(program.color_loc);
+  glDisableVertexAttribArray(program.vertex);
+  glDisableVertexAttribArray(program.color);
 }
 
 // move back to header
@@ -400,7 +306,7 @@ void Canvas<DrawerType>::RemoveNodeByID(int id) {
 
 template <class DrawerType>
 void Canvas<DrawerType>::Draw() {
-  glUseProgram(program_.program_id);
+  glUseProgram(program_.pid);
   for (auto itr = drawers_.begin(); itr != drawers_.end(); ++itr) {
     itr->second->Draw(program_, camera_);
   }

@@ -106,7 +106,7 @@ bool Application::Init(int w, int h) {
 
   // world_.Read);
   world_ = ParseWorld((CreateJsonObject("path_simple.json")));
-  world_->Start(World::EngineType::kLiquidFun);
+  world_->Start(World::EngineType::kBullet);
 
   // 0.0015 is a scale, better to read from the input
   // e.g. 0.5 / max(world_.xspan(), world_.yspan());
@@ -290,8 +290,7 @@ void Application::RenderID() {
       std::string label = std::to_string(node->id);
       label +=
           ":(" + std::to_string(pos(0)) + "," + std::to_string(pos(1)) + ")";
-      text_drawer_->Draw(label, Vector2f(pos(0), pos(1)), gl_program_,
-                         &camera_);
+      text_drawer_->Draw(label, Vector2f(pos(0), pos(1)), &camera_);
     }
   }
 }

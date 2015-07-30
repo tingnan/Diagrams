@@ -13,7 +13,8 @@
 
 #include <string>
 
-#include "draw/drawer.h"
+#include "include/matrix_types.h"
+#include "draw/gl_utility.h"
 
 namespace diagrammar {
 
@@ -21,15 +22,16 @@ class TextDrawer {
  public:
   explicit TextDrawer(TTF_Font* font);
   // w and h are window sizes
-  void Draw(const std::string& text, const Vector2f& pos, GLProgram program,  class Camera* camera);
+  void Draw(const std::string& text, const Vector2f& pos, class Camera* camera);
 
  private:
   void GenBuffers();
+  TTF_Font* font_;
   GLuint text_buffer_;
   GLuint vert_buffer_;
   GLuint vert_indice_;
   GLuint vert_color_;
-  TTF_Font* font_;
+  GLProgram program_;
 };
 
 }  // namespace diagrammar
