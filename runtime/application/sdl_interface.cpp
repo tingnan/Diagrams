@@ -54,6 +54,19 @@ std::unique_ptr<diagrammar::World> ParseWorld(const Json::Value& world) {
       std::move(simulation_world));
 }
 
+diagrammar::GLProgram LoadSphereGLProgram() {
+  std::string vert_shader = diagrammar::Stringify("sphere.vert");
+  std::string frag_shader = diagrammar::Stringify("sphere.frag");
+  diagrammar::GLProgram program;
+  program.pid =
+      diagrammar::CreateGLProgram(vert_shader.c_str(), frag_shader.c_str());
+  program.u_mvp = glGetUniformLocation(program.pid, "u_mvp");
+  program.color = glGetAttribLocation(program.pid, "color");
+  program.vertex = glGetAttribLocation(program.pid, "vertex");
+  program.resolution = glGetUniformLocation(program.pid, "resolution");
+  return program;
+}
+
 }  // namespace
 
 namespace diagrammar {
@@ -106,13 +119,9 @@ bool Application::Init(int w, int h) {
 
   // world_.Read);
   world_ = ParseWorld((CreateJsonObject("path_simple.json")));
-  world_->Start(World::EngineType::kBullet);
+  world_->Start(World::EngineType::kLiquidFun);
 
-  // 0.0015 is a scale, better to read from the input
-  // e.g. 0.5 / max(world_.xspan(), world_.yspan());
-  glViewport(0, 0, 800, 800);
   gl_program_ = LoadDefaultGLProgram();
-  // we have one fixed camera and one movable camera for now
   cameras_.resize(2);
   cameras_[0] =
       make_unique<Camera>(Vector3f(0, -100, 800), Vector3f(0, 300, 0),
@@ -121,21 +130,26 @@ bool Application::Init(int w, int h) {
   cameras_[1] =
       make_unique<Camera>(Vector3f(0, 0, 800), Vector3f(0, 0, 0),
                           Vector3f(0, 1, 0), M_PI / 2.0, 1.0, 10.0, 10000.0);
-  poly_debug_drawer_ = make_unique<NodeGroupDrawer<NodePolyDrawer>>(
-      gl_program_, cameras_[0].get());
-  for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
-    poly_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
-  }
 
+  poly_debug_drawer_ = make_unique<NodeGroupDrawer<NodePolyDrawer>>(
+      gl_program_, cameras_[0].get(), Vector2f(w, h));
   path_debug_drawer_ = make_unique<NodeGroupDrawer<NodePathDrawer>>(
-      gl_program_, cameras_[0].get());
+      gl_program_, cameras_[0].get(), Vector2f(w, h));
+  particle_drawer_ = make_unique<NodeGroupDrawer<SphereDrawer>>(
+      LoadSphereGLProgram(), cameras_[0].get(), Vector2f(w, h));
   for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
+    auto& collision_shapes = world_->GetNodeByIndex(i)->collision_shapes;
+    if (collision_shapes.size() == 1 &&
+        collision_shapes[0]->shape_type == Shape2DType::kDisk) {
+      particle_drawer_->AddNode(world_->GetNodeByIndex(i));
+    }
+    poly_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
     path_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
   }
 
   text_drawer_ = make_unique<TextDrawer>(font_);
   // use the fixed camera
-  canvas_drawer_ = make_unique<CanvasDrawer>(cameras_[1].get());
+  canvas_drawer_ = make_unique<CanvasDrawer>(cameras_[1].get(), Vector2f(w, h));
 
   // SDL_StartTextInput();
   return true;
@@ -314,11 +328,13 @@ void Application::Render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
+    auto curr_time = world_->now();
+    if (true) canvas_drawer_->Draw(curr_time * 1e-3);
     if (draw_poly_) poly_debug_drawer_->Draw();
     if (draw_path_) path_debug_drawer_->Draw();
     if (draw_text_) RenderID();
-    auto curr_time = world_->now();
-    canvas_drawer_->Draw(curr_time * 1e-3);
+    if (true) particle_drawer_->Draw();
+
     SDL_GL_SwapWindow(window_);
   }
 }

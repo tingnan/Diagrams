@@ -16,31 +16,6 @@ const std::array<GLfloat, 16> kQuad = {
     {-1, 1, 0.0, 0.0, 1, 1, 0.0, 0.0, 1, -1, 0.0, 0.0, -1, -1, 0.0, 0.0}};
 const std::array<GLuint, 6> kQuadIndices = {{0, 1, 2, 2, 3, 0}};
 
-/*
-void RenderString(FT_Face fc, std::string s, float x, float y, float sx,
-                    float sy) {
-  for (auto ch : s) {
-    if (FT_Load_Char(fc, ch, FT_LOAD_RENDER)) continue;
-    FT_GlyphSlot glyph = fc->glyph;
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, glyph->bitmap.width,
-                 glyph->bitmap.rows, 0, GL_ALPHA, GL_UNSIGNED_BYTE,
-                 glyph->bitmap.buffer);
-    // now we have added a texture
-    // let us create a box, the x and y are cursor position
-    // sx and sy are scale in each direction
-    GLfloat xpos = x + glyph->bitmap_left * sx;
-    GLfloat ypos = y + glyph->bitmap_top * sy;
-    GLfloat w = glyph->bitmap.width * sx;
-    GLfloat h = glyph->bitmap.rows * sy;
-    GLfloat char_box[16] = {xpos, ypos,     0, 0, xpos + w, ypos,     1, 0,
-                            xpos, ypos - h, 0, 1, xpos + w, ypos - h, 1, 1};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(char_box), char_box, GL_DYNAMIC_DRAW);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-    x += (glyph->advance.x >> 6) * sx;
-    y += (glyph->advance.y >> 6) * sy;
-  }
-}
-*/
 }  // namespace
 
 namespace diagrammar {
@@ -133,7 +108,8 @@ void NodePathDrawer::GenBuffers() {
   }
 }
 
-void NodePathDrawer::Draw(GLProgram program, Camera* camera) {
+void NodePathDrawer::Draw(GLProgram program, Camera* camera,
+                          Vector2f resolution) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
@@ -267,7 +243,8 @@ void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh2D& mesh) {
                GL_STATIC_DRAW);
 }
 
-void NodePolyDrawer::Draw(GLProgram program, Camera* camera) {
+void NodePolyDrawer::Draw(GLProgram program, Camera* camera,
+                          Vector2f resolution) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
@@ -291,10 +268,106 @@ void NodePolyDrawer::Draw(GLProgram program, Camera* camera) {
   glDisableVertexAttribArray(program.color);
 }
 
+SphereDrawer::SphereDrawer(const Node* node) {
+  node_ = node;
+  GenBuffers();
+}
+SphereDrawer::~SphereDrawer() {
+  glDeleteBuffers(vertex_buffer_.size(), vertex_buffer_.data());
+  glDeleteBuffers(vertex_color_buffer_.size(), vertex_color_buffer_.data());
+}
+
+void SphereDrawer::GenBuffers() {
+  vertex_size_.resize(1);
+  vertex_size_[0] = 0;
+  index_size_.resize(1);
+  index_size_[0] = 0;
+
+  std::vector<GLfloat> vert_array;
+  std::vector<GLfloat> colors;
+  std::vector<GLuint> indices;
+  for (auto& shape_ptr : node_->collision_shapes) {
+    if (shape_ptr->shape_type == Shape2DType::kDisk) {
+      auto sphere_ptr = dynamic_cast<Disk2D*>(shape_ptr.get());
+      float sphere_radius = sphere_ptr->radius;
+      // a quad with 4 vertices
+      vertex_size_[0] += 4;
+      // and 6 indices
+      index_size_[0] += 6;
+      std::vector<GLfloat> quad_vertices(16, 0);
+      std::vector<GLfloat> color(16, 1);
+
+      for (size_t i = 0; i < 16; i += 4) {
+        quad_vertices[i + 0] = kQuad[i + 0] * sphere_radius;
+        quad_vertices[i + 1] = kQuad[i + 1] * sphere_radius;
+        quad_vertices[i + 2] = 0;
+        quad_vertices[i + 3] = sphere_radius;
+      }
+
+      vert_array.insert(vert_array.end(), quad_vertices.begin(),
+                        quad_vertices.end());
+
+      colors.insert(colors.end(), color.begin(), color.end());
+      // warning, we are reusing the first spheres;
+      indices.insert(indices.end(), kQuadIndices.begin(), kQuadIndices.end());
+    }
+  }
+
+  vertex_buffer_.resize(1);
+  glGenBuffers(1, &vertex_buffer_[0]);
+  vertex_color_buffer_.resize(1);
+  glGenBuffers(1, &vertex_color_buffer_[0]);
+  index_buffer_.resize(1);
+  glGenBuffers(1, &index_buffer_[0]);
+
+  // now bind buffers and upload data
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[0]);
+  glBufferData(GL_ARRAY_BUFFER, vert_array.size() * sizeof(GLfloat),
+               vert_array.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_color_buffer_[0]);
+  glBufferData(GL_ARRAY_BUFFER, colors.size() * sizeof(GLfloat), colors.data(),
+               GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_[0]);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
+               indices.data(), GL_STATIC_DRAW);
+}
+void SphereDrawer::Draw(GLProgram program, Camera* camera,
+                        Vector2f resolution) {
+  assert(node_);
+  assert(vertex_buffer_.size() == 1);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  GLfloat view_port[2] = {resolution(0), resolution(1)};
+  glUniform2fv(program.resolution, 1, view_port);
+
+  for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
+    glVertexAttribPointer(program.vertex, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(program.vertex);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_color_buffer_[i]);
+    glVertexAttribPointer(program.color, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(program.color);
+
+    Matrix4f u_mvp(Matrix4f::Identity());
+    u_mvp.col(3).head<3>() = node_->frame.GetTranslation();
+    u_mvp = camera->GetViewProjection() * u_mvp;
+    // Now we just align the frame with camera frame
+    u_mvp.topLeftCorner<3, 3>() = Matrix3f::Identity();
+    glUniformMatrix4fv(program.u_mvp, 1, false, u_mvp.data());
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_[i]);
+    glDrawElements(GL_TRIANGLES, index_size_[i], GL_UNSIGNED_INT, 0);
+  }
+  glDisableVertexAttribArray(program.vertex);
+  glDisableVertexAttribArray(program.color);
+}
+
 // move back to header
 template <class DrawerType>
-NodeGroupDrawer<DrawerType>::NodeGroupDrawer(GLProgram program, Camera* camera)
-    : program_(program), camera_(camera) {}
+NodeGroupDrawer<DrawerType>::NodeGroupDrawer(GLProgram program, Camera* camera,
+                                             Vector2f resolution)
+    : program_(program), camera_(camera), view_port_(resolution) {}
 
 template <class DrawerType>
 void NodeGroupDrawer<DrawerType>::AddNode(const Node* node) {
@@ -312,7 +385,7 @@ template <class DrawerType>
 void NodeGroupDrawer<DrawerType>::Draw() {
   glUseProgram(program_.pid);
   for (auto itr = drawers_.begin(); itr != drawers_.end(); ++itr) {
-    itr->second->Draw(program_, camera_);
+    itr->second->Draw(program_, camera_, view_port_);
   }
   glUseProgram(0);
 }
@@ -320,8 +393,10 @@ void NodeGroupDrawer<DrawerType>::Draw() {
 // to prevent linking error
 template class NodeGroupDrawer<NodePathDrawer>;
 template class NodeGroupDrawer<NodePolyDrawer>;
+template class NodeGroupDrawer<SphereDrawer>;
 
-CanvasDrawer::CanvasDrawer(Camera* camera) : camera_(camera) {
+CanvasDrawer::CanvasDrawer(Camera* camera, Vector2f resolution)
+    : camera_(camera), view_port_(resolution) {
   GenBuffers();
   std::string vert_shader = Stringify("bgshader.vert");
   std::string frag_shader = Stringify("bgshader.frag");
@@ -362,7 +437,7 @@ void CanvasDrawer::Draw(float curr_time) {
   glUseProgram(program_.pid);
 
   // Resolution of the ocean and the time fluctuation
-  GLfloat resolution[2] = {600, 600};
+  GLfloat resolution[2] = {view_port_(0), view_port_(1)};
   glUniform2fv(resolution_, 1, resolution);
   glUniform1f(time_, curr_time);
 

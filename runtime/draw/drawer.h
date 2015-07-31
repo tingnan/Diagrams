@@ -22,7 +22,7 @@ class Camera;
 
 class NodeDrawer {
  public:
-  virtual void Draw(GLProgram program, Camera* camera) = 0;
+  virtual void Draw(GLProgram program, Camera* camera, Vector2f resolution) = 0;
   virtual ~NodeDrawer() = default;
 
  protected:
@@ -40,7 +40,7 @@ class NodePathDrawer : public NodeDrawer {
   explicit NodePathDrawer(const Node* node);
   ~NodePathDrawer();
   // Use a precompiled program and a scale to draw
-  void Draw(GLProgram program, Camera* camera);
+  void Draw(GLProgram program, Camera* camera, Vector2f resolution);
 
  private:
   void GenPathBuffer(const Path2D&, bool);
@@ -53,7 +53,7 @@ class NodePolyDrawer : public NodeDrawer {
   // Set a node before calling Draw()
   explicit NodePolyDrawer(const Node* node);
   ~NodePolyDrawer();
-  void Draw(GLProgram program, Camera* camera);
+  void Draw(GLProgram program, Camera* camera, Vector2f resolution);
 
  private:
   void GenTriangleBuffer(const TriangleMesh2D&);
@@ -63,25 +63,43 @@ class NodePolyDrawer : public NodeDrawer {
   std::vector<GLuint> index_size_;
 };
 
+class SphereDrawer : public NodeDrawer {
+ public:
+  explicit SphereDrawer(const Node* node);
+  ~SphereDrawer();
+  void Draw(GLProgram program, Camera* camera, Vector2f resolution);
+
+ private:
+  void GenBuffers();
+  std::vector<GLuint> index_buffer_;
+  std::vector<GLuint> index_size_;
+};
+
 template <class DrawerType>
 class NodeGroupDrawer {
  public:
-  NodeGroupDrawer(GLProgram program, Camera* camera);
+  NodeGroupDrawer(GLProgram program, Camera* camera, Vector2f resolution);
   void AddNode(const Node* node);
   void RemoveNodeByID(id_t id);
   void Draw();
 
+  void ChangeGLProgram(GLProgram program) { program_ = program; }
+  void ChangeCamera(Camera* camera) { camera_ = camera; }
+  void ChangeResolution(Vector2f resolution) { view_port_ = resolution; }
+
  private:
   GLProgram program_;
   Camera* camera_ = nullptr;
+  Vector2f view_port_;
   std::unordered_map<id_t, std::unique_ptr<DrawerType> > drawers_;
 };
 
 class CanvasDrawer {
  public:
-  CanvasDrawer(Camera* camera);
+  CanvasDrawer(Camera* camera, Vector2f resolution);
   ~CanvasDrawer();
   void Draw(float curr_time);
+  void ChangeResolution(Vector2f resolution) { view_port_ = resolution; }
 
  private:
   void GenBuffers();
@@ -91,6 +109,7 @@ class CanvasDrawer {
   GLuint vert_buffer_;
   GLuint vert_indice_;
   Camera* camera_ = nullptr;
+  Vector2f view_port_;
 };
 
 }  // namespace diagrammar

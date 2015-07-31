@@ -35,7 +35,6 @@ class World {
 
   // initialize the world, the physics engine MUST be initialized after
   // the world description is loaded
-  void Read(const Json::Value&);
   void Start(EngineType t = EngineType::kLiquidFun);
 
   // put in the main loop
@@ -90,12 +89,6 @@ class World {
    private:
     id_t id_counter_ = 0;
   };
-
-  // Clear everything in the world.
-  void Reset();
-
-  // called by InitializeWorldDescription
-  void ParseWorld(const Json::Value&);
 
   Node* AddNodeInternal(std::unique_ptr<Node> new_node);
   Joint* AddJointInternal(std::unique_ptr<Joint> new_joint);

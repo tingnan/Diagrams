@@ -23,21 +23,6 @@ World::World() {}
 
 World::~World() {}
 
-void World::Reset() {
-  node_map_.clear();
-  node_id_map_.clear();
-  frame = CoordinateFrame(Isometry2f::Identity());
-  step_time_.clear();
-  id_pool_.Reset();
-  auto engine_ptr = physics_engine_.release();
-  if (engine_ptr) delete engine_ptr;
-}
-
-void World::Read(const Json::Value& world) {
-  Reset();
-  ParseWorld(world);
-}
-
 void World::Start(EngineType engine_type) {
   auto engine_ptr = physics_engine_.release();
   if (engine_ptr) delete engine_ptr;
@@ -359,25 +344,6 @@ float World::now() const { return timer_.now(); }
 
 float World::simulation_time() const {
   return timer_.accumulated_ticks() * timer_.tick_time();
-}
-
-void World::ParseWorld(const Json::Value& world) {
-  // Construct the initial world
-
-  if (world.isMember("transform")) {
-    frame = CoordinateFrame(ParseTransformation2D(world["transform"]));
-  }
-  const Json::Value& child_obj = world["children"];
-  Json::Value::const_iterator child_itr = child_obj.begin();
-  for (; child_itr != child_obj.end(); ++child_itr) {
-    AddNode(ParseNode(*child_itr));
-  }
-  // can only parse the joint after we know all the nodes
-  const Json::Value& joint_obj = world["joints"];
-  Json::Value::const_iterator joint_itr = joint_obj.begin();
-  for (; joint_itr != joint_obj.end(); ++joint_itr) {
-    AddJoint(ParseJoint(*joint_itr));
-  }
 }
 
 }  // namespace diagrammar

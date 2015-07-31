@@ -7,6 +7,7 @@
 #include <OpenGL/gl.h>
 #else
 #include <GLES2/gl2.h>
+#include <GLES2/gl2ext.h>
 #endif
 
 namespace diagrammar {
@@ -18,6 +19,7 @@ struct GLProgram {
   GLuint vertex;
   GLuint normal;
   GLuint texture;
+  GLuint resolution;
 };
 
 GLuint CreateGLProgram(const char* vert_shader_src,
