@@ -18,7 +18,7 @@ Camera::Camera(const Vector3f& position, const Vector3f& target,
 }
 
 void Camera::SetView(const Vector3f& position, const Vector3f& target,
-                          const Vector3f& up) {
+                     const Vector3f& up) {
   Matrix3f rotation;
   rotation.row(1) = up.normalized();
   rotation.row(2) = (position - target).normalized();
@@ -40,15 +40,14 @@ void Camera::SetPerspective(float fov, float aspect_ratio, float near,
   perspective_projection_(3, 2) = -1;
   perspective_projection_(2, 3) = -2 * far * near / range;
   perspective_projection_(3, 3) = 0;
-  matrix_dirty_  = true;
+  matrix_dirty_ = true;
 }
-
 
 void Camera::Translate(const Vector3f& translation) {
   // Compute the frame in the world coordinate;
-  Isometry3f frame = Isometry3f(view_).inverse();
-  frame.translate(translation);
-  view_ = frame.inverse().matrix();
+  Matrix4f frame = view_.inverse();
+  frame.topRightCorner<3, 1>() += translation;
+  view_ = frame.inverse();
   matrix_dirty_ = true;
 }
 

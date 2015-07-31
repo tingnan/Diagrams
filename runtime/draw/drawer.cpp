@@ -343,9 +343,9 @@ void CanvasDrawer::GenBuffers() {
   glBindBuffer(GL_ARRAY_BUFFER, vert_buffer_);
   std::array<GLfloat, 16> vert_array = kQuad;
   for (size_t i = 0; i < 16; i += 4) {
-    vert_array[i + 0] = vert_array[i + 0] * 800;
-    vert_array[i + 1] = vert_array[i + 1] * 800;
-    vert_array[i + 2] = -0.5;
+    vert_array[i + 0] = vert_array[i + 0] * 10000;
+    vert_array[i + 1] = vert_array[i + 1] * 10000;
+    vert_array[i + 2] = -1000;
   }
 
   glBufferData(GL_ARRAY_BUFFER, vert_array.size() * sizeof(GLfloat),
