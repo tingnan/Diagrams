@@ -68,19 +68,41 @@ b2Joint* AddRevoluteJointToWorld(const diagrammar::RevoluteJoint& joint_info,
 
 void ApplyForceToBody(b2Body* body, const diagrammar::Vector2f& force,
                       const diagrammar::Vector2f& offset) {
+#ifdef __native_client__
   body->ApplyForce(b2Vec2(force(0), force(1)),
                    body->GetWorldPoint(b2Vec2(offset(0), offset(1))));
+#else
+  body->ApplyForce(b2Vec2(force(0), force(1)),
+                   body->GetWorldPoint(b2Vec2(offset(0), offset(1))), true);
+#endif
 }
 
 void ApplyImpulseToBody(b2Body* body, const diagrammar::Vector2f& impulse,
                         const diagrammar::Vector2f& offset) {
+#ifdef __native_client__
   body->ApplyLinearImpulse(b2Vec2(impulse(0), impulse(1)),
                            body->GetWorldPoint(b2Vec2(offset(0), offset(1))));
+#else
+  body->ApplyLinearImpulse(b2Vec2(impulse(0), impulse(1)),
+                           body->GetWorldPoint(b2Vec2(offset(0), offset(1))),
+                           true);
+
+#endif
 }
 
-void ApplyTorqueToBody(b2Body* body, float torq) { body->ApplyTorque(torq); }
+void ApplyTorqueToBody(b2Body* body, float torq) {
+#ifdef __native_client__
+  body->ApplyTorque(torq);
+#else
+  body->ApplyTorque(torq, true);
+#endif
+}
 void ApplyAngularImpulseToBody(b2Body* body, float impulse) {
+#ifdef __native_client__
   body->ApplyAngularImpulse(impulse);
+#else
+  body->ApplyAngularImpulse(impulse, true);
+#endif
 }
 
 }  // namespace

@@ -64,9 +64,9 @@ class NodePolyDrawer : public NodeDrawer {
 };
 
 template <class DrawerType>
-class Canvas {
+class NodeGroupDrawer {
  public:
-  Canvas(GLProgram program, Camera* camera);
+  NodeGroupDrawer(GLProgram program, Camera* camera);
   void AddNode(const Node* node);
   void RemoveNodeByID(id_t id);
   void Draw();
@@ -75,6 +75,22 @@ class Canvas {
   GLProgram program_;
   Camera* camera_ = nullptr;
   std::unordered_map<id_t, std::unique_ptr<DrawerType> > drawers_;
+};
+
+class CanvasDrawer {
+ public:
+  CanvasDrawer(Camera* camera);
+  ~CanvasDrawer();
+  void Draw(float curr_time);
+
+ private:
+  void GenBuffers();
+  GLProgram program_;
+  GLuint resolution_;
+  GLuint time_;
+  GLuint vert_buffer_;
+  GLuint vert_indice_;
+  Camera* camera_ = nullptr;
 };
 
 }  // namespace diagrammar

@@ -6,6 +6,7 @@
 #include <json/json.h>
 
 #include <vector>
+#include <memory>
 
 #include "geometry/geometry2.h"
 #include "geometry/coordinate_frame.h"

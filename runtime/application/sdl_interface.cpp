@@ -112,20 +112,29 @@ bool Application::Init(int w, int h) {
   // e.g. 0.5 / max(world_.xspan(), world_.yspan());
   glViewport(0, 0, 800, 800);
   gl_program_ = LoadDefaultGLProgram();
-  camera_.SetView(Vector3f(0, 0, 800), Vector3f(0, 0, 0), Vector3f(0, 1, 0));
-  camera_.SetPerspective(M_PI / 2.0, 1, 10, 10000);
-
-  poly_drawers_ = make_unique<Canvas<NodePolyDrawer>>(gl_program_, &camera_);
-  for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
-    poly_drawers_->AddNode(world_->GetNodeByIndex(i));
+  // we have one fixed camera and one movable camera for now
+  cameras_.resize(2);
+  for (auto& camera_ : cameras_) {
+    camera_ =
+        make_unique<Camera>(Vector3f(0, 0, 800), Vector3f(0, 0, 0),
+                            Vector3f(0, 1, 0), M_PI / 2.0, 1.0, 10.0, 10000.0);
   }
 
-  path_drawers_ = make_unique<Canvas<NodePathDrawer>>(gl_program_, &camera_);
+  poly_debug_drawer_ = make_unique<NodeGroupDrawer<NodePolyDrawer>>(
+      gl_program_, cameras_[0].get());
   for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
-    path_drawers_->AddNode(world_->GetNodeByIndex(i));
+    poly_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
+  }
+
+  path_debug_drawer_ = make_unique<NodeGroupDrawer<NodePathDrawer>>(
+      gl_program_, cameras_[0].get());
+  for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
+    path_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
   }
 
   text_drawer_ = make_unique<TextDrawer>(font_);
+  // use the fixed camera
+  canvas_drawer_ = make_unique<CanvasDrawer>(cameras_[1].get());
 
   // SDL_StartTextInput();
   return true;
@@ -210,14 +219,14 @@ bool Application::HandleMessage(const Json::Value& message) {
         if (test_add_remove_node != nullptr) {
           const Node* tmp_ptr =
               world_->AddNode(std::move(test_add_remove_node));
-          path_drawers_->AddNode(tmp_ptr);
-          poly_drawers_->AddNode(tmp_ptr);
+          path_debug_drawer_->AddNode(tmp_ptr);
+          poly_debug_drawer_->AddNode(tmp_ptr);
         } else {
           id_t test_id = 1;
           auto tmp_ptr = world_->RemoveNodeByExtID(test_id);
           if (tmp_ptr != nullptr) {
-            path_drawers_->RemoveNodeByID(tmp_ptr->id);
-            poly_drawers_->RemoveNodeByID(tmp_ptr->id);
+            path_debug_drawer_->RemoveNodeByID(tmp_ptr->id);
+            poly_debug_drawer_->RemoveNodeByID(tmp_ptr->id);
             test_add_remove_node = std::move(tmp_ptr);
             test_add_remove_node->id = test_id;
           }
@@ -265,7 +274,7 @@ bool Application::HandleMessage(const Json::Value& message) {
 
   if (message["type"] == "mouse_wheel") {
     float delta = message["y"].asFloat();
-    camera_.Translate(Vector3f(0, 0, delta));
+    cameras_[0]->Translate(Vector3f(0, 0, delta));
     return true;
   }
 
@@ -275,7 +284,7 @@ bool Application::HandleMessage(const Json::Value& message) {
       float x_delta = -message["xrel"].asFloat();
       // In browser, y direction is reversed
       float y_delta = message["yrel"].asFloat();
-      camera_.Translate(Vector3f(x_delta, y_delta, 0));
+      cameras_[0]->Translate(Vector3f(x_delta, y_delta, 0));
     }
   }
 
@@ -290,7 +299,7 @@ void Application::RenderID() {
       std::string label = std::to_string(node->id);
       label +=
           ":(" + std::to_string(pos(0)) + "," + std::to_string(pos(1)) + ")";
-      text_drawer_->Draw(label, Vector2f(pos(0), pos(1)), &camera_);
+      text_drawer_->Draw(label, Vector2f(pos(0), pos(1)), cameras_[0].get());
     }
   }
 }
@@ -303,9 +312,12 @@ void Application::Render() {
     glClearColor(0.3, 0.3, 0.3, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
-    if (draw_poly_) poly_drawers_->Draw();
-    if (draw_path_) path_drawers_->Draw();
+
+    if (draw_poly_) poly_debug_drawer_->Draw();
+    if (draw_path_) path_debug_drawer_->Draw();
     if (draw_text_) RenderID();
+    auto curr_time = world_->now();
+    canvas_drawer_->Draw(curr_time * 1e-3);
     SDL_GL_SwapWindow(window_);
   }
 }

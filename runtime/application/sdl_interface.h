@@ -41,10 +41,11 @@ class Application {
   bool draw_poly_ = false;
   bool draw_path_ = true;
   bool draw_text_ = false;
-  Camera camera_;
-  std::unique_ptr<Canvas<NodePolyDrawer> > poly_drawers_;
-  std::unique_ptr<Canvas<NodePathDrawer> > path_drawers_;
+  std::vector<std::unique_ptr<Camera>> cameras_;
+  std::unique_ptr<NodeGroupDrawer<NodePolyDrawer>> poly_debug_drawer_;
+  std::unique_ptr<NodeGroupDrawer<NodePathDrawer>> path_debug_drawer_;
   std::unique_ptr<TextDrawer> text_drawer_;
+  std::unique_ptr<CanvasDrawer> canvas_drawer_;
 };
 
 }  // namespace diagrammar

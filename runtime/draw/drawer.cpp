@@ -12,6 +12,10 @@
 
 namespace {
 const GLuint kVertDim = 4;
+const std::array<GLfloat, 16> kQuad = {
+    {-1, 1, 0.0, 0.0, 1, 1, 0.0, 0.0, 1, -1, 0.0, 0.0, -1, -1, 0.0, 0.0}};
+const std::array<GLuint, 6> kQuadIndices = {{0, 1, 2, 2, 3, 0}};
+
 /*
 void RenderString(FT_Face fc, std::string s, float x, float y, float sx,
                     float sy) {
@@ -289,31 +293,92 @@ void NodePolyDrawer::Draw(GLProgram program, Camera* camera) {
 
 // move back to header
 template <class DrawerType>
-Canvas<DrawerType>::Canvas(GLProgram program, Camera* camera)
+NodeGroupDrawer<DrawerType>::NodeGroupDrawer(GLProgram program, Camera* camera)
     : program_(program), camera_(camera) {}
 
 template <class DrawerType>
-void Canvas<DrawerType>::AddNode(const Node* node) {
+void NodeGroupDrawer<DrawerType>::AddNode(const Node* node) {
   drawers_[node->id] = make_unique<DrawerType>(node);
 }
 
 template <class DrawerType>
-void Canvas<DrawerType>::RemoveNodeByID(int id) {
+void NodeGroupDrawer<DrawerType>::RemoveNodeByID(int id) {
   if (drawers_.find(id) != drawers_.end()) {
     drawers_.erase(id);
   }
 }
 
 template <class DrawerType>
-void Canvas<DrawerType>::Draw() {
+void NodeGroupDrawer<DrawerType>::Draw() {
   glUseProgram(program_.pid);
   for (auto itr = drawers_.begin(); itr != drawers_.end(); ++itr) {
     itr->second->Draw(program_, camera_);
   }
+  glUseProgram(0);
 }
 
 // to prevent linking error
-template class Canvas<NodePathDrawer>;
-template class Canvas<NodePolyDrawer>;
+template class NodeGroupDrawer<NodePathDrawer>;
+template class NodeGroupDrawer<NodePolyDrawer>;
+
+CanvasDrawer::CanvasDrawer(Camera* camera) : camera_(camera) {
+  GenBuffers();
+  std::string vert_shader = Stringify("bgshader.vert");
+  std::string frag_shader = Stringify("bgshader.frag");
+  program_.pid = CreateGLProgram(vert_shader.c_str(), frag_shader.c_str());
+  program_.u_mvp = glGetUniformLocation(program_.pid, "u_mvp");
+  program_.color = glGetAttribLocation(program_.pid, "color");
+  program_.vertex = glGetAttribLocation(program_.pid, "vertex");
+  time_ = glGetUniformLocation(program_.pid, "time");
+  resolution_ = glGetUniformLocation(program_.pid, "resolution");
+}
+
+CanvasDrawer::~CanvasDrawer() {
+  glDeleteBuffers(1, &vert_buffer_);
+  glDeleteBuffers(1, &vert_indice_);
+}
+
+void CanvasDrawer::GenBuffers() {
+  glGenBuffers(1, &vert_buffer_);
+  glBindBuffer(GL_ARRAY_BUFFER, vert_buffer_);
+  std::array<GLfloat, 16> vert_array = kQuad;
+  for (size_t i = 0; i < 16; i += 4) {
+    vert_array[i + 0] = vert_array[i + 0] * 800;
+    vert_array[i + 1] = vert_array[i + 1] * 800;
+    vert_array[i + 2] = -0.5;
+  }
+
+  glBufferData(GL_ARRAY_BUFFER, vert_array.size() * sizeof(GLfloat),
+               vert_array.data(), GL_STATIC_DRAW);
+
+  glGenBuffers(1, &vert_indice_);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vert_indice_);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * kQuadIndices.size(),
+               kQuadIndices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void CanvasDrawer::Draw(float curr_time) {
+  glUseProgram(program_.pid);
+
+  // Resolution of the ocean and the time fluctuation
+  GLfloat resolution[2] = {600, 600};
+  glUniform2fv(resolution_, 1, resolution);
+  glUniform1f(time_, curr_time);
+
+  glBindBuffer(GL_ARRAY_BUFFER, vert_buffer_);
+  glVertexAttribPointer(program_.vertex, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
+  glEnableVertexAttribArray(program_.vertex);
+
+  Matrix4f u_mvp(Matrix4f::Identity());
+  u_mvp = camera_->GetViewProjection() * u_mvp;
+  glUniformMatrix4fv(program_.u_mvp, 1, false, u_mvp.data());
+
+  // scale
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vert_indice_);
+  glDrawElements(GL_TRIANGLES, kQuadIndices.size(), GL_UNSIGNED_INT, 0);
+
+  glUseProgram(0);
+}
 
 }  // namespace diagrammar
