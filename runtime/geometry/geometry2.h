@@ -68,6 +68,11 @@ TriangleMesh2D TriangulatePolyline(const Path2D& path, float offset);
 //   if the holes cut the polygon into separate pieces.
 std::vector<Polygon2D> ResolveIntersections(const Polygon2D& polygon);
 
+// For each point on the path, generate a normal vector. The third parameter,
+// outward is only meaninful when the path is closed
+std::vector<Vector2f> GeneratePathNormals(const Path2D& path, bool is_closed,
+                                          bool outward);
+
 }  // namespace diagrammar
 
 #endif  // RUNTIME_GEOMETRY_GEOMETRY2_H_

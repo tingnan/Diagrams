@@ -176,7 +176,6 @@ void NodePolyDrawer::GenBuffers() {
   }
 }
 
-// TODO(tingnan) fix rendering
 void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh2D& mesh) {
   size_t num_vertices = mesh.vertices.size();
   vertex_size_.emplace_back(num_vertices);
@@ -245,6 +244,79 @@ void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh2D& mesh) {
 
 void NodePolyDrawer::Draw(GLProgram program, Camera* camera,
                           Vector2f resolution) {
+  assert(node_);
+  for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
+    glVertexAttribPointer(program.vertex, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(program.vertex);
+
+    glBindBuffer(GL_ARRAY_BUFFER, vertex_color_buffer_[i]);
+    glVertexAttribPointer(program.color, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(program.color);
+
+    Matrix4f u_mvp(Matrix4f::Identity());
+    u_mvp.topLeftCorner<3, 3>() = node_->frame.GetRotationMatrix();
+    u_mvp.col(3).head<3>() = node_->frame.GetTranslation();
+    u_mvp = camera->GetViewProjection() * u_mvp;
+    glUniformMatrix4fv(program.u_mvp, 1, false, u_mvp.data());
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_[i]);
+    glDrawElements(GL_TRIANGLES, index_size_[i], GL_UNSIGNED_INT, 0);
+  }
+  glDisableVertexAttribArray(program.vertex);
+  glDisableVertexAttribArray(program.color);
+}
+
+NodeBuldgedDrawer::NodeBuldgedDrawer(const Node* node) {
+  node_ = node;
+  GenBuffers();
+}
+
+NodeBuldgedDrawer::~NodeBuldgedDrawer() {
+  glDeleteBuffers(vertex_buffer_.size(), vertex_buffer_.data());
+  glDeleteBuffers(vertex_color_buffer_.size(), vertex_color_buffer_.data());
+  glDeleteBuffers(index_buffer_.size(), index_buffer_.data());
+}
+
+void NodeBuldgedDrawer::GenBuffers() {
+  assert(node_ != nullptr);
+  for (auto& shape_ptr : node_->collision_shapes) {
+    GenTriangleBufferForShape(shape_ptr.get());
+  }
+}
+
+void NodeBuldgedDrawer::GenTriangleBufferForShape(CollisionShape2D* shape_ptr);
+{
+  switch (shape_ptr->shape_type) {
+    case Shape2DType::kDisk: {
+      auto sphere_ptr = dynamic_cast<Disk2D*>(shape_ptr);
+      const size_t num_vertices = 30;
+      Polygon2D polygon;
+      for (size_t i = 0; i < num_vertices; ++i) {
+        float theta = float(i) / num_vertices * M_PI * 2;
+        polygon.path.emplace_back(cos(theta) * sphere_ptr->radius,
+                                  sin(theta) * sphere_ptr->radius);
+      }
+      // auto mesh = TriangulatePolygon(polygon);
+      // GenTriangleBuffer(mesh);
+    } break;
+    case Shape2DType::kPolygon: {
+      auto poly_ptr = dynamic_cast<Polygon2D*>(shape_ptr);
+      // auto mesh = TriangulatePolygon(*poly_ptr);
+      // GenTriangleBuffer(mesh);
+    } break;
+    case Shape2DType::kPolyLine: {
+      auto line_ptr = dynamic_cast<Line2D*>(shape_ptr);
+      // auto mesh = TriangulatePolyline(line_ptr->path, 1.5);
+      // GenTriangleBuffer(mesh);
+    } break;
+    default:
+      break;
+  }
+}
+
+void NodeBuldgedDrawer::Draw(GLProgram program, Camera* camera,
+                             Vector2f resolution) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
@@ -339,7 +411,6 @@ void SphereDrawer::Draw(GLProgram program, Camera* camera,
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   GLfloat view_port[2] = {resolution(0), resolution(1)};
   glUniform2fv(program.resolution, 1, view_port);
-
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
     glVertexAttribPointer(program.vertex, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);

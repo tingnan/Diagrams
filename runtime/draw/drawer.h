@@ -27,7 +27,6 @@ class NodeDrawer {
 
  protected:
   std::vector<GLuint> vertex_size_;
-  // Buffer id for vertex and color array
   std::vector<GLuint> vertex_buffer_;
   std::vector<GLuint> vertex_color_buffer_;
   const Node* node_ = nullptr;
@@ -56,9 +55,25 @@ class NodePolyDrawer : public NodeDrawer {
   void Draw(GLProgram program, Camera* camera, Vector2f resolution);
 
  private:
-  void GenTriangleBuffer(const TriangleMesh2D&);
+  void GenTriangleBuffer(const TriangleMesh2D& mesh);
   void GenBuffers();
 
+  std::vector<GLuint> index_buffer_;
+  std::vector<GLuint> index_size_;
+};
+
+class NodeBuldgedDrawer : public NodeDrawer {
+ public:
+  // Set a node before calling Draw()
+  explicit NodeBuldgedDrawer(const Node* node);
+  ~NodeBuldgedDrawer();
+  void Draw(GLProgram program, Camera* camera, Vector2f resolution);
+
+ private:
+  void GenTriangleBufferForShape(CollisionShape2D*);
+  void GenBuffers();
+
+  std::vector<GLuint> normal_buffer_;
   std::vector<GLuint> index_buffer_;
   std::vector<GLuint> index_size_;
 };
@@ -100,6 +115,7 @@ class CanvasDrawer {
   ~CanvasDrawer();
   void Draw(float curr_time);
   void ChangeResolution(Vector2f resolution) { view_port_ = resolution; }
+  void ChangeCamera(Camera* camera) { camera_ = camera; }
 
  private:
   void GenBuffers();

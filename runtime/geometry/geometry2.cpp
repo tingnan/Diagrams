@@ -326,6 +326,15 @@ std::vector<diagrammar::Path2D> ResolveIntersectionsClosedPaths(
   return resolved_paths;
 }
 
+// Input must be three points from a ccw oriented curve (if it is closed)!
+diagrammar::Vector2f GetNormalFromTwoPoints(const diagrammar::Vector2f& p0,
+                                            const diagrammar::Vector2f& p1) {
+  diagrammar::Matrix2f cw_90;
+  cw_90 << 0, 1, -1, 0;
+  diagrammar::Vector2f normal_vec(cw_90 * (p1 - p0));
+  return normal_vec.normalized();
+}
+
 }  // namespace
 
 namespace diagrammar {
@@ -474,6 +483,43 @@ std::vector<Polygon2D> ResolveIntersections(const Polygon2D& polygon) {
     }
   }
   return polygons;
+}
+
+std::vector<Vector2f> GeneratePathNormals(const Path2D& path, bool is_closed,
+                                          bool outward) {
+  assert(path.size() >= 2);
+  // Here we are going to use a simple 3-point interpolation method
+  // first we need to make the path in ccw direction
+  ClipperLib::Path scaled_path = UScalePathDiaToClipper(path);
+  if (!ClipperLib::Orientation(scaled_path)) {
+    ClipperLib::ReversePath(scaled_path);
+  }
+  Path2D ccw_path = DScalePathClipperToDia(scaled_path);
+
+  // Special treatment for the first and last point.
+  std::vector<Vector2f> output_vecs(path.size());
+  if (is_closed) {
+    output_vecs[0] =
+        GetNormalFromTwoPoints(ccw_path[ccw_path.size() - 1], ccw_path[1]);
+    output_vecs.back() =
+        GetNormalFromTwoPoints(ccw_path[ccw_path.size() - 2], ccw_path[0]);
+  } else {
+    output_vecs[0] = GetNormalFromTwoPoints(ccw_path[0], ccw_path[1]);
+    output_vecs.back() = GetNormalFromTwoPoints(ccw_path[ccw_path.size() - 2],
+                                                ccw_path[ccw_path.size() - 1]);
+  }
+
+  // We use the point before and after ith point to interpolate its normal.
+  for (size_t i = 1; i < ccw_path.size() - 1; ++i) {
+    output_vecs[i] = GetNormalFromTwoPoints(ccw_path[i - 1], ccw_path[i + 1]);
+  }
+
+  // Reverse normal direction
+  if (!outward) {
+    for (size_t i = 0; i < ccw_path.size(); ++i) {
+      output_vecs[i] = -output_vecs[i];
+    }
+  }
 }
 
 }  // namespace diagrammar

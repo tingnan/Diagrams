@@ -124,12 +124,12 @@ bool Application::Init(int w, int h) {
   gl_program_ = LoadDefaultGLProgram();
   cameras_.resize(2);
   cameras_[0] =
-      make_unique<Camera>(Vector3f(0, -100, 800), Vector3f(0, 300, 0),
-                          Vector3f(0, 1, 0), M_PI / 2.0, 1.0, 10.0, 100000.0);
+      make_unique<Camera>(Vector3f(0, -50, 650), Vector3f(0, 50, 0),
+                          Vector3f(0, 1, 0), M_PI / 2.0, 1.0, 10.0, 500000.0);
 
   cameras_[1] =
       make_unique<Camera>(Vector3f(0, 0, 800), Vector3f(0, 0, 0),
-                          Vector3f(0, 1, 0), M_PI / 2.0, 1.0, 10.0, 10000.0);
+                          Vector3f(0, 1, 0), M_PI / 2.0, 1.0, 10.0, 500000.0);
 
   poly_debug_drawer_ = make_unique<NodeGroupDrawer<NodePolyDrawer>>(
       gl_program_, cameras_[0].get(), Vector2f(w, h));

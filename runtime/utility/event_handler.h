@@ -1,4 +1,4 @@
-3  // Copyright 2015 Native Client Authors.
+// Copyright 2015 Native Client Authors.
 #ifndef RUNTIME_UTILITY_EVENTHANDLER_H_
 #define RUNTIME_UTILITY_EVENTHANDLER_H_
 
@@ -7,8 +7,8 @@
 #include <condition_variable>
 #include <queue>
 
-    namespace Json {
-  class Value;
+namespace Json {
+class Value;
 }  // namespace Json
 
 namespace diagrammar {
