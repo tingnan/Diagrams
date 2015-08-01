@@ -58,21 +58,23 @@ GLTriangleMesh SweeptPath2DToGLMesh(const Path2D &path, GLfloat depth,
 // Make a OpenGL mesh from a Polygon2D object
 GLTriangleMesh SweepPolygon2DToGLMesh(const Polygon2D &polygon, GLfloat depth);
 
+// This method creates a GLTriangleMesh that lies in x-y plane, with normals
+// pointing to positive-z direction.
+// The dimension should be >=3
+GLTriangleMesh GLTriangulate2DShape2D(const CollisionShape2D *shape_ptr);
+// TODO(tingnan)
+// This method will extend the 2D input shape into 3D hulls and then return the
+// triangulation.
+GLTriangleMesh GLTriangulate3DShape2D(const CollisionShape2D *shape_ptr,
+                                      GLfloat depth);
+
+std::vector<GLfloat> SerializePath2D(const Path2D &path, bool is_closed);
+
 GLuint CreateGLProgram(const char *vert_shader_src,
                        const char *frag_shader_src);
 
 GLProgram LoadDefaultGLProgram();
 
-// This method creates a GLTriangleMesh that lies in x-y plane, with normals
-// pointing to positive-z direction.
-// The dimension should be >=3
-GLTriangleMesh GLTriangulate2DShape2D(CollisionShape2D *shape_ptr);
-// TODO(tingnan)
-// This method will extend the 2D input shape into 3D hulls and then return the
-// triangulation.
-GLTriangleMesh GLTriangulate3DShape2D(CollisionShape2D *shape_ptr,
-                                      GLfloat depth);
+}  // namespace diagrammar
 
-} // namespace diagrammar
-
-#endif // RUNTIME_DRAW_GL_UTILITY_H
+#endif  // RUNTIME_DRAW_GL_UTILITY_H

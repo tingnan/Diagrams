@@ -48,6 +48,9 @@ struct TriangleMesh2D {
   std::vector<std::array<size_t, 3> > faces;
 };
 
+// Rasterize the disk and return a boundary path.
+Path2D SketchDiskEdge(const Disk2D& disk, size_t num_vertices);
+
 // Simplify a path with a relative tolerance
 Path2D SimplifyPolyline(const Path2D& path, float rel_tol = 0.005);
 

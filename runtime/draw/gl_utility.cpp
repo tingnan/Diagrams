@@ -9,11 +9,13 @@
 #include "physics/node.h"
 
 namespace {
-const char kFragShaderSource[] = "precision mediump float;\n"
-                                 "varying vec4 v_color;\n"
-                                 "void main() {\n"
-                                 "  gl_FragColor = v_color;\n"
-                                 "}\n";
+
+const char kFragShaderSource[] =
+    "precision mediump float;\n"
+    "varying vec4 v_color;\n"
+    "void main() {\n"
+    "  gl_FragColor = v_color;\n"
+    "}\n";
 
 const char kVertShaderSource[] =
     "uniform mat4 u_mvp;\n"
@@ -26,7 +28,7 @@ const char kVertShaderSource[] =
     "  v_color = vec4(color.xyz, 1.0);\n"
     "}\n";
 
-} // namespace
+}  // namespace
 
 namespace diagrammar {
 
@@ -100,12 +102,33 @@ GLProgram LoadDefaultGLProgram() {
   return program;
 }
 
+std::vector<GLfloat> SerializePath2D(const Path2D &path, bool is_closed) {
+  std::vector<GLfloat> vertices(path.size() * 4);
+  const size_t path_size = path.size();
+  for (size_t i = 0, j = 0; i < path_size; ++i, j += 4) {
+    vertices[j + 0] = path[i](0);
+    vertices[j + 1] = path[i](1);
+    vertices[j + 2] = 0;
+    vertices[j + 3] = 1;
+  }
+  if (is_closed) {
+    vertices.emplace_back(path[0](0));
+    vertices.emplace_back(path[0](1));
+    vertices.emplace_back(0);
+    vertices.emplace_back(0);
+  }
+  return vertices;
+}
+
 GLTriangleMesh::GLTriangleMesh(GLuint num_vertices, GLuint num_triangles)
-    : vertices(dimension * num_vertices), normals(dimension * num_vertices),
-      colors(dimension * num_vertices), indices(3 * num_triangles) {}
+    : vertices(dimension * num_vertices),
+      normals(dimension * num_vertices),
+      colors(dimension * num_vertices),
+      indices(3 * num_triangles) {}
 
 GLTriangleMesh::GLTriangleMesh(GLuint num_vertices)
-    : vertices(dimension * num_vertices), normals(dimension * num_vertices),
+    : vertices(dimension * num_vertices),
+      normals(dimension * num_vertices),
       colors(dimension * num_vertices) {}
 
 GLTriangleMesh ConvertDiagMesh2DToGLMesh(const TriangleMesh2D &diag_mesh,
@@ -167,7 +190,7 @@ GLTriangleMesh SweeptPath2DToGLMesh(const Path2D &path, GLfloat depth,
   size_t num_triangles = is_closed ? num_vertices : num_vertices - 2;
   GLTriangleMesh gl_mesh(num_vertices, num_triangles);
   auto path_normals = GeneratePathNormals(path, is_closed, outward);
-  for (size_t i = 0, j = 0; i < num_path_points; ++i, j+=8) {
+  for (size_t i = 0, j = 0; i < num_path_points; ++i, j += 8) {
     // Bottom vertices
     gl_mesh.vertices[j + 0] = path[i](0);
     gl_mesh.vertices[j + 1] = path[i](1);
@@ -196,7 +219,7 @@ GLTriangleMesh SweeptPath2DToGLMesh(const Path2D &path, GLfloat depth,
   // We have triangles connecting the top and bottom vertices.
   // The vertices are grouped as [0 1 2, 1 2 3, 2 3 4, 3 4 5...]
   size_t i = 0, j = 0;
-  for (; i < num_vertices - 2; i+=2, j += 6) {
+  for (; i < num_vertices - 2; i += 2, j += 6) {
     gl_mesh.indices[j + 0] = i;
     gl_mesh.indices[j + 1] = i + 1;
     gl_mesh.indices[j + 2] = i + 2;
@@ -246,63 +269,34 @@ GLTriangleMesh CombineGLMesh(std::vector<GLTriangleMesh> meshes) {
   return combined_mesh;
 }
 
-GLTriangleMesh GLTriangulate2DShape2D(CollisionShape2D *shape_ptr,
-                                      GLuint dimension) {
+GLTriangleMesh GLTriangulate2DShape2D(const CollisionShape2D *shape_ptr) {
   switch (shape_ptr->shape_type) {
-  case Shape2DType::kDisk: {
-    auto sphere_ptr = dynamic_cast<Disk2D *>(shape_ptr);
-    const size_t num_vertices = 30;
-    Polygon2D polygon;
-    for (size_t i = 0; i < num_vertices; ++i) {
-      float theta = float(i) / num_vertices * M_PI * 2;
-      polygon.path.emplace_back(cos(theta) * sphere_ptr->radius,
-                                sin(theta) * sphere_ptr->radius);
-    }
-    auto diag_mesh = TriangulatePolygon(polygon);
-    return ConvertDiagMesh2DToGLMesh(diag_mesh, 0.0);
-  } break;
-  case Shape2DType::kPolygon: {
-    auto poly_ptr = dynamic_cast<Polygon2D *>(shape_ptr);
-    auto diag_mesh = TriangulatePolygon(*poly_ptr);
-    return ConvertDiagMesh2DToGLMesh(diag_mesh, 0.0);
-  } break;
-  case Shape2DType::kPolyLine: {
-    auto line_ptr = dynamic_cast<Line2D *>(shape_ptr);
-    auto diag_mesh = TriangulatePolyline(line_ptr->path, 1.5);
-    return ConvertDiagMesh2DToGLMesh(diag_mesh, 0.0);
-  } break;
-  default:
-    break;
+    case Shape2DType::kDisk: {
+      auto disk_ptr = dynamic_cast<const Disk2D *>(shape_ptr);
+      const size_t num_vertices = 30;
+      Polygon2D polygon(SketchDiskEdge(*disk_ptr, num_vertices));
+      auto diag_mesh = TriangulatePolygon(polygon);
+      return ConvertDiagMesh2DToGLMesh(diag_mesh, 0.0);
+    } break;
+    case Shape2DType::kPolygon: {
+      auto poly_ptr = dynamic_cast<const Polygon2D *>(shape_ptr);
+      auto diag_mesh = TriangulatePolygon(*poly_ptr);
+      return ConvertDiagMesh2DToGLMesh(diag_mesh, 0.0);
+    } break;
+    case Shape2DType::kPolyLine: {
+      auto line_ptr = dynamic_cast<const Line2D *>(shape_ptr);
+      auto diag_mesh = TriangulatePolyline(line_ptr->path, 1.5);
+      return ConvertDiagMesh2DToGLMesh(diag_mesh, 0.0);
+    } break;
+    default:
+      break;
   }
   return GLTriangleMesh();
 }
 
-GLTriangleMesh GLTriangulate3DShape2D(struct CollisionShape2D *shape_ptr,
+GLTriangleMesh GLTriangulate3DShape2D(const CollisionShape2D *shape_ptr,
                                       GLfloat depth) {
-  switch (shape_ptr->shape_type) {
-  case Shape2DType::kDisk: {
-    auto sphere_ptr = dynamic_cast<Disk2D *>(shape_ptr);
-    const size_t num_vertices = 30;
-    Polygon2D polygon;
-    for (size_t i = 0; i < num_vertices; ++i) {
-      float theta = float(i) / num_vertices * M_PI * 2;
-      polygon.path.emplace_back(cos(theta) * sphere_ptr->radius,
-                                sin(theta) * sphere_ptr->radius);
-    }
-    auto diag_mesh = TriangulatePolygon(polygon);
-  } break;
-  case Shape2DType::kPolygon: {
-    auto poly_ptr = dynamic_cast<Polygon2D *>(shape_ptr);
-    auto diag_mesh = TriangulatePolygon(*poly_ptr);
-  } break;
-  case Shape2DType::kPolyLine: {
-    auto line_ptr = dynamic_cast<Line2D *>(shape_ptr);
-    auto diag_mesh = TriangulatePolyline(line_ptr->path, 1.5);
-  } break;
-  default:
-    break;
-  }
   return GLTriangleMesh();
 }
 
-} // namespace diagrammar
+}  // namespace diagrammar

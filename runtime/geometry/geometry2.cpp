@@ -340,6 +340,15 @@ diagrammar::Vector2f GetNormalFromTwoPoints(const diagrammar::Vector2f& p0,
 namespace diagrammar {
 CollisionShape2D::~CollisionShape2D() {}
 
+Path2D SketchDiskEdge(const Disk2D& disk, size_t num_vertices) {
+  Path2D boundary(num_vertices);
+  for (size_t i = 0; i < num_vertices; ++i) {
+    float theta = 2 * i * M_PI / static_cast<float>(num_vertices);
+    boundary[i] = Vector2f(disk.radius * cos(theta), disk.radius * sin(theta));
+  }
+  return boundary;
+}
+
 std::vector<Vector2f> SimplifyPolyline(const Path2D& path, float rel_tol) {
   if (path.size() <= 2) {
     return path;

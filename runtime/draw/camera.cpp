@@ -60,4 +60,4 @@ const Matrix4f &Camera::GetViewProjection() {
   return cached_view_projection_;
 }
 
-} // namespace diagrammar
+}  // namespace diagrammar

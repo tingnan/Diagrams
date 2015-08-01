@@ -50,7 +50,7 @@ SDL_Surface *StringToSDLSurface(const char *message, TTF_Font *font) {
   return ttf_surface;
 }
 
-} // namespace
+}  // namespace
 
 namespace diagrammar {
 
@@ -140,4 +140,4 @@ void TextDrawer::Draw(const std::string &text, const Vector2f &pos,
   glUseProgram(0);
 }
 
-} // namespace diagrammar
+}  // namespace diagrammar
