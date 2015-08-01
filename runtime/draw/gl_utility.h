@@ -31,8 +31,9 @@ struct GLProgram {
 // colors(r, g, b, a) to be 4;
 struct GLTriangleMesh {
   GLTriangleMesh() = default;
-  GLTriangleMesh(GLuint num_vertices, GLuint num_faces);
-  const GLuint dimension = 4;
+  GLTriangleMesh(GLuint num_vertices);
+  GLTriangleMesh(GLuint num_vertices, GLuint num_triangles);
+  const static GLuint dimension = 4;
   std::vector<GLfloat> vertices;
   std::vector<GLfloat> normals;
   std::vector<GLfloat> colors;
@@ -49,10 +50,10 @@ GLTriangleMesh CombineGLMesh(std::vector<GLTriangleMesh> meshes);
 
 // TODO(tingnan)
 // Make a OpenGL mesh from a Path2D using sweeping method. The sweep direction
-// is z and the distance swept is given by depth
+// is z and the distance swept is given by depth. The last parameter indicates
+// if the normals will point outward for a closed path.
 GLTriangleMesh SweeptPath2DToGLMesh(const Path2D &path, GLfloat depth,
-                                    bool is_closed = true,
-                                    bool normal_out = true);
+                                    bool is_closed = true, bool outward = true);
 // TODO(tingnan)
 // Make a OpenGL mesh from a Polygon2D object
 GLTriangleMesh SweepPolygon2DToGLMesh(const Polygon2D &polygon, GLfloat depth);

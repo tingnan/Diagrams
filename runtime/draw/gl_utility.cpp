@@ -100,9 +100,13 @@ GLProgram LoadDefaultGLProgram() {
   return program;
 }
 
-GLTriangleMesh::GLTriangleMesh(GLuint num_vertices, GLuint num_faces)
+GLTriangleMesh::GLTriangleMesh(GLuint num_vertices, GLuint num_triangles)
     : vertices(dimension * num_vertices), normals(dimension * num_vertices),
-      colors(dimension * num_vertices), indices(3 * num_faces) {}
+      colors(dimension * num_vertices), indices(3 * num_triangles) {}
+
+GLTriangleMesh::GLTriangleMesh(GLuint num_vertices)
+    : vertices(dimension * num_vertices), normals(dimension * num_vertices),
+      colors(dimension * num_vertices) {}
 
 GLTriangleMesh ConvertDiagMesh2DToGLMesh(const TriangleMesh2D &diag_mesh,
                                          GLfloat depth, bool normal_up) {
@@ -155,6 +159,66 @@ GLTriangleMesh ConvertDiagMesh2DToGLMesh(const TriangleMesh2D &diag_mesh,
   return gl_mesh;
 }
 
+GLTriangleMesh SweeptPath2DToGLMesh(const Path2D &path, GLfloat depth,
+                                    bool is_closed, bool outward) {
+  size_t num_path_points = path.size();
+  // Two set of vertices for top and bottom.
+  size_t num_vertices = 2 * num_path_points;
+  size_t num_triangles = is_closed ? num_vertices : num_vertices - 2;
+  GLTriangleMesh gl_mesh(num_vertices, num_triangles);
+  auto path_normals = GeneratePathNormals(path, is_closed, outward);
+  for (size_t i = 0, j = 0; i < num_path_points; ++i, j+=8) {
+    // Bottom vertices
+    gl_mesh.vertices[j + 0] = path[i](0);
+    gl_mesh.vertices[j + 1] = path[i](1);
+    gl_mesh.vertices[j + 2] = 0;
+    gl_mesh.vertices[j + 3] = 0;
+    // Top vertices
+    gl_mesh.vertices[j + 4] = path[i](0);
+    gl_mesh.vertices[j + 5] = path[i](1);
+    gl_mesh.vertices[j + 6] = depth;
+    gl_mesh.vertices[j + 7] = 0;
+    // Bottom normal
+    gl_mesh.normals[j + 0] = path_normals[i](0);
+    gl_mesh.normals[j + 1] = path_normals[i](1);
+    gl_mesh.normals[j + 2] = 0;
+    gl_mesh.normals[j + 3] = 0;
+    // Top normal
+    gl_mesh.normals[j + 4] = path_normals[i](0);
+    gl_mesh.normals[j + 5] = path_normals[i](1);
+    gl_mesh.normals[j + 6] = 0;
+    gl_mesh.normals[j + 7] = 0;
+    // Colors
+    for (size_t k = 0; k < 8; ++k) {
+      gl_mesh.colors[j + k] = 1;
+    }
+  }
+  // We have triangles connecting the top and bottom vertices.
+  // The vertices are grouped as [0 1 2, 1 2 3, 2 3 4, 3 4 5...]
+  size_t i = 0, j = 0;
+  for (; i < num_vertices - 2; i+=2, j += 6) {
+    gl_mesh.indices[j + 0] = i;
+    gl_mesh.indices[j + 1] = i + 1;
+    gl_mesh.indices[j + 2] = i + 2;
+
+    gl_mesh.indices[j + 3] = i + 1;
+    gl_mesh.indices[j + 4] = i + 2;
+    gl_mesh.indices[j + 5] = i + 3;
+  }
+
+  if (is_closed) {
+    assert(i + 2 == num_vertices);
+    gl_mesh.indices[j + 0] = i;
+    gl_mesh.indices[j + 1] = i + 1;
+    gl_mesh.indices[j + 2] = 0;
+
+    gl_mesh.indices[j + 3] = i + 1;
+    gl_mesh.indices[j + 4] = 0;
+    gl_mesh.indices[j + 5] = 1;
+  }
+  return gl_mesh;
+}
+
 GLTriangleMesh CombineGLMesh(std::vector<GLTriangleMesh> meshes) {
   GLTriangleMesh combined_mesh;
   // The only thing we need to worry about is the indices array;
@@ -171,7 +235,7 @@ GLTriangleMesh CombineGLMesh(std::vector<GLTriangleMesh> meshes) {
     combined_mesh.colors.insert(combined_mesh.colors.end(),
                                 std::make_move_iterator(mesh.colors.begin()),
                                 std::make_move_iterator(mesh.colors.end()));
-    // Update the mesh indices before inserting to the back
+    // Update the current mesh indices before inserting to the back of combined.
     for (auto &idx : mesh.indices) {
       idx += offset;
     }
