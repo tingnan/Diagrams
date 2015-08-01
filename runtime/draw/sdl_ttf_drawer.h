@@ -19,14 +19,14 @@
 namespace diagrammar {
 
 class TextDrawer {
- public:
-  explicit TextDrawer(TTF_Font* font);
+public:
+  explicit TextDrawer(TTF_Font *font);
   // w and h are window sizes
-  void Draw(const std::string& text, const Vector2f& pos, class Camera* camera);
+  void Draw(const std::string &text, const Vector2f &pos, class Camera *camera);
 
- private:
+private:
   void GenBuffers();
-  TTF_Font* font_;
+  TTF_Font *font_;
   GLuint text_buffer_;
   GLuint vert_buffer_;
   GLuint vert_indice_;
@@ -34,6 +34,6 @@ class TextDrawer {
   GLProgram program_;
 };
 
-}  // namespace diagrammar
+} // namespace diagrammar
 
-#endif  // RUNTIME_DRAW_SDL_TTF_DRAWER_H_
+#endif // RUNTIME_DRAW_SDL_TTF_DRAWER_H_

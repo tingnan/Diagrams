@@ -40,9 +40,9 @@ const std::array<GLfloat, 16> kQuadColor = {{1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
 
 const std::array<GLuint, 6> kQuadIndices = {{0, 1, 2, 2, 3, 0}};
 
-SDL_Surface* StringToSDLSurface(const char* message, TTF_Font* font) {
+SDL_Surface *StringToSDLSurface(const char *message, TTF_Font *font) {
   SDL_Color color = {255, 255, 255, 255};
-  SDL_Surface* ttf_surface = TTF_RenderText_Blended(font, message, color);
+  SDL_Surface *ttf_surface = TTF_RenderText_Blended(font, message, color);
   if (ttf_surface == nullptr) {
     std::cerr << "TTF_RenderText: " << SDL_GetError() << std::endl;
     return nullptr;
@@ -50,11 +50,11 @@ SDL_Surface* StringToSDLSurface(const char* message, TTF_Font* font) {
   return ttf_surface;
 }
 
-}  // namespace
+} // namespace
 
 namespace diagrammar {
 
-TextDrawer::TextDrawer(TTF_Font* font) : font_(font) {
+TextDrawer::TextDrawer(TTF_Font *font) : font_(font) {
   GenBuffers();
   program_.pid = CreateGLProgram(kVertShaderSource, kFragShaderSource);
   program_.u_mvp = glGetUniformLocation(program_.pid, "u_mvp");
@@ -86,10 +86,10 @@ void TextDrawer::GenBuffers() {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void TextDrawer::Draw(const std::string& text, const Vector2f& pos,
-                      Camera* camera) {
+void TextDrawer::Draw(const std::string &text, const Vector2f &pos,
+                      Camera *camera) {
   GLProgram program = program_;
-  SDL_Surface* surface = StringToSDLSurface(text.c_str(), font_);
+  SDL_Surface *surface = StringToSDLSurface(text.c_str(), font_);
   if (surface == nullptr) {
     return;
   }
@@ -140,4 +140,4 @@ void TextDrawer::Draw(const std::string& text, const Vector2f& pos,
   glUseProgram(0);
 }
 
-}  // namespace diagrammar
+} // namespace diagrammar

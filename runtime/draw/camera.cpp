@@ -8,8 +8,8 @@
 
 namespace diagrammar {
 
-Camera::Camera(const Vector3f& position, const Vector3f& target,
-               const Vector3f& up, float fov, float aspect_ratio, float near,
+Camera::Camera(const Vector3f &position, const Vector3f &target,
+               const Vector3f &up, float fov, float aspect_ratio, float near,
                float far)
     : view_(Matrix4f::Identity()),
       perspective_projection_(Matrix4f::Identity()) {
@@ -17,8 +17,8 @@ Camera::Camera(const Vector3f& position, const Vector3f& target,
   SetPerspective(fov, aspect_ratio, near, far);
 }
 
-void Camera::SetView(const Vector3f& position, const Vector3f& target,
-                     const Vector3f& up) {
+void Camera::SetView(const Vector3f &position, const Vector3f &target,
+                     const Vector3f &up) {
   Matrix3f rotation;
   rotation.row(1) = up.normalized();
   rotation.row(2) = (position - target).normalized();
@@ -43,7 +43,7 @@ void Camera::SetPerspective(float fov, float aspect_ratio, float near,
   matrix_dirty_ = true;
 }
 
-void Camera::Translate(const Vector3f& translation) {
+void Camera::Translate(const Vector3f &translation) {
   // Compute the frame in the world coordinate;
   Matrix4f frame = view_.inverse();
   frame.topRightCorner<3, 1>() += translation;
@@ -51,7 +51,7 @@ void Camera::Translate(const Vector3f& translation) {
   matrix_dirty_ = true;
 }
 
-const Matrix4f& Camera::GetViewProjection() {
+const Matrix4f &Camera::GetViewProjection() {
   if (matrix_dirty_) {
     matrix_dirty_ = false;
     cached_view_projection_ = perspective_projection_ * view_;
@@ -60,4 +60,4 @@ const Matrix4f& Camera::GetViewProjection() {
   return cached_view_projection_;
 }
 
-}  // namespace diagrammar
+} // namespace diagrammar

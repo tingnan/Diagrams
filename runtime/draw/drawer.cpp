@@ -16,11 +16,11 @@ const std::array<GLfloat, 16> kQuad = {
     {-1, 1, 0.0, 0.0, 1, 1, 0.0, 0.0, 1, -1, 0.0, 0.0, -1, -1, 0.0, 0.0}};
 const std::array<GLuint, 6> kQuadIndices = {{0, 1, 2, 2, 3, 0}};
 
-}  // namespace
+} // namespace
 
 namespace diagrammar {
 
-NodePathDrawer::NodePathDrawer(const Node* node) {
+NodePathDrawer::NodePathDrawer(const Node *node) {
   node_ = node;
   GenBuffers();
 }
@@ -30,7 +30,7 @@ NodePathDrawer::~NodePathDrawer() {
   glDeleteBuffers(vertex_color_buffer_.size(), vertex_color_buffer_.data());
 }
 
-void NodePathDrawer::GenPathBuffer(const Path2D& polyline, bool is_closed) {
+void NodePathDrawer::GenPathBuffer(const Path2D &polyline, bool is_closed) {
   GLuint vert_vbo;
   glGenBuffers(1, &vert_vbo);
   vertex_buffer_.emplace_back(vert_vbo);
@@ -76,39 +76,39 @@ void NodePathDrawer::GenPathBuffer(const Path2D& polyline, bool is_closed) {
 void NodePathDrawer::GenBuffers() {
   assert(node_ != nullptr);
 
-  for (auto& shape_ptr : node_->collision_shapes) {
+  for (auto &shape_ptr : node_->collision_shapes) {
     switch (shape_ptr->shape_type) {
-      case Shape2DType::kDisk: {
-        auto sphere_ptr = dynamic_cast<Disk2D*>(shape_ptr.get());
-        const size_t num_vertices = 30;
-        Path2D polyline;
-        for (size_t i = 0; i < num_vertices; ++i) {
-          float theta = float(i) / num_vertices * M_PI * 2;
-          polyline.emplace_back(cos(theta) * sphere_ptr->radius,
-                                sin(theta) * sphere_ptr->radius);
-        }
+    case Shape2DType::kDisk: {
+      auto sphere_ptr = dynamic_cast<Disk2D *>(shape_ptr.get());
+      const size_t num_vertices = 30;
+      Path2D polyline;
+      for (size_t i = 0; i < num_vertices; ++i) {
+        float theta = float(i) / num_vertices * M_PI * 2;
+        polyline.emplace_back(cos(theta) * sphere_ptr->radius,
+                              sin(theta) * sphere_ptr->radius);
+      }
+      GenPathBuffer(polyline, true);
+    } break;
+    case Shape2DType::kPolygon: {
+      auto poly_ptr = dynamic_cast<Polygon2D *>(shape_ptr.get());
+      unsigned num_paths = 1 + poly_ptr->holes.size();
+      for (size_t i = 0; i < num_paths; ++i) {
+        const std::vector<Vector2f> &polyline =
+            i == 0 ? poly_ptr->path : poly_ptr->holes[i - 1];
         GenPathBuffer(polyline, true);
-      } break;
-      case Shape2DType::kPolygon: {
-        auto poly_ptr = dynamic_cast<Polygon2D*>(shape_ptr.get());
-        unsigned num_paths = 1 + poly_ptr->holes.size();
-        for (size_t i = 0; i < num_paths; ++i) {
-          const std::vector<Vector2f>& polyline =
-              i == 0 ? poly_ptr->path : poly_ptr->holes[i - 1];
-          GenPathBuffer(polyline, true);
-        }
-      } break;
-      case Shape2DType::kPolyLine: {
-        auto line_ptr = dynamic_cast<Line2D*>(shape_ptr.get());
-        GenPathBuffer(line_ptr->path, false);
-      } break;
-      default:
-        break;
+      }
+    } break;
+    case Shape2DType::kPolyLine: {
+      auto line_ptr = dynamic_cast<Line2D *>(shape_ptr.get());
+      GenPathBuffer(line_ptr->path, false);
+    } break;
+    default:
+      break;
     }
   }
 }
 
-void NodePathDrawer::Draw(GLProgram program, Camera* camera,
+void NodePathDrawer::Draw(GLProgram program, Camera *camera,
                           Vector2f resolution) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
@@ -133,7 +133,7 @@ void NodePathDrawer::Draw(GLProgram program, Camera* camera,
   glDisableVertexAttribArray(program.color);
 }
 
-NodePolyDrawer::NodePolyDrawer(const Node* node) {
+NodePolyDrawer::NodePolyDrawer(const Node *node) {
   node_ = node;
   GenBuffers();
 }
@@ -146,37 +146,37 @@ NodePolyDrawer::~NodePolyDrawer() {
 
 void NodePolyDrawer::GenBuffers() {
   assert(node_ != nullptr);
-  for (auto& shape_ptr : node_->collision_shapes) {
+  for (auto &shape_ptr : node_->collision_shapes) {
     switch (shape_ptr->shape_type) {
-      case Shape2DType::kDisk: {
-        auto sphere_ptr = dynamic_cast<Disk2D*>(shape_ptr.get());
-        const size_t num_vertices = 30;
-        Polygon2D polygon;
-        for (size_t i = 0; i < num_vertices; ++i) {
-          float theta = float(i) / num_vertices * M_PI * 2;
-          polygon.path.emplace_back(cos(theta) * sphere_ptr->radius,
-                                    sin(theta) * sphere_ptr->radius);
-        }
-        auto mesh = TriangulatePolygon(polygon);
-        GenTriangleBuffer(mesh);
-      } break;
-      case Shape2DType::kPolygon: {
-        auto poly_ptr = dynamic_cast<Polygon2D*>(shape_ptr.get());
-        auto mesh = TriangulatePolygon(*poly_ptr);
-        GenTriangleBuffer(mesh);
-      } break;
-      case Shape2DType::kPolyLine: {
-        auto line_ptr = dynamic_cast<Line2D*>(shape_ptr.get());
-        auto mesh = TriangulatePolyline(line_ptr->path, 1.5);
-        GenTriangleBuffer(mesh);
-      } break;
-      default:
-        break;
+    case Shape2DType::kDisk: {
+      auto sphere_ptr = dynamic_cast<Disk2D *>(shape_ptr.get());
+      const size_t num_vertices = 30;
+      Polygon2D polygon;
+      for (size_t i = 0; i < num_vertices; ++i) {
+        float theta = float(i) / num_vertices * M_PI * 2;
+        polygon.path.emplace_back(cos(theta) * sphere_ptr->radius,
+                                  sin(theta) * sphere_ptr->radius);
+      }
+      auto mesh = TriangulatePolygon(polygon);
+      GenTriangleBuffer(mesh);
+    } break;
+    case Shape2DType::kPolygon: {
+      auto poly_ptr = dynamic_cast<Polygon2D *>(shape_ptr.get());
+      auto mesh = TriangulatePolygon(*poly_ptr);
+      GenTriangleBuffer(mesh);
+    } break;
+    case Shape2DType::kPolyLine: {
+      auto line_ptr = dynamic_cast<Line2D *>(shape_ptr.get());
+      auto mesh = TriangulatePolyline(line_ptr->path, 1.5);
+      GenTriangleBuffer(mesh);
+    } break;
+    default:
+      break;
     }
   }
 }
 
-void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh2D& mesh) {
+void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh2D &mesh) {
   size_t num_vertices = mesh.vertices.size();
   vertex_size_.emplace_back(num_vertices);
 
@@ -188,7 +188,7 @@ void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh2D& mesh) {
   // the vertes array
   std::vector<GLfloat> vert_array;
   vert_array.reserve(num_vertices * kVertDim);
-  for (auto& vt : mesh.vertices) {
+  for (auto &vt : mesh.vertices) {
     vert_array.emplace_back(vt(0));
     vert_array.emplace_back(vt(1));
     vert_array.emplace_back(0);
@@ -203,7 +203,7 @@ void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh2D& mesh) {
   index_buffer_.emplace_back(i_buffer);
   std::vector<GLuint> indices;
   indices.reserve(mesh.faces.size() * 3);
-  for (auto& face : mesh.faces) {
+  for (auto &face : mesh.faces) {
     for (size_t vt_idx = 0; vt_idx < 3; ++vt_idx) {
       indices.emplace_back(face[vt_idx]);
     }
@@ -242,7 +242,7 @@ void NodePolyDrawer::GenTriangleBuffer(const TriangleMesh2D& mesh) {
                GL_STATIC_DRAW);
 }
 
-void NodePolyDrawer::Draw(GLProgram program, Camera* camera,
+void NodePolyDrawer::Draw(GLProgram program, Camera *camera,
                           Vector2f resolution) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
@@ -267,7 +267,7 @@ void NodePolyDrawer::Draw(GLProgram program, Camera* camera,
   glDisableVertexAttribArray(program.color);
 }
 
-NodeBuldgedDrawer::NodeBuldgedDrawer(const Node* node) {
+NodeBuldgedDrawer::NodeBuldgedDrawer(const Node *node) {
   node_ = node;
   GenBuffers();
 }
@@ -280,42 +280,42 @@ NodeBuldgedDrawer::~NodeBuldgedDrawer() {
 
 void NodeBuldgedDrawer::GenBuffers() {
   assert(node_ != nullptr);
-  for (auto& shape_ptr : node_->collision_shapes) {
+  for (auto &shape_ptr : node_->collision_shapes) {
     GenTriangleBufferForShape(shape_ptr.get());
   }
 }
 
-void NodeBuldgedDrawer::GenTriangleBufferForShape(CollisionShape2D* shape_ptr);
+void NodeBuldgedDrawer::GenTriangleBufferForShape(CollisionShape2D *shape_ptr);
 {
   switch (shape_ptr->shape_type) {
-    case Shape2DType::kDisk: {
-      auto sphere_ptr = dynamic_cast<Disk2D*>(shape_ptr);
-      const size_t num_vertices = 30;
-      Polygon2D polygon;
-      for (size_t i = 0; i < num_vertices; ++i) {
-        float theta = float(i) / num_vertices * M_PI * 2;
-        polygon.path.emplace_back(cos(theta) * sphere_ptr->radius,
-                                  sin(theta) * sphere_ptr->radius);
-      }
-      // auto mesh = TriangulatePolygon(polygon);
-      // GenTriangleBuffer(mesh);
-    } break;
-    case Shape2DType::kPolygon: {
-      auto poly_ptr = dynamic_cast<Polygon2D*>(shape_ptr);
-      // auto mesh = TriangulatePolygon(*poly_ptr);
-      // GenTriangleBuffer(mesh);
-    } break;
-    case Shape2DType::kPolyLine: {
-      auto line_ptr = dynamic_cast<Line2D*>(shape_ptr);
-      // auto mesh = TriangulatePolyline(line_ptr->path, 1.5);
-      // GenTriangleBuffer(mesh);
-    } break;
-    default:
-      break;
+  case Shape2DType::kDisk: {
+    auto sphere_ptr = dynamic_cast<Disk2D *>(shape_ptr);
+    const size_t num_vertices = 30;
+    Polygon2D polygon;
+    for (size_t i = 0; i < num_vertices; ++i) {
+      float theta = float(i) / num_vertices * M_PI * 2;
+      polygon.path.emplace_back(cos(theta) * sphere_ptr->radius,
+                                sin(theta) * sphere_ptr->radius);
+    }
+    // auto mesh = TriangulatePolygon(polygon);
+    // GenTriangleBuffer(mesh);
+  } break;
+  case Shape2DType::kPolygon: {
+    auto poly_ptr = dynamic_cast<Polygon2D *>(shape_ptr);
+    // auto mesh = TriangulatePolygon(*poly_ptr);
+    // GenTriangleBuffer(mesh);
+  } break;
+  case Shape2DType::kPolyLine: {
+    auto line_ptr = dynamic_cast<Line2D *>(shape_ptr);
+    // auto mesh = TriangulatePolyline(line_ptr->path, 1.5);
+    // GenTriangleBuffer(mesh);
+  } break;
+  default:
+    break;
   }
 }
 
-void NodeBuldgedDrawer::Draw(GLProgram program, Camera* camera,
+void NodeBuldgedDrawer::Draw(GLProgram program, Camera *camera,
                              Vector2f resolution) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
@@ -340,7 +340,7 @@ void NodeBuldgedDrawer::Draw(GLProgram program, Camera* camera,
   glDisableVertexAttribArray(program.color);
 }
 
-SphereDrawer::SphereDrawer(const Node* node) {
+SphereDrawer::SphereDrawer(const Node *node) {
   node_ = node;
   GenBuffers();
 }
@@ -358,9 +358,9 @@ void SphereDrawer::GenBuffers() {
   std::vector<GLfloat> vert_array;
   std::vector<GLfloat> colors;
   std::vector<GLuint> indices;
-  for (auto& shape_ptr : node_->collision_shapes) {
+  for (auto &shape_ptr : node_->collision_shapes) {
     if (shape_ptr->shape_type == Shape2DType::kDisk) {
-      auto sphere_ptr = dynamic_cast<Disk2D*>(shape_ptr.get());
+      auto sphere_ptr = dynamic_cast<Disk2D *>(shape_ptr.get());
       float sphere_radius = sphere_ptr->radius;
       // a quad with 4 vertices
       vertex_size_[0] += 4;
@@ -403,7 +403,7 @@ void SphereDrawer::GenBuffers() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
                indices.data(), GL_STATIC_DRAW);
 }
-void SphereDrawer::Draw(GLProgram program, Camera* camera,
+void SphereDrawer::Draw(GLProgram program, Camera *camera,
                         Vector2f resolution) {
   assert(node_);
   assert(vertex_buffer_.size() == 1);
@@ -436,12 +436,12 @@ void SphereDrawer::Draw(GLProgram program, Camera* camera,
 
 // move back to header
 template <class DrawerType>
-NodeGroupDrawer<DrawerType>::NodeGroupDrawer(GLProgram program, Camera* camera,
+NodeGroupDrawer<DrawerType>::NodeGroupDrawer(GLProgram program, Camera *camera,
                                              Vector2f resolution)
     : program_(program), camera_(camera), view_port_(resolution) {}
 
 template <class DrawerType>
-void NodeGroupDrawer<DrawerType>::AddNode(const Node* node) {
+void NodeGroupDrawer<DrawerType>::AddNode(const Node *node) {
   drawers_[node->id] = make_unique<DrawerType>(node);
 }
 
@@ -452,8 +452,7 @@ void NodeGroupDrawer<DrawerType>::RemoveNodeByID(int id) {
   }
 }
 
-template <class DrawerType>
-void NodeGroupDrawer<DrawerType>::Draw() {
+template <class DrawerType> void NodeGroupDrawer<DrawerType>::Draw() {
   glUseProgram(program_.pid);
   for (auto itr = drawers_.begin(); itr != drawers_.end(); ++itr) {
     itr->second->Draw(program_, camera_, view_port_);
@@ -466,7 +465,7 @@ template class NodeGroupDrawer<NodePathDrawer>;
 template class NodeGroupDrawer<NodePolyDrawer>;
 template class NodeGroupDrawer<SphereDrawer>;
 
-CanvasDrawer::CanvasDrawer(Camera* camera, Vector2f resolution)
+CanvasDrawer::CanvasDrawer(Camera *camera, Vector2f resolution)
     : camera_(camera), view_port_(resolution) {
   GenBuffers();
   std::string vert_shader = Stringify("bgshader.vert");
@@ -527,4 +526,4 @@ void CanvasDrawer::Draw(float curr_time) {
   glUseProgram(0);
 }
 
-}  // namespace diagrammar
+} // namespace diagrammar
