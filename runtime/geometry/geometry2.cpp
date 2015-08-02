@@ -529,6 +529,7 @@ std::vector<Vector2f> GeneratePathNormals(const Path2D& path, bool is_closed,
       output_vecs[i] = -output_vecs[i];
     }
   }
+  return output_vecs;
 }
 
 }  // namespace diagrammar

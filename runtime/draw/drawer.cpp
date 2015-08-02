@@ -197,16 +197,50 @@ void NodeBuldgedDrawer::GenBuffers() {
   }
 }
 
-void NodeBuldgedDrawer::GenTriangleBuffer(const CollisionShape2D *shape_ptr) {}
+void NodeBuldgedDrawer::GenTriangleBuffer(const CollisionShape2D *shape) {
+  GLTriangleMesh gl_mesh = GLTriangulate3DShape2D(shape, 10);
+
+  GLuint v_buffer;
+  glGenBuffers(1, &v_buffer);
+
+  glBindBuffer(GL_ARRAY_BUFFER, v_buffer);
+  glBufferData(GL_ARRAY_BUFFER, gl_mesh.vertices.size() * sizeof(GLfloat),
+               gl_mesh.vertices.data(), GL_STATIC_DRAW);
+
+  GLuint i_buffer;
+  glGenBuffers(1, &i_buffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, i_buffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, gl_mesh.indices.size() * sizeof(GLuint),
+               gl_mesh.indices.data(), GL_STATIC_DRAW);
+
+  GLuint c_buffer;
+  glGenBuffers(1, &c_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, c_buffer);
+  glBufferData(GL_ARRAY_BUFFER, gl_mesh.colors.size() * sizeof(GLfloat),
+               gl_mesh.colors.data(), GL_STATIC_DRAW);
+
+  GLuint n_buffer;
+  glGenBuffers(1, &n_buffer);
+  glBindBuffer(GL_ARRAY_BUFFER, n_buffer);
+  glBufferData(GL_ARRAY_BUFFER, gl_mesh.normals.size() * sizeof(GLfloat),
+               gl_mesh.normals.data(), GL_STATIC_DRAW);
+
+  tri_index_size_.emplace_back(gl_mesh.indices.size());
+  tri_index_buffer_.emplace_back(i_buffer);
+  vertex_size_.emplace_back(gl_mesh.vertices.size());
+  vertex_buffer_.emplace_back(v_buffer);
+  vertex_color_buffer_.emplace_back(c_buffer);
+  normal_buffer_.emplace_back(n_buffer);
+}
 
 void NodeBuldgedDrawer::Draw(GLProgram program, Camera *camera,
                              Vector2f resolution) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     GLEnableVertexAttrib(program.vertex, GL_ARRAY_BUFFER, vertex_buffer_[i]);
+    GLEnableVertexAttrib(program.normal, GL_ARRAY_BUFFER, normal_buffer_[i]);
     GLEnableVertexAttrib(program.color, GL_ARRAY_BUFFER,
                          vertex_color_buffer_[i]);
-
     Matrix4f u_mvp = GLGetNodeViewProjection(camera, node_);
     glUniformMatrix4fv(program.u_mvp, 1, false, u_mvp.data());
 
@@ -215,6 +249,7 @@ void NodeBuldgedDrawer::Draw(GLProgram program, Camera *camera,
   }
   glDisableVertexAttribArray(program.vertex);
   glDisableVertexAttribArray(program.color);
+  glDisableVertexAttribArray(program.normal);
 }
 
 SphereDrawer::SphereDrawer(const Node *node) {
@@ -286,10 +321,9 @@ void SphereDrawer::Draw(GLProgram program, Camera *camera,
                         Vector2f resolution) {
   assert(node_);
   assert(vertex_buffer_.size() == 1);
+  glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  GLfloat view_port[2] = {resolution(0), resolution(1)};
-  glUniform2fv(program.resolution, 1, view_port);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_[i]);
     glVertexAttribPointer(program.vertex, kVertDim, GL_FLOAT, GL_FALSE, 0, 0);
@@ -301,9 +335,10 @@ void SphereDrawer::Draw(GLProgram program, Camera *camera,
 
     Matrix4f u_mvp(Matrix4f::Identity());
     u_mvp.col(3).head<3>() = node_->frame.GetTranslation();
-    u_mvp = camera->GetViewProjection() * u_mvp;
-    // Now we just align the frame with camera frame
+    u_mvp = camera->GetView() * u_mvp;
     u_mvp.topLeftCorner<3, 3>() = Matrix3f::Identity();
+    u_mvp = camera->GetProjection() * u_mvp;
+    // Now we just align the frame with camera frame
     glUniformMatrix4fv(program.u_mvp, 1, false, u_mvp.data());
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, tri_index_buffer_[i]);
@@ -344,6 +379,7 @@ void NodeGroupDrawer<DrawerType>::Draw() {
 template class NodeGroupDrawer<NodePathDrawer>;
 template class NodeGroupDrawer<NodePolyDrawer>;
 template class NodeGroupDrawer<SphereDrawer>;
+template class NodeGroupDrawer<NodeBuldgedDrawer>;
 
 CanvasDrawer::CanvasDrawer(Camera *camera, Vector2f resolution)
     : camera_(camera), view_port_(resolution) {

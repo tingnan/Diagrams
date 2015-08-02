@@ -194,23 +194,23 @@ GLTriangleMesh SweeptPath2DToGLMesh(const Path2D &path, GLfloat depth,
     // Bottom vertices
     gl_mesh.vertices[j + 0] = path[i](0);
     gl_mesh.vertices[j + 1] = path[i](1);
-    gl_mesh.vertices[j + 2] = 0;
-    gl_mesh.vertices[j + 3] = 0;
+    gl_mesh.vertices[j + 2] = -depth * 0.5;
+    gl_mesh.vertices[j + 3] = 1;
     // Top vertices
     gl_mesh.vertices[j + 4] = path[i](0);
     gl_mesh.vertices[j + 5] = path[i](1);
-    gl_mesh.vertices[j + 6] = depth;
-    gl_mesh.vertices[j + 7] = 0;
+    gl_mesh.vertices[j + 6] = depth * 0.5;
+    gl_mesh.vertices[j + 7] = 1;
     // Bottom normal
     gl_mesh.normals[j + 0] = path_normals[i](0);
     gl_mesh.normals[j + 1] = path_normals[i](1);
     gl_mesh.normals[j + 2] = 0;
-    gl_mesh.normals[j + 3] = 0;
+    gl_mesh.normals[j + 3] = 1;
     // Top normal
     gl_mesh.normals[j + 4] = path_normals[i](0);
     gl_mesh.normals[j + 5] = path_normals[i](1);
     gl_mesh.normals[j + 6] = 0;
-    gl_mesh.normals[j + 7] = 0;
+    gl_mesh.normals[j + 7] = 1;
     // Colors
     for (size_t k = 0; k < 8; ++k) {
       gl_mesh.colors[j + k] = 1;
@@ -240,6 +240,20 @@ GLTriangleMesh SweeptPath2DToGLMesh(const Path2D &path, GLfloat depth,
     gl_mesh.indices[j + 5] = 1;
   }
   return gl_mesh;
+}
+
+GLTriangleMesh SweepPolygon2DToGLMesh(const Polygon2D &polygon, GLfloat depth) {
+  std::vector<GLTriangleMesh> gl_meshes;
+  gl_meshes.emplace_back(SweeptPath2DToGLMesh(polygon.path, depth));
+  for (const auto &hole : polygon.holes) {
+    gl_meshes.emplace_back(SweeptPath2DToGLMesh(hole, depth, true, false));
+  }
+  auto diag_mesh = TriangulatePolygon(polygon);
+  gl_meshes.emplace_back(
+      ConvertDiagMesh2DToGLMesh(diag_mesh, -0.5 * depth, false));
+  gl_meshes.emplace_back(
+      ConvertDiagMesh2DToGLMesh(diag_mesh, depth * 0.5, true));
+  return CombineGLMesh(gl_meshes);
 }
 
 GLTriangleMesh CombineGLMesh(std::vector<GLTriangleMesh> meshes) {
@@ -296,6 +310,24 @@ GLTriangleMesh GLTriangulate2DShape2D(const CollisionShape2D *shape_ptr) {
 
 GLTriangleMesh GLTriangulate3DShape2D(const CollisionShape2D *shape_ptr,
                                       GLfloat depth) {
+  switch (shape_ptr->shape_type) {
+    case Shape2DType::kDisk: {
+      auto disk_ptr = dynamic_cast<const Disk2D *>(shape_ptr);
+      const size_t num_vertices = 30;
+      Polygon2D polygon(SketchDiskEdge(*disk_ptr, num_vertices));
+      return SweepPolygon2DToGLMesh(polygon, depth);
+    } break;
+    case Shape2DType::kPolygon: {
+      auto poly_ptr = dynamic_cast<const Polygon2D *>(shape_ptr);
+      return SweepPolygon2DToGLMesh(*poly_ptr, depth);
+    } break;
+    case Shape2DType::kPolyLine: {
+      auto line_ptr = dynamic_cast<const Line2D *>(shape_ptr);
+      return SweeptPath2DToGLMesh(line_ptr->path, depth, false);
+    } break;
+    default:
+      break;
+  }
   return GLTriangleMesh();
 }
 

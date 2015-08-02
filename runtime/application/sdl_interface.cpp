@@ -63,7 +63,20 @@ diagrammar::GLProgram LoadSphereGLProgram() {
   program.u_mvp = glGetUniformLocation(program.pid, "u_mvp");
   program.color = glGetAttribLocation(program.pid, "color");
   program.vertex = glGetAttribLocation(program.pid, "vertex");
-  program.resolution = glGetUniformLocation(program.pid, "resolution");
+  return program;
+}
+
+diagrammar::GLProgram LoadMesh3DGLProgram() {
+  std::string vert_shader = diagrammar::Stringify("mesh3d.vert");
+  std::string frag_shader = diagrammar::Stringify("mesh3d.frag");
+  diagrammar::GLProgram program;
+  program.pid =
+      diagrammar::CreateGLProgram(vert_shader.c_str(), frag_shader.c_str());
+  program.u_mvp = glGetUniformLocation(program.pid, "u_mvp");
+  program.color = glGetAttribLocation(program.pid, "color");
+  program.vertex = glGetAttribLocation(program.pid, "vertex");
+  program.normal = glGetAttribLocation(program.pid, "normal");
+  std::cout << program.normal << std::endl;
   return program;
 }
 
@@ -131,8 +144,8 @@ bool Application::Init(int w, int h) {
       make_unique<Camera>(Vector3f(0, 0, 800), Vector3f(0, 0, 0),
                           Vector3f(0, 1, 0), M_PI / 2.0, 1.0, 10.0, 500000.0);
 
-  poly_debug_drawer_ = make_unique<NodeGroupDrawer<NodePolyDrawer>>(
-      gl_program_, cameras_[0].get(), Vector2f(w, h));
+  poly_debug_drawer_ = make_unique<NodeGroupDrawer<NodeBuldgedDrawer>>(
+      LoadMesh3DGLProgram(), cameras_[0].get(), Vector2f(w, h));
   path_debug_drawer_ = make_unique<NodeGroupDrawer<NodePathDrawer>>(
       gl_program_, cameras_[0].get(), Vector2f(w, h));
   particle_drawer_ = make_unique<NodeGroupDrawer<SphereDrawer>>(
@@ -142,8 +155,9 @@ bool Application::Init(int w, int h) {
     if (collision_shapes.size() == 1 &&
         collision_shapes[0]->shape_type == Shape2DType::kDisk) {
       particle_drawer_->AddNode(world_->GetNodeByIndex(i));
+    } else {
+      poly_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
     }
-    poly_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
     path_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
   }
 

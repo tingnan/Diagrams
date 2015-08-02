@@ -19,6 +19,8 @@ class Camera {
   void SetPerspective(float fov, float aspect_ratio, float near, float far);
   void Translate(const Vector3f &translation);
   const Matrix4f &GetViewProjection();
+  const Matrix4f &GetView() { return view_; }
+  const Matrix4f &GetProjection() { return perspective_projection_; }
   // Matrix4f member needs this alignment.
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
  private:
