@@ -1,9 +1,9 @@
 build
-DEBUG
+build_pnacl
 tools
-foo
-DiagrammarCpp.sublime-project
-DiagrammarCpp.sublime-workspace
-.codelite
-DiagrammarCpp.workspace
-DiagrammarCpp.project
+.clang_complete
+.linter-clang-includes
+cloc-*
+cpplint.py
+runtime.project
+DEBUG

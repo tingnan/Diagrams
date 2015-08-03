@@ -2,6 +2,9 @@
 #include <SDL2/SDL_main.h>
 
 #include <iostream>
+#include <fstream>
+
+#include <sys/mount.h>
 
 #include "application/sdl_interface.h"
 #include "physics/world.h"
@@ -10,6 +13,9 @@
 #include "utility/event_handler.h"
 
 namespace {
+
+const char* kFontFileName = "";
+
 bool EmitSDLError(const char* message) {
   std::cerr << message << ": ";
   std::cerr << SDL_GetError() << std::endl;
@@ -121,17 +127,17 @@ bool Application::Init(int w, int h) {
     return EmitSDLError("error initialize font system");
   }
 
-  font_ = TTF_OpenFont("DejaVuSans.ttf", 14);
+  font_ = TTF_OpenFont("DejaVuSans.ttfd", 14);
   if (font_ == nullptr) {
     std::string message;
     message += "error read font ";
-    message += "DejaVuSans.ttf ";
-    message += "at size" + std::to_string(14);
+    message += "DejaVuSans.ttfd ";
+    message += "at size " + std::to_string(14);
     return EmitSDLError(message.c_str());
   }
 
   // world_.Read);
-  world_ = ParseWorld((CreateJsonObject("path_simple.json")));
+  world_ = ParseWorld((CreateJsonObject("path_simple.jsond")));
   world_->Start(World::EngineType::kLiquidFun);
 
   gl_program_ = LoadDefaultGLProgram();
@@ -161,7 +167,7 @@ bool Application::Init(int w, int h) {
     path_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
   }
 
-  text_drawer_ = make_unique<TextDrawer>(font_);
+  // text_drawer_ = make_unique<TextDrawer>(font_);
   // use the fixed camera
   canvas_drawer_ = make_unique<CanvasDrawer>(cameras_[1].get(), Vector2f(w, h));
 
@@ -356,6 +362,12 @@ void Application::Render() {
 }  // namespace diagrammar
 
 int main(int argc, char* argv[]) {
+  umount("/");
+  mount("",                    /* source */
+        "/",                   /* target */
+        "httpfs",              /* filesystemtype */
+        0,                     /* mountflags */
+        "cache_content=true"); /* data specific to the httpfs type */
   diagrammar::Application app;
   if (!app.Init(800, 800)) {
     return 0;
