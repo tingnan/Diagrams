@@ -109,7 +109,8 @@ void World::Step() {
 }
 
 bool World::HandleMessage(const Json::Value& message) {
-  // Scoped state machine
+  // All the code in the following brackets shows how the world can handle
+  // message and manipulate nodes in the underlying physics engine.
   {
     const id_t left_flipper_id = 11;
     const id_t right_flipper_id = 12;
@@ -167,10 +168,12 @@ bool World::HandleMessage(const Json::Value& message) {
         // boost all particles
         for (decltype(node_map_)::const_iterator itr = node_map_.cbegin();
              itr != node_map_.cend(); ++itr) {
-          Vector3f impulse(impulse_dist(rd_generator),
-                           impulse_dist(rd_generator), 0);
-          physics_engine_->ApplyImpulseToNode(itr->first, impulse,
-                                              Vector3f(0, 0, 0));
+          if (itr->first >= 14) {
+            Vector3f impulse(impulse_dist(rd_generator),
+                             impulse_dist(rd_generator), 0);
+            physics_engine_->ApplyImpulseToNode(itr->first, impulse,
+                                                Vector3f(0, 0, 0));
+          }
         }
       }
 
@@ -178,7 +181,7 @@ bool World::HandleMessage(const Json::Value& message) {
       }
     }
   }
-  return false;
+  return true;
 }
 
 const Node* World::AddNode(std::unique_ptr<Node> new_node) {
