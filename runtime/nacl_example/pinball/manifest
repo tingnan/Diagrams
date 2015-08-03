@@ -1,8 +1,0 @@
--r-- 742380 /DejaVuSans.ttf
--r-- 877 /bgshader.frag
--r-- 191 /bgshader.vert
--r-- 1175 /mesh3d.frag
--r-- 360 /mesh3d.vert
--r-- 96893 /path_simple.json
--r-- 477 /sphere.frag
--r-- 331 /sphere.vert

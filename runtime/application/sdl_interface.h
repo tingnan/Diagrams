@@ -42,9 +42,9 @@ class Application {
   bool draw_path_ = false;
   bool draw_text_ = false;
   std::vector<std::unique_ptr<Camera>> cameras_;
+  std::unique_ptr<NodeGroupDrawer<NodePathDrawer>> path_drawer_;
   std::unique_ptr<NodeGroupDrawer<SphereDrawer>> particle_drawer_;
-  std::unique_ptr<NodeGroupDrawer<NodeBuldgedDrawer>> poly_debug_drawer_;
-  std::unique_ptr<NodeGroupDrawer<NodePathDrawer>> path_debug_drawer_;
+  std::unique_ptr<NodeGroupDrawer<NodeBuldgedDrawer>> poly_drawer_;
   std::unique_ptr<TextDrawer> text_drawer_;
   std::unique_ptr<CanvasDrawer> canvas_drawer_;
 };

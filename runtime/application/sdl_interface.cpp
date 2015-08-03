@@ -14,7 +14,8 @@
 
 namespace {
 
-const char* kFontFileName = "";
+const char* kFontFileName = "DroidSans.ttfd";
+const char* kDemoFileName = "path_simple.jsond";
 
 bool EmitSDLError(const char* message) {
   std::cerr << message << ": ";
@@ -127,20 +128,21 @@ bool Application::Init(int w, int h) {
     return EmitSDLError("error initialize font system");
   }
 
-  font_ = TTF_OpenFont("DejaVuSans.ttfd", 14);
+  font_ = TTF_OpenFont(kFontFileName, 14);
   if (font_ == nullptr) {
     std::string message;
     message += "error read font ";
-    message += "DejaVuSans.ttfd ";
+    message += kFontFileName;
     message += "at size " + std::to_string(14);
     return EmitSDLError(message.c_str());
   }
 
-  // world_.Read);
-  world_ = ParseWorld((CreateJsonObject("path_simple.jsond")));
+  world_ = ParseWorld((CreateJsonObject(kDemoFileName)));
   world_->Start(World::EngineType::kLiquidFun);
 
   gl_program_ = LoadDefaultGLProgram();
+  // We have two camera setup: the first one for viewing the board and the
+  // second one for background. The second camera does not move.
   cameras_.resize(2);
   cameras_[0] =
       make_unique<Camera>(Vector3f(0, -50, 650), Vector3f(0, 50, 0),
@@ -150,28 +152,27 @@ bool Application::Init(int w, int h) {
       make_unique<Camera>(Vector3f(0, 0, 800), Vector3f(0, 0, 0),
                           Vector3f(0, 1, 0), M_PI / 2.0, 1.0, 10.0, 500000.0);
 
-  poly_debug_drawer_ = make_unique<NodeGroupDrawer<NodeBuldgedDrawer>>(
+  poly_drawer_ = make_unique<NodeGroupDrawer<NodeBuldgedDrawer>>(
       LoadMesh3DGLProgram(), cameras_[0].get(), Vector2f(w, h));
-  path_debug_drawer_ = make_unique<NodeGroupDrawer<NodePathDrawer>>(
+  path_drawer_ = make_unique<NodeGroupDrawer<NodePathDrawer>>(
       gl_program_, cameras_[0].get(), Vector2f(w, h));
   particle_drawer_ = make_unique<NodeGroupDrawer<SphereDrawer>>(
       LoadSphereGLProgram(), cameras_[0].get(), Vector2f(w, h));
+  // Add Node to each group drawer.
   for (size_t i = 0; i < world_->GetNumNodes(); ++i) {
     auto& collision_shapes = world_->GetNodeByIndex(i)->collision_shapes;
     if (collision_shapes.size() == 1 &&
         collision_shapes[0]->shape_type == Shape2DType::kDisk) {
       particle_drawer_->AddNode(world_->GetNodeByIndex(i));
     } else {
-      poly_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
+      poly_drawer_->AddNode(world_->GetNodeByIndex(i));
     }
-    path_debug_drawer_->AddNode(world_->GetNodeByIndex(i));
+    path_drawer_->AddNode(world_->GetNodeByIndex(i));
   }
 
-  // text_drawer_ = make_unique<TextDrawer>(font_);
-  // use the fixed camera
+  text_drawer_ = make_unique<TextDrawer>(font_);
+  // Use the fixed camera for background drawing.
   canvas_drawer_ = make_unique<CanvasDrawer>(cameras_[1].get(), Vector2f(w, h));
-
-  // SDL_StartTextInput();
   return true;
 }
 
@@ -254,14 +255,14 @@ bool Application::HandleMessage(const Json::Value& message) {
         if (test_add_remove_node != nullptr) {
           const Node* tmp_ptr =
               world_->AddNode(std::move(test_add_remove_node));
-          path_debug_drawer_->AddNode(tmp_ptr);
-          poly_debug_drawer_->AddNode(tmp_ptr);
+          path_drawer_->AddNode(tmp_ptr);
+          poly_drawer_->AddNode(tmp_ptr);
         } else {
           id_t test_id = 1;
           auto tmp_ptr = world_->RemoveNodeByExtID(test_id);
           if (tmp_ptr != nullptr) {
-            path_debug_drawer_->RemoveNodeByID(tmp_ptr->id);
-            poly_debug_drawer_->RemoveNodeByID(tmp_ptr->id);
+            path_drawer_->RemoveNodeByID(tmp_ptr->id);
+            poly_drawer_->RemoveNodeByID(tmp_ptr->id);
             test_add_remove_node = std::move(tmp_ptr);
             test_add_remove_node->id = test_id;
           }
@@ -348,12 +349,16 @@ void Application::Render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
-    auto curr_time = world_->now() * 1e-3;  // into seconds
+    // Cast time into seconds.
+    auto curr_time = world_->now() * 1e-3;
+
     if (true) canvas_drawer_->Draw(curr_time);
-    if (draw_poly_) poly_debug_drawer_->Draw(curr_time);
-    if (draw_path_) path_debug_drawer_->Draw(curr_time);
+    if (draw_poly_) {
+      poly_drawer_->Draw(curr_time);
+      particle_drawer_->Draw(curr_time);
+    }
+    if (draw_path_) path_drawer_->Draw(curr_time);
     if (draw_text_) RenderID();
-    if (true) particle_drawer_->Draw(curr_time);
 
     SDL_GL_SwapWindow(window_);
   }
@@ -362,12 +367,6 @@ void Application::Render() {
 }  // namespace diagrammar
 
 int main(int argc, char* argv[]) {
-  umount("/");
-  mount("",                    /* source */
-        "/",                   /* target */
-        "httpfs",              /* filesystemtype */
-        0,                     /* mountflags */
-        "cache_content=true"); /* data specific to the httpfs type */
   diagrammar::Application app;
   if (!app.Init(800, 800)) {
     return 0;
