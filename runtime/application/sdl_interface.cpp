@@ -76,7 +76,7 @@ diagrammar::GLProgram LoadMesh3DGLProgram() {
   program.color = glGetAttribLocation(program.pid, "color");
   program.vertex = glGetAttribLocation(program.pid, "vertex");
   program.normal = glGetAttribLocation(program.pid, "normal");
-  std::cout << program.normal << std::endl;
+  program.resolution = glGetUniformLocation(program.pid, "resolution");
   return program;
 }
 
@@ -342,12 +342,12 @@ void Application::Render() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
-    auto curr_time = world_->now();
-    if (true) canvas_drawer_->Draw(curr_time * 1e-3);
-    if (draw_poly_) poly_debug_drawer_->Draw();
-    if (draw_path_) path_debug_drawer_->Draw();
+    auto curr_time = world_->now() * 1e-3;  // into seconds
+    if (true) canvas_drawer_->Draw(curr_time);
+    if (draw_poly_) poly_debug_drawer_->Draw(curr_time);
+    if (draw_path_) path_debug_drawer_->Draw(curr_time);
     if (draw_text_) RenderID();
-    if (true) particle_drawer_->Draw();
+    if (true) particle_drawer_->Draw(curr_time);
 
     SDL_GL_SwapWindow(window_);
   }

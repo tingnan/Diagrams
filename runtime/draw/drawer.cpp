@@ -98,7 +98,7 @@ void NodePathDrawer::GenBuffers() {
 }
 
 void NodePathDrawer::Draw(GLProgram program, Camera *camera,
-                          Vector2f resolution) {
+                          Vector2f resolution, float current_time) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     GLEnableVertexAttrib(program.vertex, GL_ARRAY_BUFFER, vertex_buffer_[i]);
@@ -162,7 +162,7 @@ void NodePolyDrawer::GenTriangleBuffer(const CollisionShape2D *shape) {
 }
 
 void NodePolyDrawer::Draw(GLProgram program, Camera *camera,
-                          Vector2f resolution) {
+                          Vector2f resolution, float current_time) {
   assert(node_);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     GLEnableVertexAttrib(program.vertex, GL_ARRAY_BUFFER, vertex_buffer_[i]);
@@ -234,8 +234,11 @@ void NodeBuldgedDrawer::GenTriangleBuffer(const CollisionShape2D *shape) {
 }
 
 void NodeBuldgedDrawer::Draw(GLProgram program, Camera *camera,
-                             Vector2f resolution) {
+                             Vector2f resolution, float current_time) {
   assert(node_);
+  glUniform2f(program.resolution, resolution(0), resolution(1));
+  GLuint time_pos = glGetUniformLocation(program.pid, "time");
+  glUniform1f(time_pos, current_time);
   for (size_t i = 0; i < vertex_buffer_.size(); ++i) {
     GLEnableVertexAttrib(program.vertex, GL_ARRAY_BUFFER, vertex_buffer_[i]);
     GLEnableVertexAttrib(program.normal, GL_ARRAY_BUFFER, normal_buffer_[i]);
@@ -317,8 +320,8 @@ void SphereDrawer::GenBuffers() {
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint),
                indices.data(), GL_STATIC_DRAW);
 }
-void SphereDrawer::Draw(GLProgram program, Camera *camera,
-                        Vector2f resolution) {
+void SphereDrawer::Draw(GLProgram program, Camera *camera, Vector2f resolution,
+                        float current_time) {
   assert(node_);
   assert(vertex_buffer_.size() == 1);
   glEnable(GL_DEPTH_TEST);
@@ -367,10 +370,10 @@ void NodeGroupDrawer<DrawerType>::RemoveNodeByID(int id) {
 }
 
 template <class DrawerType>
-void NodeGroupDrawer<DrawerType>::Draw() {
+void NodeGroupDrawer<DrawerType>::Draw(float current_time) {
   glUseProgram(program_.pid);
   for (auto itr = drawers_.begin(); itr != drawers_.end(); ++itr) {
-    itr->second->Draw(program_, camera_, view_port_);
+    itr->second->Draw(program_, camera_, view_port_, current_time);
   }
   glUseProgram(0);
 }

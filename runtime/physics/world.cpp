@@ -163,7 +163,7 @@ bool World::HandleMessage(const Json::Value& message) {
         right_flipper_pressed = false;
       }
 
-      if (message["key_code"] == "R" && message["key_pressed"] == true) {
+      if (message["key_code"] == "B" && message["key_pressed"] == true) {
         // boost all particles
         for (decltype(node_map_)::const_iterator itr = node_map_.cbegin();
              itr != node_map_.cend(); ++itr) {
@@ -172,6 +172,9 @@ bool World::HandleMessage(const Json::Value& message) {
           physics_engine_->ApplyImpulseToNode(itr->first, impulse,
                                               Vector3f(0, 0, 0));
         }
+      }
+
+      if (message["key_code"] == "R" && message["key_pressed"] == true) {
       }
     }
   }

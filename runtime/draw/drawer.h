@@ -22,7 +22,8 @@ class Camera;
 
 class NodeDrawer {
  public:
-  virtual void Draw(GLProgram program, Camera *camera, Vector2f resolution) = 0;
+  virtual void Draw(GLProgram program, Camera *camera, Vector2f resolution,
+                    float current_time) = 0;
   virtual ~NodeDrawer() = default;
 
  protected:
@@ -39,7 +40,8 @@ class NodePathDrawer : public NodeDrawer {
   explicit NodePathDrawer(const Node *node);
   ~NodePathDrawer();
   // Use a precompiled program and a scale to draw
-  void Draw(GLProgram program, Camera *camera, Vector2f resolution);
+  void Draw(GLProgram program, Camera *camera, Vector2f resolution,
+            float current_time);
 
  private:
   void GenPathBuffer(const Path2D &, bool);
@@ -52,7 +54,8 @@ class NodePolyDrawer : public NodeDrawer {
   // Set a node before calling Draw()
   explicit NodePolyDrawer(const Node *node);
   ~NodePolyDrawer();
-  void Draw(GLProgram program, Camera *camera, Vector2f resolution);
+  void Draw(GLProgram program, Camera *camera, Vector2f resolution,
+            float current_time);
 
  private:
   void GenTriangleBuffer(const CollisionShape2D *shape);
@@ -67,7 +70,8 @@ class NodeBuldgedDrawer : public NodeDrawer {
   // Set a node before calling Draw()
   explicit NodeBuldgedDrawer(const Node *node);
   ~NodeBuldgedDrawer();
-  void Draw(GLProgram program, Camera *camera, Vector2f resolution);
+  void Draw(GLProgram program, Camera *camera, Vector2f resolution,
+            float current_time);
 
  private:
   void GenTriangleBuffer(const CollisionShape2D *shape);
@@ -82,7 +86,8 @@ class SphereDrawer : public NodeDrawer {
  public:
   explicit SphereDrawer(const Node *node);
   ~SphereDrawer();
-  void Draw(GLProgram program, Camera *camera, Vector2f resolution);
+  void Draw(GLProgram program, Camera *camera, Vector2f resolution,
+            float current_time);
 
  private:
   void GenBuffers();
@@ -96,7 +101,7 @@ class NodeGroupDrawer {
   NodeGroupDrawer(GLProgram program, Camera *camera, Vector2f resolution);
   void AddNode(const Node *node);
   void RemoveNodeByID(id_t id);
-  void Draw();
+  void Draw(float current_time);
 
   void ChangeGLProgram(GLProgram program) { program_ = program; }
   void ChangeCamera(Camera *camera) { camera_ = camera; }
@@ -113,7 +118,7 @@ class CanvasDrawer {
  public:
   CanvasDrawer(Camera *camera, Vector2f resolution);
   ~CanvasDrawer();
-  void Draw(float curr_time);
+  void Draw(float current_time);
   void ChangeResolution(Vector2f resolution) { view_port_ = resolution; }
   void ChangeCamera(Camera *camera) { camera_ = camera; }
 

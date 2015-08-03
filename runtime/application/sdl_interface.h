@@ -38,8 +38,8 @@ class Application {
   GLProgram gl_program_;
   TTF_Font* font_;
   std::unique_ptr<World> world_;
-  bool draw_poly_ = false;
-  bool draw_path_ = true;
+  bool draw_poly_ = true;
+  bool draw_path_ = false;
   bool draw_text_ = false;
   std::vector<std::unique_ptr<Camera>> cameras_;
   std::unique_ptr<NodeGroupDrawer<SphereDrawer>> particle_drawer_;
