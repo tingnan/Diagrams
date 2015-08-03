@@ -35,7 +35,6 @@ class Application {
   bool app_running_ = true;
   SDL_Window* window_;
   SDL_GLContext gl_context_;
-  GLProgram gl_program_;
   TTF_Font* font_;
   std::unique_ptr<World> world_;
   bool draw_poly_ = true;

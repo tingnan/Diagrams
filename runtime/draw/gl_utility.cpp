@@ -8,28 +8,6 @@
 #include "draw/gl_utility.h"
 #include "physics/node.h"
 
-namespace {
-
-const char kFragShaderSource[] =
-    "precision mediump float;\n"
-    "varying vec4 v_color;\n"
-    "void main() {\n"
-    "  gl_FragColor = v_color;\n"
-    "}\n";
-
-const char kVertShaderSource[] =
-    "uniform mat4 u_mvp;\n"
-    "attribute vec4 vertex;\n"
-    "attribute vec4 normal;\n"
-    "attribute vec4 color;\n"
-    "varying vec4 v_color;\n"
-    "void main() {\n"
-    "  gl_Position = u_mvp * vec4(vertex.xyz, 1.0);\n"
-    "  v_color = vec4(color.xyz, 1.0);\n"
-    "}\n";
-
-}  // namespace
-
 namespace diagrammar {
 
 void ShaderErrorHandler(GLuint shader_id) {
@@ -92,18 +70,8 @@ GLuint CreateGLProgram(const char *vert_shader_src,
   return program_id;
 }
 
-GLProgram LoadDefaultGLProgram() {
-  GLProgram program;
-  program.pid = CreateGLProgram(kVertShaderSource, kFragShaderSource);
-  program.u_mvp = glGetUniformLocation(program.pid, "u_mvp");
-  program.color = glGetAttribLocation(program.pid, "color");
-  program.normal = glGetAttribLocation(program.pid, "normal");
-  program.vertex = glGetAttribLocation(program.pid, "vertex");
-  return program;
-}
-
 std::vector<GLfloat> SerializePath2D(const Path2D &path, bool is_closed) {
-  std::vector<GLfloat> vertices(path.size() * 4);
+  std::vector<GLfloat> vertices(path.size() * kDiagrammarGLVertexDimension);
   const size_t path_size = path.size();
   for (size_t i = 0, j = 0; i < path_size; ++i, j += 4) {
     vertices[j + 0] = path[i](0);
@@ -121,22 +89,23 @@ std::vector<GLfloat> SerializePath2D(const Path2D &path, bool is_closed) {
 }
 
 GLTriangleMesh::GLTriangleMesh(GLuint num_vertices, GLuint num_triangles)
-    : vertices(dimension * num_vertices),
-      normals(dimension * num_vertices),
-      colors(dimension * num_vertices),
+    : vertices(kDiagrammarGLVertexDimension * num_vertices),
+      normals(kDiagrammarGLVertexDimension * num_vertices),
+      colors(kDiagrammarGLVertexDimension * num_vertices),
       indices(3 * num_triangles) {}
 
 GLTriangleMesh::GLTriangleMesh(GLuint num_vertices)
-    : vertices(dimension * num_vertices),
-      normals(dimension * num_vertices),
-      colors(dimension * num_vertices) {}
+    : vertices(kDiagrammarGLVertexDimension * num_vertices),
+      normals(kDiagrammarGLVertexDimension * num_vertices),
+      colors(kDiagrammarGLVertexDimension * num_vertices) {}
 
 GLTriangleMesh ConvertDiagMesh2DToGLMesh(const TriangleMesh2D &diag_mesh,
                                          GLfloat depth, bool normal_up) {
   int normal_sign = normal_up ? 1 : -1;
   GLTriangleMesh gl_mesh(diag_mesh.vertices.size(), diag_mesh.faces.size());
   const size_t num_vertices = diag_mesh.vertices.size();
-  for (size_t i = 0, j = 0; i < num_vertices; ++i, j += 4) {
+  for (size_t i = 0, j = 0; i < num_vertices;
+       ++i, j += kDiagrammarGLVertexDimension) {
     gl_mesh.vertices[j + 0] = diag_mesh.vertices[i](0);
     gl_mesh.vertices[j + 1] = diag_mesh.vertices[i](1);
     gl_mesh.vertices[j + 2] = depth;

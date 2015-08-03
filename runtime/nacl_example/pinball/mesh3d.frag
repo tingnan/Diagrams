@@ -5,7 +5,6 @@ precision mediump float;
 #endif
 
 uniform float time;
-uniform vec2 resolution;
 varying vec4 output_color;
 varying vec4 normal_direction;
 varying vec2 uv;
@@ -41,6 +40,7 @@ void main( void ) {
   vec3 light_norm = normalize(light_direction);
   float cos_theta = clamp(dot(light_norm, normal_direction.xyz), 0.0, 1.0);
   float light_color = cos_theta * PatternCompose(uv);
+  light_color *= 3.0 * light_color;
   vec4 color = output_color.aaaa;
-  gl_FragColor =  color * vec4(0, 2.0 * light_color * light_color, light_color * light_color, 1.0);
+  gl_FragColor =  color * vec4(light_color, 1.5 * light_color, light_color, 1.0);
 }

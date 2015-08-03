@@ -17,6 +17,24 @@ namespace {
 const char* kFontFileName = "DroidSans.ttfd";
 const char* kDemoFileName = "path_simple.jsond";
 
+const char kFragShaderSource[] =
+    "precision mediump float;\n"
+    "varying vec4 v_color;\n"
+    "void main() {\n"
+    "  gl_FragColor = v_color;\n"
+    "}\n";
+
+const char kVertShaderSource[] =
+    "uniform mat4 u_mvp;\n"
+    "attribute vec4 vertex;\n"
+    "attribute vec4 normal;\n"
+    "attribute vec4 color;\n"
+    "varying vec4 v_color;\n"
+    "void main() {\n"
+    "  gl_Position = u_mvp * vec4(vertex.xyz, 1.0);\n"
+    "  v_color = vec4(color.xyz, 1.0);\n"
+    "}\n";
+
 bool EmitSDLError(const char* message) {
   std::cerr << message << ": ";
   std::cerr << SDL_GetError() << std::endl;
@@ -87,6 +105,17 @@ diagrammar::GLProgram LoadMesh3DGLProgram() {
   return program;
 }
 
+diagrammar::GLProgram LoadSimpleGLProgram() {
+  diagrammar::GLProgram program;
+  program.pid =
+      diagrammar::CreateGLProgram(kVertShaderSource, kFragShaderSource);
+  program.u_mvp = glGetUniformLocation(program.pid, "u_mvp");
+  program.color = glGetAttribLocation(program.pid, "color");
+  program.normal = glGetAttribLocation(program.pid, "normal");
+  program.vertex = glGetAttribLocation(program.pid, "vertex");
+  return program;
+}
+
 }  // namespace
 
 namespace diagrammar {
@@ -140,7 +169,6 @@ bool Application::Init(int w, int h) {
   world_ = ParseWorld((CreateJsonObject(kDemoFileName)));
   world_->Start(World::EngineType::kLiquidFun);
 
-  gl_program_ = LoadDefaultGLProgram();
   // We have two camera setup: the first one for viewing the board and the
   // second one for background. The second camera does not move.
   cameras_.resize(2);
@@ -155,7 +183,7 @@ bool Application::Init(int w, int h) {
   poly_drawer_ = make_unique<NodeGroupDrawer<NodeBuldgedDrawer>>(
       LoadMesh3DGLProgram(), cameras_[0].get(), Vector2f(w, h));
   path_drawer_ = make_unique<NodeGroupDrawer<NodePathDrawer>>(
-      gl_program_, cameras_[0].get(), Vector2f(w, h));
+      LoadSimpleGLProgram(), cameras_[0].get(), Vector2f(w, h));
   particle_drawer_ = make_unique<NodeGroupDrawer<SphereDrawer>>(
       LoadSphereGLProgram(), cameras_[0].get(), Vector2f(w, h));
   // Add Node to each group drawer.

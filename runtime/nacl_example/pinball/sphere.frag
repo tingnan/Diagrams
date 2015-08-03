@@ -4,7 +4,6 @@
 precision mediump float;
 #endif
 
-uniform vec2 resolution;
 varying vec2 uv;
 varying float radius;
 varying vec4 output_color;

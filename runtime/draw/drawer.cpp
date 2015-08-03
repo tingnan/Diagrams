@@ -16,9 +16,10 @@ const std::array<GLfloat, 16> kQuad = {
     {-1, 1, 0.0, 0.0, 1, 1, 0.0, 0.0, 1, -1, 0.0, 0.0, -1, -1, 0.0, 0.0}};
 const std::array<GLuint, 6> kQuadIndices = {{0, 1, 2, 2, 3, 0}};
 
-void GLEnableVertexAttrib(GLuint attrib_loc, GLenum buffer_target,
-                          GLuint buffer_id, GLuint dimension = 4,
-                          GLenum data_type = GL_FLOAT) {
+void GLEnableVertexAttrib(
+    GLuint attrib_loc, GLenum buffer_target, GLuint buffer_id,
+    GLuint dimension = diagrammar::kDiagrammarGLVertexDimension,
+    GLenum data_type = GL_FLOAT) {
   glBindBuffer(buffer_target, buffer_id);
   glVertexAttribPointer(attrib_loc, dimension, data_type, GL_FALSE, 0, 0);
   glEnableVertexAttribArray(attrib_loc);

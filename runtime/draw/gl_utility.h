@@ -16,6 +16,7 @@
 #include "physics/node.h"
 
 namespace diagrammar {
+
 struct GLProgram {
   GLuint pid;
   // the user provided model_view_projection matrix
@@ -28,12 +29,13 @@ struct GLProgram {
 };
 
 // We set the dimension of vertices (x, y, z, w), normals (x, y, z, padding) and
-// colors(r, g, b, a) to be 4;
+// colors(r, g, b, a) to be 4.
+const static GLuint kDiagrammarGLVertexDimension = 4;
+
 struct GLTriangleMesh {
   GLTriangleMesh() = default;
   GLTriangleMesh(GLuint num_vertices);
   GLTriangleMesh(GLuint num_vertices, GLuint num_triangles);
-  const static GLuint dimension = 4;
   std::vector<GLfloat> vertices;
   std::vector<GLfloat> normals;
   std::vector<GLfloat> colors;
@@ -72,8 +74,6 @@ std::vector<GLfloat> SerializePath2D(const Path2D &path, bool is_closed);
 
 GLuint CreateGLProgram(const char *vert_shader_src,
                        const char *frag_shader_src);
-
-GLProgram LoadDefaultGLProgram();
 
 }  // namespace diagrammar
 
