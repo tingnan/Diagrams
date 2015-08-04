@@ -1,9 +1,0 @@
-build
-build_pnacl
-tools
-.clang_complete
-.linter-clang-includes
-cloc-*
-cpplint.py
-runtime.project
-DEBUG

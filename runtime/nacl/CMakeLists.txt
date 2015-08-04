@@ -1,8 +1,0 @@
-find_library(PPAPI_CPP_LIBRARIES NAMES ppapi_cpp PATHS /)
-find_library(PPAPI_LIBRARIES NAMES ppapi)
-find_library(NACL_IO_LIBRARIES NAMES nacl_io PATHS /)
-find_library(PPAPI_GLES2_LIBRARIES NAMES ppapi_gles2 PATHS /)
-file(GLOB sources "*.cpp") 
-file(GLOB headers "*.h")
-add_executable(naclmodule ${sources} ${headers})
-target_link_libraries(naclmodule diagphysics diaggeometry diagutility ${JSON_LIBRARIES} ${POLY2TRI_LIBRARIES} ${LIQUIDFUN_LIBRARIES}  ${NACL_LIBRARIES})
