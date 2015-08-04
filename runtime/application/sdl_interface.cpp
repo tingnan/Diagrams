@@ -232,9 +232,6 @@ bool Application::Init(int w, int h) {
 
 void Application::WindowEvent(SDL_WindowEvent event) {
   if (event.event == SDL_WINDOWEVENT_RESIZED) {
-    std::stringstream ss;
-    ss << "window resized: " << event.data1 << " " << event.data2;
-    std::cerr << ss.str();
   }
 }
 
