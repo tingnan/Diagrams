@@ -32,6 +32,7 @@ class Application {
   bool LoadFont();
   // For debugging purpose only
   void RenderID();
+  void WindowEvent(SDL_WindowEvent event);
   bool app_running_ = true;
   SDL_Window* window_;
   SDL_GLContext gl_context_;

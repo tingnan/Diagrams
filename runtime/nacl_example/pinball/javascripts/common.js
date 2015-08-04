@@ -354,7 +354,7 @@ var common = (function() {
       updateStatus(
           'Browser does not support NaCl (' + tool + '), or NaCl is disabled');
     } else if (common.naclModule == null) {
-      updateStatus('Creating embed: ' + tool);
+      updateStatus('Creating embed: ' + tool + ': might take 10 ~ 40 s');
 
       // We use a non-zero sized embed to give Chrome space to place the bad
       // plug-in graphic, if there is a problem.

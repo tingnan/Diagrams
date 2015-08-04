@@ -230,6 +230,14 @@ bool Application::Init(int w, int h) {
   return true;
 }
 
+void Application::WindowEvent(SDL_WindowEvent event) {
+  if (event.event == SDL_WINDOWEVENT_RESIZED) {
+    std::stringstream ss;
+    ss << "window resized: " << event.data1 << " " << event.data2;
+    std::cerr << ss.str();
+  }
+}
+
 void Application::HandleEvents() {
   SDL_Event event;
   while (SDL_PollEvent(&event) != 0) {
@@ -238,6 +246,9 @@ void Application::HandleEvents() {
       case SDL_QUIT:
         app_running_ = false;
         break;
+      case SDL_WINDOWEVENT: {
+        WindowEvent(event.window);
+      }
       case SDL_MOUSEBUTTONDOWN:
       case SDL_MOUSEBUTTONUP: {
         // Please check SDL website for button enums.
