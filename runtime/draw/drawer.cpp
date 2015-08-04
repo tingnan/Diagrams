@@ -385,17 +385,11 @@ template class NodeGroupDrawer<NodePolyDrawer>;
 template class NodeGroupDrawer<SphereDrawer>;
 template class NodeGroupDrawer<NodeBuldgedDrawer>;
 
-CanvasDrawer::CanvasDrawer(Camera *camera, Vector2f resolution)
-    : camera_(camera), view_port_(resolution) {
+CanvasDrawer::CanvasDrawer(GLProgram program, Camera *camera,
+                           Vector2f resolution)
+    : program_(program), camera_(camera), view_port_(resolution) {
   GenBuffers();
-  std::string vert_shader = Stringify("bgshader.vert");
-  std::string frag_shader = Stringify("bgshader.frag");
-  program_.pid = CreateGLProgram(vert_shader.c_str(), frag_shader.c_str());
-  program_.u_mvp = glGetUniformLocation(program_.pid, "u_mvp");
-  program_.color = glGetAttribLocation(program_.pid, "color");
-  program_.vertex = glGetAttribLocation(program_.pid, "vertex");
   time_ = glGetUniformLocation(program_.pid, "time");
-  resolution_ = glGetUniformLocation(program_.pid, "resolution");
 }
 
 CanvasDrawer::~CanvasDrawer() {
@@ -428,7 +422,7 @@ void CanvasDrawer::Draw(float curr_time) {
 
   // Resolution of the ocean and the time fluctuation
   GLfloat resolution[2] = {view_port_(0), view_port_(1)};
-  glUniform2fv(resolution_, 1, resolution);
+  glUniform2fv(program_.resolution, 1, resolution);
   glUniform1f(time_, curr_time);
 
   glBindBuffer(GL_ARRAY_BUFFER, vert_buffer_);

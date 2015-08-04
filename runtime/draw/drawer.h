@@ -116,16 +116,16 @@ class NodeGroupDrawer {
 
 class CanvasDrawer {
  public:
-  CanvasDrawer(Camera *camera, Vector2f resolution);
+  CanvasDrawer(GLProgram program, Camera *camera, Vector2f resolution);
   ~CanvasDrawer();
   void Draw(float current_time);
+  void ChangeGLProgram(GLProgram program) { program_ = program; }
   void ChangeResolution(Vector2f resolution) { view_port_ = resolution; }
   void ChangeCamera(Camera *camera) { camera_ = camera; }
 
  private:
   void GenBuffers();
   GLProgram program_;
-  GLuint resolution_;
   GLuint time_;
   GLuint vert_buffer_;
   GLuint vert_indice_;

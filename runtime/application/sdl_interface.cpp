@@ -14,6 +14,7 @@
 
 namespace {
 
+const char* kResourceFolderName = "resources";
 const char* kFontFileName = "DroidSans.ttfd";
 const char* kDemoFileName = "path_simple.jsond";
 
@@ -80,8 +81,11 @@ std::unique_ptr<diagrammar::World> ParseWorld(const Json::Value& world) {
 }
 
 diagrammar::GLProgram LoadSphereGLProgram() {
-  std::string vert_shader = diagrammar::Stringify("sphere.vert");
-  std::string frag_shader = diagrammar::Stringify("sphere.frag");
+  std::string resource_folder_name = std::string(kResourceFolderName) + "/";
+  std::string vert_shader_name = resource_folder_name + "sphere.vert";
+  std::string frag_shader_name = resource_folder_name + "sphere.frag";
+  std::string vert_shader = diagrammar::Stringify(vert_shader_name.c_str());
+  std::string frag_shader = diagrammar::Stringify(frag_shader_name.c_str());
   diagrammar::GLProgram program;
   program.pid =
       diagrammar::CreateGLProgram(vert_shader.c_str(), frag_shader.c_str());
@@ -92,8 +96,11 @@ diagrammar::GLProgram LoadSphereGLProgram() {
 }
 
 diagrammar::GLProgram LoadMesh3DGLProgram() {
-  std::string vert_shader = diagrammar::Stringify("mesh3d.vert");
-  std::string frag_shader = diagrammar::Stringify("mesh3d.frag");
+  std::string resource_folder_name = std::string(kResourceFolderName) + "/";
+  std::string vert_shader_name = resource_folder_name + "mesh3d.vert";
+  std::string frag_shader_name = resource_folder_name + "mesh3d.frag";
+  std::string vert_shader = diagrammar::Stringify(vert_shader_name.c_str());
+  std::string frag_shader = diagrammar::Stringify(frag_shader_name.c_str());
   diagrammar::GLProgram program;
   program.pid =
       diagrammar::CreateGLProgram(vert_shader.c_str(), frag_shader.c_str());
@@ -113,6 +120,22 @@ diagrammar::GLProgram LoadSimpleGLProgram() {
   program.color = glGetAttribLocation(program.pid, "color");
   program.normal = glGetAttribLocation(program.pid, "normal");
   program.vertex = glGetAttribLocation(program.pid, "vertex");
+  return program;
+}
+
+diagrammar::GLProgram LoadBackgroundGLProgram() {
+  diagrammar::GLProgram program;
+  std::string resource_folder_name = std::string(kResourceFolderName) + "/";
+  std::string vert_shader_name = resource_folder_name + "bgshader.vert";
+  std::string frag_shader_name = resource_folder_name + "bgshader.frag";
+  std::string vert_shader = diagrammar::Stringify(vert_shader_name.c_str());
+  std::string frag_shader = diagrammar::Stringify(frag_shader_name.c_str());
+  program.pid =
+      diagrammar::CreateGLProgram(vert_shader.c_str(), frag_shader.c_str());
+  program.u_mvp = glGetUniformLocation(program.pid, "u_mvp");
+  program.color = glGetAttribLocation(program.pid, "color");
+  program.vertex = glGetAttribLocation(program.pid, "vertex");
+  program.resolution = glGetUniformLocation(program.pid, "resolution");
   return program;
 }
 
@@ -157,7 +180,9 @@ bool Application::Init(int w, int h) {
     return EmitSDLError("error initialize font system");
   }
 
-  font_ = TTF_OpenFont(kFontFileName, 14);
+  std::string resource_folder_name = std::string(kResourceFolderName) + "/";
+  std::string font_file_name = resource_folder_name + kFontFileName;
+  font_ = TTF_OpenFont(font_file_name.c_str(), 14);
   if (font_ == nullptr) {
     std::string message;
     message += "error read font ";
@@ -165,8 +190,8 @@ bool Application::Init(int w, int h) {
     message += "at size " + std::to_string(14);
     return EmitSDLError(message.c_str());
   }
-
-  world_ = ParseWorld((CreateJsonObject(kDemoFileName)));
+  std::string demo_file_name = resource_folder_name + kDemoFileName;
+  world_ = ParseWorld((CreateJsonObject(demo_file_name.c_str())));
   world_->Start(World::EngineType::kLiquidFun);
 
   // We have two camera setup: the first one for viewing the board and the
@@ -200,7 +225,8 @@ bool Application::Init(int w, int h) {
 
   text_drawer_ = make_unique<TextDrawer>(font_);
   // Use the fixed camera for background drawing.
-  canvas_drawer_ = make_unique<CanvasDrawer>(cameras_[1].get(), Vector2f(w, h));
+  canvas_drawer_ = make_unique<CanvasDrawer>(LoadBackgroundGLProgram(),
+                                             cameras_[1].get(), Vector2f(w, h));
   return true;
 }
 
